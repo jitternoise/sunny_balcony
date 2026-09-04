@@ -158,20 +158,56 @@ allowlist when fixing** — a stale entry silently hides the thing it tracks.
 
 ## 🆕 New items the old list predates
 
-**The solution book is roughly half invalid.** The 2026-08-31 change making the
-Wall 2 tiles wide invalidated every documented solution that places one — **49
-of 100** levels, 51 placements. `level-solutions.md` and `level-min-times.md`
-must be treated as unverified for those levels. Levels **54** ("Town Defense
-VIII", the only two-wall level, one wall now landing adjacent to the town blob)
-and **92** ("The Gauntlet VI", where a 2-wide wall takes 2 of 5 cells in a
-`corridor_half_width = 2` row) were called out for re-checking first.
+**The solution book: 27 of 100 solutions are confirmed broken.** The
+2026-08-31 change making the Wall 2 tiles wide was predicted to invalidate the
+49 solutions that place one. Every solution has now been replayed against the
+real engine (`tools/verify_solutions.gd`), and the damage is narrower than
+feared but real:
 
-**The Python simulator is not in the repository.** Every re-verification path
-above depends on it, and the docs reference it repeatedly, but there is no
-`.py` file anywhere in the tree. It needs `footprint_offsets` support to redo
-the wall solutions — which cannot start until the sim itself is recovered and
-committed. This also means the sim and engine can silently diverge, the exact
-failure class behind the 2026-08-17 rounding-parity bug.
+| | |
+|---|---|
+| Still win, exact documented measure | **72** |
+| Win at a different measure | **0** |
+| No longer win | **27** |
+| Not machine-readable | **1** (level 22) |
+
+**All 27 failures place a wall. No non-wall solution broke**, and no surviving
+solution drifted by even one measure — so the Wall footprint is the only cause,
+exactly as predicted. 22 of the 49 wall solutions still work, because a wider
+wall only matters where the extra cell dams something.
+
+Broken: 1, 2, 6, 10, 11, 12, 17, 32, 33, 54, 64, 66, 67, 68, 69, 81, 82, 83,
+85, 86, 91, 92, 93, 94, 96, 97, 98.
+
+Most time out (the water can no longer reach a pool at all); 67, 68, 69 and 97
+now lose by running off an edge. **Level 68 is the worst case** — the wall
+placement is *rejected outright*, because neither footprint orientation fits at
+`(-1, -1)`. In the real game that tap would do nothing at all, with no feedback,
+which is the silent-placement-failure problem below.
+
+Level 22's solution is prose ("dig the 108-cell channel+spurs") and needs
+hand-encoding — 108 cells, 324 taps.
+
+`level-solutions.md` and `level-min-times.md` should not be trusted for those 27
+levels until they are re-solved. Rerun the check any time with:
+
+```
+godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
+```
+
+**The Python simulator is gone, and is no longer needed.** It was never in the
+repository (`sim/gen100.py`, `sim/retrofit.py`, `sim/verify_shipped.py` lived
+outside it) and it existed only because no Godot engine was available -- every
+`dev-progress.md` entry says so. Godot 4.7.2 is available now, so verification
+runs against the shipping engine instead, via `tools/Sim.gd`. That removes the
+divergence risk the port carried: it had already drifted once, when Python's
+banker's `round()` disagreed with GDScript's `roundf()` and silently moved every
+corridor level's band centre one column on odd rows.
+
+The one thing it still did that nothing replaces is **generating** levels --
+solution-first templates with seeded rejection sampling. Worth recovering
+`gen100.py` for its templates if it turns up, but note it predates the 2-wide
+Wall and would generate levels validated against the wrong footprint.
 
 **The Hydro Electric Power Plant is dead code.** Fully implemented in
 `LevelData.gd`, `HexBoard.gd` (`hydro_plants`, `hydro_ready_at()`,
