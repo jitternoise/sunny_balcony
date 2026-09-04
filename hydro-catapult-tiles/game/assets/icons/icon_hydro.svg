@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Hydro Electric Power Plant: dam wall + turbine hub. Steel-blue to
+       match the terrain's own fill color (see HexBoard._draw_cell()'s
+       HYDRO branch) -- deliberately its own "structure" family, distinct
+       from both Pool's water-blue and every placeable block's own color. -->
+  <g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="20" y="30" width="60" height="45" rx="4" fill="#4d7896"/>
+    <circle cx="50" cy="52" r="16" fill="#cfe8fb"/>
+    <g stroke="#1e2530" stroke-width="4">
+      <line x1="50" y1="38" x2="50" y2="66"/>
+      <line x1="36" y1="52" x2="64" y2="52"/>
+      <line x1="40" y1="42" x2="60" y2="62"/>
+      <line x1="60" y1="42" x2="40" y2="62"/>
+    </g>
+  </g>
+</svg>
