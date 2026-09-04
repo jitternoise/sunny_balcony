@@ -8,7 +8,7 @@ level_id = 72
 display_name = "72. Big Digs II"
 intro_text = "Packed dirt everywhere. Tap to dig the river's channel -- and don't let it wait long enough to mudslide."
 grid_radius = 4
-water_sources = Array[Vector2i]([Vector2i(-1, -4)])
+water_sources = Array[Vector2i]([Vector2i(0, -4)])
 fire_cells = Array[Vector2i]([Vector2i(-1, 1), Vector2i(-2, 3)])
 pool_targets = {
 Vector2i(-2, 4): 4

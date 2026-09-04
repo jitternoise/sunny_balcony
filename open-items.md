@@ -116,28 +116,39 @@ Two headless tools were added under `game/tools/` to make this repeatable:
   below were produced.
   `godot --headless --path game res://tools/LevelHarness.tscn -- 24 40`
 
-**19 levels have a water source one ring outside the playable area.** All 19
-are the same coordinate, `(-1, -4)` on a `grid_radius = 4` board — distance 5.
-Every other source in the game (88 of 107) sits exactly on the rim.
+**Water sources outside the playable area — 13 of 19 fixed.** All 19 sat at
+`(-1, -4)` on a `grid_radius = 4` board (distance 5), where every other source
+in the game (88 of 107) sits exactly on the rim.
 
-This is **not** a simulation bug, which an A/B run confirmed: from `(-1, -4)`
-the down-left diagonal is off-board and gets skipped, and the fallback lands on
-exactly the cell an on-rim `(0, -4)` source would have reached. Level 24 run
-with each source produces identical output — same depth, same live cells, same
-fires.
+This was never a simulation bug. From `(-1, -4)` the down-left diagonal is
+off-board and gets skipped, and the fallback lands on the same cell an on-rim
+source reaches. It was a rendering bug: `HexBoard._draw_source_marker()` is
+called for every `water_sources` entry with no `in_playable_area()` check, so
+the marker and its first flow-preview arrow drew detached from the grid.
 
-It *is* a rendering bug. `HexBoard._draw_source_marker()` is called for every
-entry in `water_sources` with no `in_playable_area()` check, so on these 19
-levels the source marker and its first flow-preview arrow draw detached from
-the grid, floating in the sky above and left of the board. Compare level 1
-(marker on a tile) with level 24 (marker on nothing).
+**Fixed (13 pointy-grid levels)** — 24, 28, 29, 34, 38, 42, 46, 47, 48, 50, 53,
+66, 72 — moved to `(0, -4)`. Verified by running all 19 levels for 60 beats
+before and after: output is byte-identical, so nothing about the simulation
+moved. Confirmed visually too — the marker now sits on a tile.
 
-Fix is a one-cell data edit on 19 files — `(-1, -4)` → `(0, -4)` — or a guard
-in the draw call. The data edit is safer, since it also stops the smoke test
-flagging them.
+**Still open (6 flat-grid levels)** — 55, 56, 59, 60, 61, 62. These need a
+design decision, because on a `grid_style = "flat"` board water falls straight
+down a column (`Hex.FLAT_DOWN`), so moving the source sideways moves the entire
+stream. Both candidate fixes were tested and both change gameplay:
 
-Affected: 24, 28, 29, 34, 38, 42, 46, 47, 48, 50, 53, 55, 56, 59, 60, 61, 62,
-66, 72.
+- `(0, -4)` — shifts the stream one column. Measurably different: level 59 goes
+  from an edge loss at beat 38 to still running at beat 60, level 55's fire
+  stops being extinguished.
+- `(-1, -3)` — keeps the column (it's the topmost in-area cell at `q = -1`) but
+  starts the water one row lower, shifting every level's timing by a beat.
+
+A third option is to guard the draw call instead of touching the data, but then
+those levels show no source marker at all, which is arguably worse than one in
+the wrong place. Note these 6 also use `(-1, -4)` as a `source_flow_style` key
+(level 56's is `"zigzag"`), so any data fix must update both or the flow style
+silently reverts to `"straight"`.
+
+`smoke_test.gd` now reports exactly these 6.
 
 ---
 
