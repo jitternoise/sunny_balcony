@@ -6,8 +6,31 @@ extends SceneTree
 ##   godot --headless --path game --script res://tools/smoke_test.gd
 ## Exits non-zero if anything fails, so it can gate a build.
 
+## Deferred, known problems. Reported as KNOWN rather than counted as
+## failures, so a genuine regression still stands out and the exit code
+## stays meaningful. Remove an entry here the moment it's fixed -- a stale
+## allowlist silently hides the thing it was meant to track.
+##
+## flat-grid off-board sources: levels 55, 56, 59, 60, 61 and 62 keep a
+## water source at (-1,-4), one ring outside a radius-4 board, so its
+## marker draws detached from the grid. Not fixed with the other 13
+## because these are grid_style = "flat", where water falls straight down
+## a column -- moving the source sideways moves the whole stream, and both
+## candidate coordinates measurably change play. They also key
+## source_flow_style off the same coordinate. See open-items.md.
+const KNOWN_ISSUES := {
+	"level_055.tres": "flat-grid off-board source",
+	"level_056.tres": "flat-grid off-board source",
+	"level_059.tres": "flat-grid off-board source",
+	"level_060.tres": "flat-grid off-board source",
+	"level_061.tres": "flat-grid off-board source",
+	"level_062.tres": "flat-grid off-board source",
+}
+
+
 func _init() -> void:
 	var errors: Array[String] = []
+	var known: Array[String] = []
 	var checked := 0
 
 	# Block catalog
@@ -61,7 +84,11 @@ func _init() -> void:
 		# detached from the grid. Cosmetic, but wrong-looking.
 		for c in lv.water_sources:
 			if _hex_distance(c) > radius:
-				errors.append("%s water_source %s is outside grid_radius %d - marker renders off-board" % [f, c, radius])
+				var msg := "%s water_source %s is outside grid_radius %d - marker renders off-board" % [f, c, radius]
+				if KNOWN_ISSUES.has(f):
+					known.append("%s  (%s)" % [msg, KNOWN_ISSUES[f]])
+				else:
+					errors.append(msg)
 
 		for group in [["fire_cells", lv.fire_cells],
 					  ["town_cells", lv.town_cells], ["geyser_cells", lv.geyser_cells],
@@ -74,11 +101,15 @@ func _init() -> void:
 				errors.append("%s pool_targets %s is outside grid_radius %d" % [f, c, radius])
 
 	print("\n=== smoke test: %d levels, %d block types ===" % [checked, block_ids.size()])
+	if not known.is_empty():
+		print("KNOWN - %d deferred issue(s), not counted as failures:" % known.size())
+		for k in known:
+			print("  " + k)
 	if errors.is_empty():
-		print("PASS - no problems found")
+		print("PASS - no new problems found")
 		quit(0)
 	else:
-		print("FAIL - %d problem(s):" % errors.size())
+		print("FAIL - %d new problem(s):" % errors.size())
 		for e in errors:
 			print("  " + e)
 		quit(1)
