@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 55
+display_name = "55. Flat Fields I"
+intro_text = "The rotated flat grid: water can run straight down. Redirect it where straight isn't good enough."
+grid_radius = 4
+grid_style = "flat"
+source_flow_style = {
+Vector2i(-1, -4): "straight"
+}
+water_sources = Array[Vector2i]([Vector2i(-1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-1, -1)])
+pool_targets = {
+Vector2i(-2, 4): 4
+}
+starting_inventory = {
+"divert_left": 1
+}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 11
+display_name = "11. Grand Convergence"
+intro_text = "Two sources, several fires and pools. Bounce one stream onto a stable path and branch the other to cover everything -- combine what you've learned."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(0, -4), Vector2i(2, -4)])
+fire_cells = Array[Vector2i]([Vector2i(0, -2), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(1, -1)])
+pool_targets = {
+Vector2i(-2, 2): 4,
+Vector2i(-1, 1): 4,
+Vector2i(0, 1): 4
+}
+starting_inventory = {
+"wall": 1,
+"splitter": 1,
+"divert_right": 1
+}
+blocked_cells = Array[Vector2i]([])

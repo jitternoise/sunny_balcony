@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 34
+display_name = "34. Wall Work IV"
+intro_text = "A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(-1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-4, 2), Vector2i(-2, -2)])
+pool_targets = {
+Vector2i(-4, 4): 4
+}
+starting_inventory = {
+"wall": 1
+}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fire: flame silhouette, two-tone -->
+  <defs>
+    <linearGradient id="flameGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="55%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#7a1a0a" stroke-width="5" stroke-linejoin="round">
+    <path d="M50 14
+             C40 28 30 34 30 50
+             C30 66 40 78 50 78
+             C60 78 70 66 70 50
+             C70 40 64 36 62 30
+             C60 40 54 42 52 36
+             C50 28 54 22 50 14 Z"
+          fill="url(#flameGrad)"/>
+  </g>
+</svg>

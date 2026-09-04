@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Wall: boulder / rock -->
+  <g stroke="#3a332b" stroke-width="5" stroke-linejoin="round">
+    <path d="M50 18 L69 25 L80 42 L75 64 L57 78 L39 75 L22 60 L20 39 L33 23 Z" fill="#9c9186"/>
+    <path d="M50 18 L69 25 L60 39 L43 35 Z" fill="#bcb2a2"/>
+    <path d="M39 75 L22 60 L32 49 L48 58 Z" fill="#786f62"/>
+    <line x1="43" y1="35" x2="48" y2="58" stroke-width="3"/>
+    <line x1="60" y1="39" x2="57" y2="78" stroke-width="3"/>
+  </g>
+</svg>

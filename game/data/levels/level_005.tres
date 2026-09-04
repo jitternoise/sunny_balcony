@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 5
+display_name = "5. Forced Redirect"
+intro_text = "A Wall doesn't let water pass through -- it bounces off onto the other diagonal instead. Use it to force the stream onto a new path toward the fire and pool."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(0, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-2, -2)])
+pool_targets = {
+Vector2i(-3, 0): 4
+}
+starting_inventory = {
+"wall": 1
+}
+blocked_cells = Array[Vector2i]([])

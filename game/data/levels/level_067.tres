@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 67
+display_name = "67. Geyser Country V"
+intro_text = "Wake the dormant geyser, then manage TWO streams at once."
+grid_radius = 6
+corridor_half_width = 2
+water_sources = Array[Vector2i]([Vector2i(3, -6)])
+fire_cells = Array[Vector2i]([Vector2i(-4, 5)])
+pool_targets = {
+Vector2i(-2, 6): 4,
+Vector2i(-5, 6): 4
+}
+starting_inventory = {
+"wall": 1
+}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([Vector2i(1, -3)])
+total_block_budget = 0

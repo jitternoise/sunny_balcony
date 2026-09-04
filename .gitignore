@@ -1,0 +1,20 @@
+# Godot 4 editor cache and imported resources
+.godot/
+/game/.godot/
+*.translation
+
+# Godot export artifacts
+build/
+export/
+export_presets.cfg
+*.apk
+*.aab
+*.ipa
+*.pck
+*.zip
+
+# macOS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~

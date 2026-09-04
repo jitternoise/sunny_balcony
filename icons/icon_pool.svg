@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Pool: basin with wave + 4-box progress ring -->
+  <g stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 46 Q50 30 78 46 L74 66 Q50 78 26 66 Z" fill="#3b9ee6"/>
+    <path d="M30 50 Q38 44 46 50 T62 50 T78 50" fill="none" stroke="#eaf6ff" stroke-width="4"/>
+  </g>
+  <g stroke="#0b3d63" stroke-width="3">
+    <rect x="16" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/>
+    <rect x="70" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/>
+    <rect x="16" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/>
+    <rect x="70" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/>
+  </g>
+</svg>

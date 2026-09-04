@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flash Flood — Icon &amp; Terrain System</title>
+<style>
+  :root{
+    --bg:#0f1520; --panel:#161d2b; --ink:#e7edf5; --sub:#93a2b8;
+    --hex-empty:#2b3a52; --hex-empty-line:#3d5378;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 24px 80px; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  }
+  h1{font-size:26px; margin:0 0 4px;}
+  p.lede{color:var(--sub); max-width:720px; margin:0 0 36px; line-height:1.5;}
+  h2{font-size:16px; letter-spacing:.04em; text-transform:uppercase; color:var(--sub);
+     border-bottom:1px solid #263248; padding-bottom:8px; margin:48px 0 20px;}
+  .grid{display:flex; flex-wrap:wrap; gap:28px;}
+  .card{
+    width:168px; background:var(--panel); border-radius:14px; padding:16px;
+    text-align:center; border:1px solid #22304a;
+  }
+  .hex-wrap{width:120px; height:120px; margin:0 auto 12px; position:relative;}
+  .hex{
+    width:120px; height:104px;
+    clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display:flex; align-items:center; justify-content:center;
+    position:relative; top:8px;
+  }
+  .hex svg{width:94%; height:94%;}
+  .name{font-size:13.5px; font-weight:600; margin-top:2px;}
+  .desc{font-size:11.5px; color:var(--sub); margin-top:4px; line-height:1.4;}
+  .swatch-row{display:flex; align-items:center; gap:10px; margin:6px 0;}
+  .swatch{width:22px; height:22px; border-radius:5px; border:1px solid #0006; flex:none;}
+  .hexcode{font-family:"SFMono-Regular",Consolas,monospace; font-size:12px; color:var(--sub);}
+  .palette{display:flex; flex-wrap:wrap; gap:24px 40px;}
+  .palette .col{min-width:220px;}
+  .board{
+    display:grid; grid-template-columns:repeat(7,60px); gap:4px 6px; margin-top:8px;
+  }
+  .board .hexc{
+    width:60px; height:52px;
+    clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display:flex; align-items:center; justify-content:center; background:var(--hex-empty);
+  }
+  .board .hexc svg{width:82%; height:82%;}
+  .board .row-odd{margin-left:33px;}
+  .note{font-size:12.5px; color:var(--sub); max-width:760px; line-height:1.6; margin-top:10px;}
+</style>
+</head>
+<body>
+
+<h1>Flash Flood — Icon &amp; Terrain System</h1>
+<p class="lede">
+  Flat-vector glyphs designed to read at small mobile size and stay legible inside a
+  pointy-top hex silhouette. Each block/terrain type gets one unmistakable shape
+  <em>and</em> one dedicated color — never rely on color alone, since a player scanning
+  fast should be able to tell blocks apart from silhouette even before the color registers.
+  Bold dark outline (#1e2530-ish) on every glyph keeps them grounded against any hex fill.
+</p>
+
+<h2>Block types (player-placed)</h2>
+<div class="grid">
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:var(--hex-empty)">
+      <svg viewBox="0 0 100 100"><g stroke="#3a332b" stroke-width="5" stroke-linejoin="round"><path d="M50 18 L69 25 L80 42 L75 64 L57 78 L39 75 L22 60 L20 39 L33 23 Z" fill="#9c9186"/><path d="M50 18 L69 25 L60 39 L43 35 Z" fill="#bcb2a2"/><path d="M39 75 L22 60 L32 49 L48 58 Z" fill="#786f62"/><line x1="43" y1="35" x2="48" y2="58" stroke-width="3"/><line x1="60" y1="39" x2="57" y2="78" stroke-width="3"/></g></svg>
+    </div></div>
+    <div class="name">Wall</div>
+    <div class="desc">A boulder reads as "solid" at a glance. Only block that stops natural fall.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:var(--hex-empty)">
+      <svg viewBox="0 0 100 100"><path d="M30 24 Q30 24 40 24 L58 42 L58 30 L74 46 L58 62 L58 50 L40 32 L40 24 Z" fill="#f7931e" stroke="#1e2530" stroke-width="5" stroke-linejoin="round"/></svg>
+    </div></div>
+    <div class="name">Diverter&nbsp;Right</div>
+    <div class="desc">Chevron points the exit direction directly — no legend needed.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:var(--hex-empty)">
+      <svg viewBox="0 0 100 100"><path d="M70 24 Q70 24 60 24 L42 42 L42 30 L26 46 L42 62 L42 50 L60 32 L60 24 Z" fill="#f7931e" stroke="#1e2530" stroke-width="5" stroke-linejoin="round"/></svg>
+    </div></div>
+    <div class="name">Diverter&nbsp;Left</div>
+    <div class="desc">Exact mirror of Diverter-Right — same color, opposite silhouette, so the pair reads as a family.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:var(--hex-empty)">
+      <svg viewBox="0 0 100 100"><g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M43 18 L57 18 L57 40 L43 40 Z" fill="#a78bfa"/><path d="M50 40 L28 60 L28 50 L18 50 L34 66 L50 50 Z" fill="#a78bfa"/><path d="M50 40 L72 60 L72 50 L82 50 L66 66 L50 50 Z" fill="#a78bfa"/></g></svg>
+    </div></div>
+    <div class="name">Splitter</div>
+    <div class="desc">One stem, two arrows — visually explains "sends water both ways" without a tooltip.</div>
+  </div>
+</div>
+
+<h2>Terrain &amp; hazards (fixed per level)</h2>
+<div class="grid">
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:#3a1410">
+      <svg viewBox="0 0 100 100"><defs><linearGradient id="fg1" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ffd166"/><stop offset="55%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M50 14 C40 28 30 34 30 50 C30 66 40 78 50 78 C60 78 70 66 70 50 C70 40 64 36 62 30 C60 40 54 42 52 36 C50 28 54 22 50 14 Z" fill="url(#fg1)" stroke="#7a1a0a" stroke-width="5" stroke-linejoin="round"/></svg>
+    </div></div>
+    <div class="name">Fire</div>
+    <div class="desc">Warm gradient flame on a dark ember tile — the hottest-looking cell on the board, on purpose.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:#0d2a44">
+      <svg viewBox="0 0 100 100"><g stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 46 Q50 30 78 46 L74 66 Q50 78 26 66 Z" fill="#3b9ee6"/><path d="M30 50 Q38 44 46 50 T62 50 T78 50" fill="none" stroke="#eaf6ff" stroke-width="4"/></g><g stroke="#0b3d63" stroke-width="3"><rect x="16" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="16" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/></g></svg>
+    </div></div>
+    <div class="name">Pool</div>
+    <div class="desc">Basin + 4 corner tabs mirror the in-HUD 4-box bar, so the cell itself previews its own win condition.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:#241207">
+      <svg viewBox="0 0 100 100"><g stroke="#3f2410" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><rect x="28" y="46" width="44" height="32" fill="#b26a2b"/><path d="M22 48 L50 22 L78 48 Z" fill="#8a4a1c"/><rect x="45" y="58" width="12" height="20" fill="#3f2410"/></g></svg>
+    </div></div>
+    <div class="name">Town</div>
+    <div class="desc">Earthy brown, house glyph. Deliberately the "calmest"-looking hazard — the danger is what it means, not how it looks, so the loss sting has to carry the weight instead of the tile.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:#0d2a44">
+      <svg viewBox="0 0 100 100"><g fill="none" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M30 12 Q42 24 30 34 Q18 44 30 54" stroke="#8fd4ff" stroke-width="7"/><path d="M50 8 Q62 22 48 34 Q36 46 50 58" stroke="#3b9ee6" stroke-width="8"/><path d="M70 12 Q80 26 66 38 Q54 50 66 60" stroke="#8fd4ff" stroke-width="7"/></g><path d="M50 58 L36 74 L36 64 L26 64 L44 84 L58 68 L58 58 Z" fill="#3b9ee6" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round"/></svg>
+    </div></div>
+    <div class="name">Water Source</div>
+    <div class="desc">Converging river strands flowing into a baked-in down-left arrow — teaches the "first move is always down-left" rule on sight, every level, no text needed.</div>
+  </div>
+
+  <div class="card">
+    <div class="hex-wrap"><div class="hex" style="background:#1a2030">
+      <svg viewBox="0 0 100 100"><g stroke="#4b5563" stroke-width="4"><line x1="20" y1="80" x2="80" y2="20"/><line x1="20" y1="60" x2="60" y2="20"/><line x1="40" y1="80" x2="80" y2="40"/></g></svg>
+    </div></div>
+    <div class="name">Blocked / Unplayable</div>
+    <div class="desc">Neutral gray hatch, no hazard color — reads as "not part of the puzzle," distinct from every danger tile.</div>
+  </div>
+</div>
+
+<h2>Palette reference</h2>
+<div class="palette">
+  <div class="col">
+    <div class="swatch-row"><div class="swatch" style="background:#9c9186"></div><span>Wall (rock) fill</span><span class="hexcode">#9C9186</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#f7931e"></div><span>Diverters</span><span class="hexcode">#F7931E</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#a78bfa"></div><span>Splitter</span><span class="hexcode">#A78BFA</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#1e2530"></div><span>Outline (all glyphs)</span><span class="hexcode">#1E2530</span></div>
+  </div>
+  <div class="col">
+    <div class="swatch-row"><div class="swatch" style="background:#f97316"></div><span>Fire</span><span class="hexcode">#F97316</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#3b9ee6"></div><span>Pool / Source</span><span class="hexcode">#3B9EE6</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#b26a2b"></div><span>Town</span><span class="hexcode">#B26A2B</span></div>
+    <div class="swatch-row"><div class="swatch" style="background:#2b3a52"></div><span>Empty hex tile</span><span class="hexcode">#2B3A52</span></div>
+  </div>
+</div>
+<p class="note">
+  Rule of thumb applied throughout: block types (things the player places) sit in the cool
+  blue/violet/gray family; terrain hazards and rewards (things already on the board) sit in
+  warm/earth tones except Pool, which stays blue because it's water-family, not danger-family.
+  That single hue split — "cool = tool, warm = consequence" — is the fastest way for a new
+  player's eye to sort a busy board without reading anything.
+</p>
+
+<h2>How it looks on an actual board</h2>
+<div class="board">
+  <div class="hexc" style="background:#0d2a44"><svg viewBox="0 0 100 100"><g fill="none" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M30 12 Q42 24 30 34 Q18 44 30 54" stroke="#8fd4ff" stroke-width="7"/><path d="M50 8 Q62 22 48 34 Q36 46 50 58" stroke="#3b9ee6" stroke-width="8"/><path d="M70 12 Q80 26 66 38 Q54 50 66 60" stroke="#8fd4ff" stroke-width="7"/></g><path d="M50 58 L36 74 L36 64 L26 64 L44 84 L58 68 L58 58 Z" fill="#3b9ee6" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round"/></svg></div>
+  <div class="hexc"></div>
+  <div class="hexc"></div>
+  <div class="hexc" style="background:#241207"><svg viewBox="0 0 100 100"><g stroke="#3f2410" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><rect x="28" y="46" width="44" height="32" fill="#b26a2b"/><path d="M22 48 L50 22 L78 48 Z" fill="#8a4a1c"/><rect x="45" y="58" width="12" height="20" fill="#3f2410"/></g></svg></div>
+  <div class="hexc"></div>
+  <div class="hexc"></div>
+  <div class="hexc"></div>
+
+  <div class="hexc row-odd"></div>
+  <div class="hexc row-odd"><svg viewBox="0 0 100 100"><path d="M30 24 Q30 24 40 24 L58 42 L58 30 L74 46 L58 62 L58 50 L40 32 L40 24 Z" fill="#f7931e" stroke="#1e2530" stroke-width="5" stroke-linejoin="round"/></svg></div>
+  <div class="hexc row-odd"></div>
+  <div class="hexc row-odd" style="background:#3a1410"><svg viewBox="0 0 100 100"><defs><linearGradient id="fg2" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ffd166"/><stop offset="55%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M50 14 C40 28 30 34 30 50 C30 66 40 78 50 78 C60 78 70 66 70 50 C70 40 64 36 62 30 C60 40 54 42 52 36 C50 28 54 22 50 14 Z" fill="url(#fg2)" stroke="#7a1a0a" stroke-width="5" stroke-linejoin="round"/></svg></div>
+  <div class="hexc row-odd"></div>
+  <div class="hexc row-odd"></div>
+
+  <div class="hexc"></div>
+  <div class="hexc"></div>
+  <div class="hexc" style="background:#1a2030"><svg viewBox="0 0 100 100"><g stroke="#4b5563" stroke-width="4"><line x1="20" y1="80" x2="80" y2="20"/><line x1="20" y1="60" x2="60" y2="20"/><line x1="40" y1="80" x2="80" y2="40"/></g></svg></div>
+  <div class="hexc"></div>
+  <div class="hexc" style="background:#0d2a44"><svg viewBox="0 0 100 100"><g stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 46 Q50 30 78 46 L74 66 Q50 78 26 66 Z" fill="#3b9ee6"/><path d="M30 50 Q38 44 46 50 T62 50 T78 50" fill="none" stroke="#eaf6ff" stroke-width="4"/></g><g stroke="#0b3d63" stroke-width="3"><rect x="16" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="16" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/></g></svg></div>
+  <div class="hexc"></div>
+</div>
+<p class="note">
+  Even with zero labels, this board reads: water enters top-left, a Diverter-Right sits one row
+  down to fight the leftward drift, a Splitter and a Wall shape the fire's approach, and the town
+  and pool sit far enough apart that a misread of one doesn't cost the other.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 3
+display_name = "3. New Corridor"
+intro_text = "Same idea as before, a new path to correct. Redirect the water so it reaches the fire and pool instead of drifting off the edge."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(0, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-1, -1)])
+pool_targets = {
+Vector2i(-2, 1): 4
+}
+starting_inventory = {
+"divert_right": 1
+}
+blocked_cells = Array[Vector2i]([])

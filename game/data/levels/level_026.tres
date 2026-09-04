@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 26
+display_name = "26. Diverter Drills IV"
+intro_text = "Steer the stream with diverters -- redirect it through every fire and into the pool."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-2, 3), Vector2i(-1, 2)])
+pool_targets = {
+Vector2i(-2, 4): 4
+}
+starting_inventory = {
+"divert_right": 1
+}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

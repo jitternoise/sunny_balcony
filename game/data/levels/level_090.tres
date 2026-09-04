@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 90
+display_name = "90. The Gauntlet IV"
+intro_text = "Everything at once: fixed splitters, dirt to dig, hazards to dodge. The river won't wait."
+grid_radius = 13
+corridor_half_width = 2
+water_sources = Array[Vector2i]([Vector2i(7, -13)])
+fire_cells = Array[Vector2i]([Vector2i(5, -10)])
+pool_targets = {
+Vector2i(-5, 13): 4
+}
+preset_blocks = {
+Vector2i(2, -1): "splitter"
+}
+starting_inventory = {}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([Vector2i(-2, 4), Vector2i(-1, 3), Vector2i(-2, 3), Vector2i(-3, 4)])
+geyser_cells = Array[Vector2i]([])
+dirt_cells = Array[Vector2i]([Vector2i(-5, 6), Vector2i(-4, 6), Vector2i(-3, 6), Vector2i(-2, 6), Vector2i(-1, 6), Vector2i(-6, 7), Vector2i(-5, 7), Vector2i(-4, 7), Vector2i(-3, 7), Vector2i(-2, 7)])
+total_block_budget = 2

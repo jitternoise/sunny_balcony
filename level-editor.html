@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash Flood — Level Editor</title>
+<style>
+  :root{
+    --bg:#101014; --panel:#181820; --panel2:#1e1e28; --border:#2c2c38;
+    --text:#e8e8ee; --dim:#9a9aab; --accent:#4d99ff; --accent2:#33d966;
+    --warn:#e0a83a; --bad:#e64d1a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  #app{display:flex;flex-direction:column;height:100vh;}
+  header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--panel);
+    border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  header h1{font-size:15px;margin:0;white-space:nowrap;color:var(--accent);}
+  header .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  header label{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:2px;}
+  header input[type=number], header input[type=text]{
+    background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:4px;padding:4px 6px;font-size:12px;width:90px;}
+  header input[type=number].small{width:56px;}
+  .tabs{display:flex;gap:2px;margin-left:auto;}
+  .tabs button{background:var(--panel2);border:1px solid var(--border);color:var(--dim);
+    padding:6px 12px;font-size:12px;border-radius:5px 5px 0 0;cursor:pointer;}
+  .tabs button.active{background:var(--bg);color:var(--accent);border-bottom:1px solid var(--bg);}
+  main{flex:1;display:flex;min-height:0;}
+  #canvasWrap{flex:1;position:relative;overflow:hidden;background:
+    radial-gradient(ellipse at center, #14141a 0%, #0b0b0e 100%);}
+  canvas{position:absolute;top:0;left:0;cursor:crosshair;touch-action:none;}
+  #hoverReadout{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.55);
+    padding:4px 8px;border-radius:5px;font-size:11px;color:var(--dim);pointer-events:none;}
+  #toolbar{position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap;max-width:70%;}
+  #toolbar button{background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  #toolbar button.active{outline:2px solid var(--accent);}
+  #toolbar .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  #zoomCtrls{position:absolute;top:8px;right:8px;display:flex;gap:4px;}
+  #zoomCtrls button{background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    width:28px;height:28px;border-radius:5px;cursor:pointer;font-size:14px;}
+  #sidebar{width:360px;background:var(--panel);border-left:1px solid var(--border);
+    overflow-y:auto;padding:12px;flex-shrink:0;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .section{margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--panel2);}
+  .section h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);}
+  .section p.hint{font-size:11px;color:var(--dim);margin:4px 0 8px;line-height:1.5;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-size:12px;}
+  .row input[type=number]{width:60px;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);border-radius:4px;padding:3px 6px;}
+  .row input[type=text]{flex:1;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);border-radius:4px;padding:3px 6px;}
+  .row input[type=color]{width:32px;height:24px;padding:0;border:none;background:none;}
+  button.full{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:7px;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px;}
+  button.full:hover{border-color:var(--accent);}
+  button.danger:hover{border-color:var(--bad);color:var(--bad);}
+  button.primary{background:var(--accent);color:#08101d;border:none;font-weight:600;}
+  select{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:5px;border-radius:5px;font-size:12px;}
+  textarea{width:100%;height:220px;background:#0b0b0e;color:#c9e6c9;font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical;}
+  .badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px;}
+  .badge.ok{background:#173;color:#9f9;}
+  .badge.warn{background:#542;color:var(--warn);}
+  .badge.bad{background:#511;color:var(--bad);}
+  .valitem{font-size:11px;padding:4px 6px;border-radius:4px;margin-bottom:4px;line-height:1.4;}
+  .valitem.warn{background:rgba(224,168,58,.12);color:var(--warn);border:1px solid rgba(224,168,58,.3);}
+  .valitem.bad{background:rgba(230,77,26,.12);color:#ff8a5c;border:1px solid rgba(230,77,26,.3);}
+  .valitem.ok{background:rgba(51,217,102,.10);color:#8ef0a8;border:1px solid rgba(51,217,102,.25);}
+  #playtestStatus{font-size:13px;font-weight:600;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;}
+  #playtestStatus.playing{background:#1b2740;color:#a9c9ff;}
+  #playtestStatus.won{background:#173a20;color:#8ef0a8;}
+  #playtestStatus.lost{background:#3a1717;color:#ff8a5c;}
+  #playtestStatus.idle{background:var(--panel2);color:var(--dim);}
+  .invbtn{display:flex;justify-content:space-between;align-items:center;background:var(--panel);
+    border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:12px;cursor:pointer;}
+  .invbtn.selected{outline:2px solid var(--accent);}
+  .invbtn[disabled]{opacity:.4;cursor:not-allowed;}
+  .poolbar{display:inline-flex;gap:2px;margin-left:6px;}
+  .poolbar span{width:8px;height:8px;background:#26262e;border-radius:1px;display:inline-block;}
+  .poolbar span.lit{background:#33d966;}
+  code{background:#000;padding:1px 5px;border-radius:3px;font-size:11px;}
+  .flexgap{display:flex;gap:6px;}
+  .flexgap>*{flex:1;}
+  a.dl{color:var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🌊 Flash Flood — Level Editor</h1>
+    <div class="meta">
+      <label>Level ID <input type="number" id="levelId" class="small" min="1" value="18"></label>
+      <label>Display name <input type="text" id="displayName" value="Level 18"></label>
+      <label>Grid radius <input type="number" id="gridRadius" class="small" min="1" max="14" value="4"></label>
+    </div>
+    <div class="tabs">
+      <button data-tab="design" class="active">Design</button>
+      <button data-tab="inventory">Inventory</button>
+      <button data-tab="playtest">Playtest</button>
+      <button data-tab="io">Import / Export</button>
+      <button data-tab="help">Help</button>
+    </div>
+  </header>
+  <main>
+    <div id="canvasWrap">
+      <canvas id="cv"></canvas>
+      <div id="toolbar"></div>
+      <div id="zoomCtrls">
+        <button id="zoomIn" title="Zoom in">+</button>
+        <button id="zoomOut" title="Zoom out">−</button>
+        <button id="zoomFit" title="Fit to view">⤢</button>
+      </div>
+      <div id="hoverReadout">—</div>
+    </div>
+    <div id="sidebar">
+
+      <div class="panel active" id="panel-design">
+        <div class="section">
+          <h3>Paint tool</h3>
+          <p class="hint">Click a cell to apply the selected tool. Clicking a cell that already has that
+          terrain removes it (toggle). Painting fire/pool/town/source on a blocked cell automatically
+          unblocks it first.</p>
+        </div>
+        <div class="section">
+          <h3>Corridor generator</h3>
+          <p class="hint">Carves every cell outside a narrow vertical band down to "empty" and blocks
+          the rest — the technique used for the game's tall scrolling levels (13–17). The band is
+          centered on <code>round(-r/2)</code> per row so it stays visually straight.</p>
+          <div class="row"><span>Half-width (tiles each side)</span>
+            <input type="number" id="corridorHalfWidth" value="2" min="0" max="10"></div>
+          <button class="full" id="btnGenCorridor">Generate corridor (overwrites blocked cells)</button>
+          <button class="full danger" id="btnClearBlocked">Clear all blocked cells</button>
+        </div>
+        <div class="section">
+          <h3>Manual coordinate entry</h3>
+          <p class="hint">Precise alternative to clicking — useful on large/tall boards.</p>
+          <div class="row"><span>q</span><input type="number" id="manQ" value="0">
+            <span>r</span><input type="number" id="manR" value="0">
+            <button class="full" style="margin-top:0;width:auto;padding:6px 10px" id="btnApplyManual">Apply tool</button></div>
+        </div>
+        <div class="section">
+          <h3>Bulk</h3>
+          <button class="full danger" id="btnClearAll">Clear entire level (keep radius/id)</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-inventory">
+        <div class="section">
+          <h3>Block catalog</h3>
+          <p class="hint">Matches <code>data/blocks/*.tres</code> in the project. Set a starting count
+          per block for this level (0 = not available). Add a custom block if you plan to add a new
+          <code>BlockData</code> resource to the project — you can also download its .tres below.</p>
+          <div id="blockList"></div>
+          <button class="full" id="btnAddBlock">+ Add custom block type</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-playtest">
+        <div id="playtestStatus" class="idle">Not started — place blocks, then Start.</div>
+        <div class="section">
+          <div class="flexgap">
+            <button class="full primary" id="ptStart">Start</button>
+            <button class="full" id="ptStep">Step</button>
+            <button class="full danger" id="ptReset">Retry</button>
+          </div>
+          <div class="row"><span>Tick speed</span>
+            <input type="range" id="ptSpeed" min="80" max="1200" value="300" style="flex:1"></div>
+          <div class="row"><span>Tick</span><b id="ptTick">0</b></div>
+          <div class="row"><span>Fires remaining</span><b id="ptFires">0</b></div>
+          <div id="ptPools"></div>
+        </div>
+        <div class="section">
+          <h3>Inventory (tap to select, then tap the board)</h3>
+          <div id="ptInventory"></div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-io">
+        <div class="section">
+          <h3>Load an existing level</h3>
+          <select id="presetSelect"><option value="">— choose a level from the uploaded project —</option></select>
+          <button class="full" id="btnLoadPreset">Load into editor</button>
+        </div>
+        <div class="section">
+          <h3>Import from .tres text</h3>
+          <textarea id="importArea" placeholder="Paste the contents of a level_XXX.tres file here…"></textarea>
+          <button class="full" id="btnImport">Parse &amp; load</button>
+        </div>
+        <div class="section">
+          <h3>Export</h3>
+          <div id="validation"></div>
+          <div class="row"><span>Suggested filename</span><code id="suggestedName">level_018.tres</code></div>
+          <textarea id="exportArea" readonly></textarea>
+          <button class="full primary" id="btnDownload">Download level_XXX.tres</button>
+          <p class="hint">Save it to <code>data/levels/</code> in your project, then add this line to
+          <code>LEVEL_PATHS</code> in <code>scripts/ui/LevelSelect.gd</code> (position in the array
+          controls play order, not <code>level_id</code>):</p>
+          <div class="row"><code id="levelPathLine">"res://data/levels/level_018.tres",</code></div>
+          <button class="full" id="btnCopyPath">Copy that line</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-help">
+        <div class="section">
+          <h3>Controls</h3>
+          <p class="hint">
+          • Click/tap a cell to paint the selected tool.<br>
+          • Click-drag (past a small threshold) pans the view instead of painting — same
+          tap-vs-drag distinction <code>Level.gd</code> uses for scrolling vs placing blocks.<br>
+          • Mouse wheel zooms toward the cursor. Use ⤢ to fit the whole board back on screen.
+          </p>
+        </div>
+        <div class="section">
+          <h3>Rules this tool enforces (ported from HexBoard.gd)</h3>
+          <p class="hint">
+          • Water's natural fall zigzags down-left/down-right, alternating per stream, first step
+          always down-left.<br>
+          • Only a <b>Wall</b> blocks natural fall (retries the other diagonal, or pools in place if
+          both are blocked). <b>Diverters</b>/<b>Splitter</b> are pass-throughs — water lands on them
+          fine, then that block's behavior decides the next step.<br>
+          • A pool needs 4 connected beats total (cumulative, not reset by a disconnect). A pool
+          consumes every stream that reaches it forever, so it must be the last stop on a branch.<br>
+          • A town cell or the bottom edge is an instant loss.<br>
+          • <b>Gotcha:</b> a level with zero fire cells and zero pool cells wins vacuously on tick 1 —
+          always add at least one of each unless that's intentional.<br>
+          • Design convention: keep the playable width at or under 9 tiles (grid_radius ≤ 4 for a full
+          diamond, or use the corridor generator for a narrower band on a taller <code>grid_radius</code>).
+          </p>
+        </div>
+        <div class="section">
+          <h3>Note on this build</h3>
+          <p class="hint">This editor matches the <code>LevelData.gd</code> / <code>HexBoard.gd</code>
+          you uploaded (4 block types, no Geyser or Jamboree budget mode yet). If you add those features
+          to the project later, bring me the updated scripts and I'll extend this tool to match.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   HEX MATH — ported 1:1 from scripts/hex/Hex.gd (pointy-top, axial q,r)
+   ========================================================================= */
+const DOWN_LEFT = {q:-1, r:1};
+const DOWN_RIGHT = {q:0, r:1};
+const NEIGHBOR_OFFSETS = [{q:1,r:0},{q:1,r:-1},{q:0,r:-1},{q:-1,r:0},DOWN_LEFT,DOWN_RIGHT];
+
+function axialToPixel(coord, size){
+  const q=coord.q, r=coord.r;
+  return { x: size*(Math.sqrt(3)*q + Math.sqrt(3)/2*r), y: size*(1.5*r) };
+}
+function pixelToAxial(pos, size){
+  const q = (Math.sqrt(3)/3*pos.x - 1/3*pos.y)/size;
+  const r = (2/3*pos.y)/size;
+  return axialRound(q,r);
+}
+function axialRound(q,r){
+  let x=q, z=r, y=-x-z;
+  let rx=Math.round(x), ry=Math.round(y), rz=Math.round(z);
+  const xd=Math.abs(rx-x), yd=Math.abs(ry-y), zd=Math.abs(rz-z);
+  if(xd>yd && xd>zd) rx=-ry-rz;
+  else if(yd>zd) ry=-rx-rz;
+  else rz=-rx-ry;
+  return {q:rx, r:rz};
+}
+function hexCorner(center,i,size){
+  const ang = (60*i - 30) * Math.PI/180;
+  return { x: center.x + size*Math.cos(ang), y: center.y + size*Math.sin(ang) };
+}
+function cubeDist(coord){
+  const q=coord.q, r=coord.r, s=-q-r;
+  return Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
+}
+function key(c){ return c.q+","+c.r; }
+function parseKey(k){ const [q,r]=k.split(",").map(Number); return {q,r}; }
+
+/* =========================================================================
+   DEFAULT BLOCK CATALOG — matches data/blocks/*.tres exactly
+   ========================================================================= */
+const BEHAVIOR = { WALL:0, DIVERT_LEFT:1, DIVERT_RIGHT:2, SPLIT:3, ABSORB:4 };
+const BEHAVIOR_NAMES = ["Wall (fully blocks)","Diverter — Left","Diverter — Right","Splitter (both diagonals)","Absorb (reserved — currently behaves like Diverter-Right in the shipped code)"];
+
+function defaultCatalog(){
+  return [
+    {id:"wall", display_name:"Wall", behavior:BEHAVIOR.WALL, color:"#808089"},
+    {id:"divert_left", display_name:"Diverter (L)", behavior:BEHAVIOR.DIVERT_LEFT, color:"#cc9933"},
+    {id:"divert_right", display_name:"Diverter (R)", behavior:BEHAVIOR.DIVERT_RIGHT, color:"#33b380"},
+    {id:"splitter", display_name:"Splitter", behavior:BEHAVIOR.SPLIT, color:"#b34dcc"},
+  ];
+}
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const state = {
+  levelId: 18,
+  displayName: "Level 18",
+  gridRadius: 4,
+  waterSources: new Set(),   // "q,r"
+  fireCells: new Set(),
+  poolCells: new Set(),
+  townCells: new Set(),
+  blockedCells: new Set(),
+  startingInventory: {},     // block id -> count
+  catalog: defaultCatalog(),
+};
+
+let currentTool = "source";
+const TOOLS = [
+  {id:"source", label:"Source", color:"#4d99ff"},
+  {id:"fire", label:"Fire", color:"#e64d1a"},
+  {id:"pool", label:"Pool", color:"#4159a8"},
+  {id:"town", label:"Town", color:"#8c7359"},
+  {id:"blocked", label:"Blocked", color:"#333"},
+  {id:"erase", label:"Erase", color:"#555"},
+];
+
+/* =========================================================================
+   VIEW (pan/zoom)
+   ========================================================================= */
+const view = { size: 24, ox: 0, oy: 0 };
+const canvas = document.getElementById("cv");
+const ctx = canvas.getContext("2d");
+const wrap = document.getElementById("canvasWrap");
+
+function resizeCanvas(){
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width*dpr;
+  canvas.height = rect.height*dpr;
+  canvas.style.width = rect.width+"px";
+  canvas.style.height = rect.height+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+window.addEventListener("resize", resizeCanvas);
+
+function playableCoords(){
+  const R = state.gridRadius;
+  const out = [];
+  for(let q=-R; q<=R; q++){
+    for(let r=-R; r<=R; r++){
+      const c={q,r};
+      if(cubeDist(c) <= R && !state.blockedCells.has(key(c))) out.push(c);
+    }
+  }
+  return out;
+}
+function allDiamondCoords(){
+  const R = state.gridRadius;
+  const out = [];
+  for(let q=-R; q<=R; q++)
+    for(let r=-R; r<=R; r++){
+      const c={q,r};
+      if(cubeDist(c) <= R) out.push(c);
+    }
+  return out;
+}
+function inPlayableArea(c){
+  return cubeDist(c) <= state.gridRadius && !state.blockedCells.has(key(c));
+}
+
+function fitToView(){
+  const cells = playableCoords();
+  if(cells.length===0){ view.size=24; view.ox=wrap.clientWidth/2; view.oy=wrap.clientHeight/2; draw(); return; }
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(const c of cells){
+    const center = axialToPixel(c,1);
+    for(let i=0;i<6;i++){
+      const p = hexCorner(center,i,1);
+      minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
+      minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y);
+    }
+  }
+  const w = maxX-minX, h = maxY-minY;
+  const availW = wrap.clientWidth - 40, availH = wrap.clientHeight - 40;
+  const size = Math.max(4, Math.min(availW/w, availH/h));
+  view.size = size;
+  view.ox = wrap.clientWidth/2 - (minX+maxX)/2*size;
+  view.oy = wrap.clientHeight/2 - (minY+maxY)/2*size;
+  draw();
+}
+
+function toScreen(c){
+  const p = axialToPixel(c, view.size);
+  return { x: p.x+view.ox, y: p.y+view.oy };
+}
+function screenToHex(sx, sy){
+  return pixelToAxial({x:sx-view.ox, y:sy-view.oy}, view.size);
+}
+
+/* =========================================================================
+   DRAWING — colors ported from HexBoard.gd's _draw_cell / status bar / town icon
+   ========================================================================= */
+const COL = {
+  empty:"#26262e", blocked:"#141418", fire:"#e64d1a",
+  poolUnfilled:"#405973", poolFilled:"#3380e6", town:"#8c7359",
+  townBody:"#d9ccb3", townRoof:"#994033", water:"#4d99ff",
+  litBox:"#33d966", unlitBox:"#26262e", outline:"rgba(0,0,0,.5)",
+  sourceRing:"#7ec4ff",
+};
+
+function cellTerrainOf(k){
+  if(state.fireCells.has(k)) return "fire";
+  if(state.poolCells.has(k)) return "pool";
+  if(state.townCells.has(k)) return "town";
+  return "empty";
+}
+
+function draw(){
+  const rect = wrap.getBoundingClientRect();
+  ctx.clearRect(0,0,rect.width,rect.height);
+  const showBlocked = true;
+  const cells = allDiamondCoords();
+  for(const c of cells){
+    const k = key(c);
+    const blocked = state.blockedCells.has(k);
+    if(blocked && !showBlocked) continue;
+    drawCell(c, blocked);
+  }
+  // sources drawn on top
+  for(const k of state.waterSources){
+    drawSourceMarker(parseKey(k));
+  }
+  // playtest water overlay
+  if(sim && sim.active){
+    for(const w of sim.waterCells) drawWater(w.coord);
+  }
+}
+
+function drawCell(c, blocked){
+  const center = toScreen(c);
+  const pts = [];
+  for(let i=0;i<6;i++) pts.push(hexCorner(center,i,view.size));
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=1;i<6;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();
+
+  let fill = COL.empty;
+  const k = key(c);
+  let placedBlockId = null;
+  if(sim && sim.active) placedBlockId = sim.placedBlocks.get(k);
+
+  if(blocked){
+    fill = COL.blocked;
+  } else if(placedBlockId){
+    const b = state.catalog.find(b=>b.id===placedBlockId);
+    fill = b ? b.color : "#fff";
+  } else if(state.fireCells.has(k)){
+    fill = COL.fire;
+  } else if(state.poolCells.has(k)){
+    const filled = sim && sim.active && (sim.poolFill.get(k)||0) >= 4;
+    fill = filled ? COL.poolFilled : COL.poolUnfilled;
+  } else if(state.townCells.has(k)){
+    fill = COL.town;
+  }
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = COL.outline;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  if(blocked){
+    // subtle hatch so it reads as "hole", distinct from empty
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle="rgba(255,255,255,.05)";
+    ctx.lineWidth=view.size*0.12;
+    for(let d=-view.size*2; d<view.size*2; d+=view.size*0.35){
+      ctx.beginPath();
+      ctx.moveTo(center.x-view.size+d, center.y-view.size);
+      ctx.lineTo(center.x+view.size+d, center.y+view.size);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  if(state.townCells.has(k) && !placedBlockId){
+    drawTownIcon(center);
+  }
+  if(state.poolCells.has(k) && sim && sim.active){
+    drawPoolBar(c, sim.poolFill.get(k)||0);
+  }
+  if(view.size > 10){
+    ctx.fillStyle = "rgba(255,255,255,.25)";
+    ctx.font = `${Math.max(8,view.size*0.28)}px monospace`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    if(view.size>16) ctx.fillText(`${c.q},${c.r}`, center.x, center.y);
+  }
+}
+
+function drawSourceMarker(c){
+  const center = toScreen(c);
+  const s = view.size;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y-s*0.05, s*0.32, 0, Math.PI*2);
+  ctx.strokeStyle = COL.sourceRing;
+  ctx.lineWidth = Math.max(1.5, s*0.08);
+  ctx.stroke();
+  // small downward arrow (first move is always down-left, shown as a hint)
+  ctx.beginPath();
+  ctx.moveTo(center.x, center.y+s*0.05);
+  ctx.lineTo(center.x-s*0.22, center.y+s*0.42);
+  ctx.moveTo(center.x, center.y+s*0.05);
+  ctx.lineTo(center.x+s*0.05, center.y+s*0.42);
+  ctx.strokeStyle = COL.sourceRing;
+  ctx.stroke();
+}
+
+function drawTownIcon(center){
+  const s = view.size;
+  const half = s*0.28, roofH = s*0.22, bodyTop = center.y - half*0.2;
+  ctx.fillStyle = COL.townBody;
+  ctx.fillRect(center.x-half, bodyTop, half*2, half*1.4);
+  ctx.beginPath();
+  ctx.moveTo(center.x-half*1.15, bodyTop);
+  ctx.lineTo(center.x+half*1.15, bodyTop);
+  ctx.lineTo(center.x, bodyTop-roofH);
+  ctx.closePath();
+  ctx.fillStyle = COL.townRoof;
+  ctx.fill();
+}
+
+function drawPoolBar(c, connected){
+  const center = toScreen(c);
+  if(connected<=0) return;
+  const box=10, gap=4, total=4*box+3*gap;
+  const startX = center.x-total/2, barY = center.y-view.size-box-6;
+  for(let i=0;i<4;i++){
+    const x = startX+i*(box+gap);
+    ctx.fillStyle = i<connected ? COL.litBox : COL.unlitBox;
+    ctx.fillRect(x,barY,box,box);
+    ctx.strokeStyle="rgba(0,0,0,.5)";
+    ctx.strokeRect(x,barY,box,box);
+  }
+}
+
+function drawWater(c){
+  const center = toScreen(c);
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, view.size*0.4, 0, Math.PI*2);
+  ctx.fillStyle = COL.water;
+  ctx.fill();
+}
+
+/* =========================================================================
+   INPUT — click-vs-drag threshold, mirroring Level.gd's DRAG_THRESHOLD
+   ========================================================================= */
+const DRAG_THRESHOLD = 8;
+let press=null;
+
+canvas.addEventListener("pointerdown", e=>{
+  canvas.setPointerCapture(e.pointerId);
+  press = {x:e.clientX, y:e.clientY, ox:view.ox, oy:view.oy, dragged:false};
+});
+canvas.addEventListener("pointermove", e=>{
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+  updateHoverReadout(sx,sy);
+  if(press){
+    const dx=e.clientX-press.x, dy=e.clientY-press.y;
+    if(Math.hypot(dx,dy) > DRAG_THRESHOLD){
+      press.dragged = true;
+      view.ox = press.ox+dx; view.oy = press.oy+dy;
+      draw();
+    }
+  }
+});
+canvas.addEventListener("pointerup", e=>{
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+  if(press && !press.dragged){
+    handleTap(sx,sy);
+  }
+  press=null;
+});
+canvas.addEventListener("pointerleave", ()=>{ document.getElementById("hoverReadout").textContent="—"; });
+canvas.addEventListener("wheel", e=>{
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const before = screenToHexFloat(sx,sy);
+  const factor = e.deltaY<0 ? 1.1 : 0.9;
+  view.size = Math.max(3, Math.min(140, view.size*factor));
+  // keep cursor position stable
+  const p = axialToPixel(before, view.size);
+  view.ox = sx - p.x; view.oy = sy - p.y;
+  draw();
+}, {passive:false});
+
+function screenToHexFloat(sx,sy){
+  // like screenToHex but returns the (unrounded) axial float via pixelToAxial's inputs
+  const size = view.size;
+  const x = sx-view.ox, y = sy-view.oy;
+  const q = (Math.sqrt(3)/3*x - 1/3*y)/size;
+  const r = (2/3*y)/size;
+  return {q,r};
+}
+
+function updateHoverReadout(sx,sy){
+  const c = screenToHex(sx,sy);
+  const el = document.getElementById("hoverReadout");
+  if(!inPlayableAreaLoose(c)){ el.textContent = `(${c.q}, ${c.r}) — outside grid`; return; }
+  el.textContent = `(${c.q}, ${c.r})`;
+}
+function inPlayableAreaLoose(c){ return cubeDist(c) <= state.gridRadius; }
+
+function handleTap(sx,sy){
+  const c = screenToHex(sx,sy);
+  if(playtestActiveTab()){
+    ptHandleTap(c);
+    return;
+  }
+  if(!inPlayableAreaLoose(c)) return;
+  applyTool(c, currentTool);
+  draw();
+  runValidation();
+}
+
+function applyTool(c, tool){
+  const k = key(c);
+  if(tool==="source"){
+    if(state.waterSources.has(k)) state.waterSources.delete(k);
+    else state.waterSources.add(k);
+    return;
+  }
+  if(tool==="erase"){
+    state.fireCells.delete(k); state.poolCells.delete(k);
+    state.townCells.delete(k); state.blockedCells.delete(k);
+    return;
+  }
+  if(tool==="blocked"){
+    if(state.blockedCells.has(k)) state.blockedCells.delete(k);
+    else {
+      state.fireCells.delete(k); state.poolCells.delete(k); state.townCells.delete(k);
+      state.waterSources.delete(k);
+      state.blockedCells.add(k);
+    }
+    return;
+  }
+  // fire / pool / town: mutually exclusive terrain, auto-unblock
+  const sets = {fire:state.fireCells, pool:state.poolCells, town:state.townCells};
+  const target = sets[tool];
+  if(target.has(k)){ target.delete(k); return; }
+  for(const other of Object.values(sets)) other.delete(k);
+  state.blockedCells.delete(k);
+  target.add(k);
+}
+
+/* =========================================================================
+   TOOLBAR / TABS
+   ========================================================================= */
+function buildToolbar(){
+  const bar = document.getElementById("toolbar");
+  bar.innerHTML = "";
+  for(const t of TOOLS){
+    const btn = document.createElement("button");
+    btn.className = t.id===currentTool ? "active":"";
+    btn.innerHTML = `<span class="swatch" style="background:${t.color}"></span>${t.label}`;
+    btn.onclick = ()=>{ currentTool=t.id; buildToolbar(); };
+    bar.appendChild(btn);
+  }
+}
+buildToolbar();
+
+document.querySelectorAll(".tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
+    if(btn.dataset.tab==="playtest") ptSetup(true);
+    if(btn.dataset.tab==="io") refreshExport();
+    if(btn.dataset.tab==="inventory") renderBlockList();
+    draw();
+  });
+});
+function playtestActiveTab(){
+  return document.getElementById("panel-playtest").classList.contains("active");
+}
+
+document.getElementById("zoomIn").onclick = ()=>{ view.size=Math.min(140,view.size*1.2); draw(); };
+document.getElementById("zoomOut").onclick = ()=>{ view.size=Math.max(3,view.size*0.8); draw(); };
+document.getElementById("zoomFit").onclick = fitToView;
+
+/* =========================================================================
+   HEADER META BINDINGS
+   ========================================================================= */
+const $levelId = document.getElementById("levelId");
+const $displayName = document.getElementById("displayName");
+const $gridRadius = document.getElementById("gridRadius");
+$levelId.oninput = ()=>{ state.levelId = parseInt($levelId.value)||1; refreshExport(); };
+$displayName.oninput = ()=>{ state.displayName = $displayName.value; refreshExport(); };
+$gridRadius.oninput = ()=>{
+  state.gridRadius = Math.max(1, parseInt($gridRadius.value)||1);
+  fitToView(); runValidation(); refreshExport();
+};
+
+/* =========================================================================
+   DESIGN TAB EXTRAS: corridor generator, manual entry, bulk clear
+   ========================================================================= */
+document.getElementById("btnGenCorridor").onclick = ()=>{
+  const half = Math.max(0, parseInt(document.getElementById("corridorHalfWidth").value)||0);
+  const R = state.gridRadius;
+  state.blockedCells.clear();
+  for(let r=-R; r<=R; r++){
+    const centerQ = Math.round(-r/2);
+    for(let q=-R; q<=R; q++){
+      const c={q,r};
+      if(cubeDist(c) > R) continue;
+      if(q < centerQ-half || q > centerQ+half){
+        state.blockedCells.add(key(c));
+      }
+    }
+  }
+  // keep terrain that fell inside blocked band consistent: unblock anything
+  // that currently holds fire/pool/town/source so those aren't silently lost
+  for(const k of [...state.fireCells, ...state.poolCells, ...state.townCells, ...state.waterSources]){
+    state.blockedCells.delete(k);
+  }
+  draw(); runValidation();
+};
+document.getElementById("btnClearBlocked").onclick = ()=>{ state.blockedCells.clear(); draw(); runValidation(); };
+document.getElementById("btnClearAll").onclick = ()=>{
+  if(!confirm("Clear all terrain, sources, and inventory for this level?")) return;
+  state.waterSources.clear(); state.fireCells.clear(); state.poolCells.clear();
+  state.townCells.clear(); state.blockedCells.clear(); state.startingInventory={};
+  draw(); runValidation(); renderBlockList();
+};
+document.getElementById("btnApplyManual").onclick = ()=>{
+  const q = parseInt(document.getElementById("manQ").value)||0;
+  const r = parseInt(document.getElementById("manR").value)||0;
+  const c = {q,r};
+  if(!inPlayableAreaLoose(c) && currentTool!=="blocked"){
+    alert("That coordinate is outside grid_radius.");
+    return;
+  }
+  applyTool(c, currentTool);
+  draw(); runValidation();
+};
+
+/* =========================================================================
+   INVENTORY TAB
+   ========================================================================= */
+function renderBlockList(){
+  const el = document.getElementById("blockList");
+  el.innerHTML = "";
+  for(const b of state.catalog){
+    const row = document.createElement("div");
+    row.className = "section";
+    row.style.marginBottom="8px";
+    row.innerHTML = `
+      <div class="row"><input type="text" value="${b.display_name}" data-f="display_name" style="flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px 6px;">
+        <input type="color" value="${b.color}" data-f="color"></div>
+      <div class="row"><span>id: <code>${b.id}</code></span>
+        <span style="display:flex;align-items:center;gap:6px">count
+        <input type="number" min="0" value="${state.startingInventory[b.id]||0}" data-inv="${b.id}"></span></div>
+      <div class="row"><select data-f="behavior">
+        ${BEHAVIOR_NAMES.map((n,i)=>`<option value="${i}" ${i===b.behavior?"selected":""}>${n}</option>`).join("")}
+      </select></div>
+      <div class="row">
+        <button class="full" data-dlblock="${b.id}" style="margin-top:0">Download BlockData .tres</button>
+        ${["wall","divert_left","divert_right","splitter"].includes(b.id) ? "" :
+          `<button class="full danger" data-rmblock="${b.id}" style="margin-top:0;margin-left:6px">Remove</button>`}
+      </div>`;
+    el.appendChild(row);
+    row.querySelector('[data-f="display_name"]').oninput = e=>{ b.display_name=e.target.value; refreshExport(); };
+    row.querySelector('[data-f="color"]').oninput = e=>{ b.color=e.target.value; draw(); };
+    row.querySelector('[data-f="behavior"]').onchange = e=>{ b.behavior=parseInt(e.target.value); };
+    row.querySelector(`[data-inv="${b.id}"]`).oninput = e=>{
+      state.startingInventory[b.id] = Math.max(0, parseInt(e.target.value)||0);
+      refreshExport();
+    };
+    row.querySelector(`[data-dlblock="${b.id}"]`).onclick = ()=> downloadBlockTres(b);
+    const rmBtn = row.querySelector(`[data-rmblock="${b.id}"]`);
+    if(rmBtn) rmBtn.onclick = ()=>{
+      state.catalog = state.catalog.filter(x=>x.id!==b.id);
+      delete state.startingInventory[b.id];
+      renderBlockList(); refreshExport();
+    };
+  }
+}
+document.getElementById("btnAddBlock").onclick = ()=>{
+  const id = prompt("New block id (snake_case, must match a future data/blocks/<id>.tres):");
+  if(!id) return;
+  if(state.catalog.some(b=>b.id===id)){ alert("That id already exists."); return; }
+  state.catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff"});
+  renderBlockList();
+};
+function downloadBlockTres(b){
+  const text = `[gd_resource type="Resource" script_class="BlockData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/BlockData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "${b.id}"
+display_name = "${b.display_name}"
+behavior = ${b.behavior}
+color = Color(${hexToColorFloats(b.color)}, 1)
+`;
+  triggerDownload(`${b.id}.tres`, text);
+}
+function hexToColorFloats(hex){
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  return [r,g,b].map(v=>Math.round(v*1000)/1000).join(", ");
+}
+
+/* =========================================================================
+   SIMULATION ENGINE — ported 1:1 from HexBoard.gd's tick()/_advance_water()
+   ========================================================================= */
+let sim = null;
+
+function ptSetup(force){
+  if(sim && sim.active && !force) return;
+  sim = {
+    active: true,
+    tick: 0,
+    gameOver: false,
+    loseReason: "",
+    won: false,
+    cellTerrain: new Map(), // k -> 'fire'|'pool'|'town'
+    placedBlocks: new Map(), // k -> block id
+    poolFill: new Map(),
+    firesRemaining: 0,
+    waterCells: [], // {coord:{q,r}, nextDir:{q,r}}
+    inventory: {},
+    selectedBlockId: "",
+  };
+  for(const k of state.fireCells) sim.cellTerrain.set(k,"fire");
+  for(const k of state.poolCells){ sim.cellTerrain.set(k,"pool"); sim.poolFill.set(k,0); }
+  for(const k of state.townCells) sim.cellTerrain.set(k,"town");
+  sim.firesRemaining = state.fireCells.size;
+  for(const id of Object.keys(state.startingInventory)) sim.inventory[id] = state.startingInventory[id];
+  stopAutoplay();
+  updatePlaytestUI();
+  renderPtInventory();
+  draw();
+}
+
+function simIsWall(k){
+  if(!sim.placedBlocks.has(k)) return false;
+  const b = state.catalog.find(b=>b.id===sim.placedBlocks.get(k));
+  return b && b.behavior===BEHAVIOR.WALL;
+}
+function simResolveTargets(k){
+  const b = state.catalog.find(b=>b.id===sim.placedBlocks.get(k));
+  const c = parseKey(k);
+  if(!b) return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}];
+  switch(b.behavior){
+    case BEHAVIOR.WALL: return [];
+    case BEHAVIOR.DIVERT_LEFT: return [{q:c.q+DOWN_LEFT.q, r:c.r+DOWN_LEFT.r}];
+    case BEHAVIOR.DIVERT_RIGHT: return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}];
+    case BEHAVIOR.SPLIT: return [{q:c.q+DOWN_LEFT.q,r:c.r+DOWN_LEFT.r},{q:c.q+DOWN_RIGHT.q,r:c.r+DOWN_RIGHT.r}];
+    default: return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}]; // ABSORB: unimplemented in the shipped code, falls through like Diverter-Right
+  }
+}
+function simAddWater(nextWater, coord, nextDir){
+  const k = key(coord);
+  if(nextWater.some(w=>key(w.coord)===k)) return;
+  nextWater.push({coord, nextDir});
+}
+function simTryEnter(coord){
+  if(!inPlayableAreaSim(coord)){
+    if(coord.r > state.gridRadius) simLose("edge");
+    return false;
+  }
+  const k = key(coord);
+  const terrain = sim.cellTerrain.get(k) || "empty";
+  if(terrain==="town"){ simLose("town"); return false; }
+  if(terrain==="fire"){ sim.cellTerrain.set(k,"empty"); sim.firesRemaining--; return false; }
+  if(terrain==="pool"){ sim.poolFill.set(k, Math.min((sim.poolFill.get(k)||0)+1,4)); return false; }
+  return true;
+}
+function inPlayableAreaSim(c){ return cubeDist(c) <= state.gridRadius && !state.blockedCells.has(key(c)); }
+
+function simTryNaturalStep(coord, dir, futureDir, nextWater){
+  const target = {q:coord.q+dir.q, r:coord.r+dir.r};
+  if(target.r > state.gridRadius){ simTryEnter(target); return true; }
+  if(!inPlayableAreaSim(target) || simIsWall(key(target))) return false;
+  if(simTryEnter(target)) simAddWater(nextWater, target, futureDir);
+  return true;
+}
+function simAdvanceWater(entry, nextWater){
+  const coord = entry.coord, nextDir = entry.nextDir;
+  const opposite = (nextDir.q===DOWN_LEFT.q && nextDir.r===DOWN_LEFT.r) ? DOWN_RIGHT : DOWN_LEFT;
+  const k = key(coord);
+  if(sim.placedBlocks.has(k)){
+    const targets = simResolveTargets(k);
+    if(targets.length===0){ simAddWater(nextWater, coord, opposite); return; }
+    for(const t of targets){ if(simTryEnter(t)) simAddWater(nextWater, t, opposite); }
+    return;
+  }
+  if(simTryNaturalStep(coord, nextDir, opposite, nextWater)) return;
+  if(simTryNaturalStep(coord, opposite, opposite, nextWater)) return;
+  simAddWater(nextWater, coord, opposite);
+}
+function simTick(){
+  if(sim.gameOver) return;
+  for(const k of state.waterSources){
+    sim.waterCells.push({coord:parseKey(k), nextDir:{...DOWN_LEFT}});
+  }
+  const nextWater = [];
+  for(const entry of sim.waterCells) simAdvanceWater(entry, nextWater);
+  sim.waterCells = nextWater;
+  sim.tick++;
+  simCheckEnd();
+}
+function simCheckEnd(){
+  if(sim.gameOver) return;
+  let allFull = true;
+  for(const k of state.poolCells){ if((sim.poolFill.get(k)||0) < 4){ allFull=false; break; } }
+  if(allFull && sim.firesRemaining<=0) simWin();
+}
+function simLose(reason){
+  if(sim.gameOver) return;
+  sim.gameOver=true; sim.loseReason=reason;
+  stopAutoplay(); updatePlaytestUI(); draw();
+}
+function simWin(){
+  if(sim.gameOver) return;
+  sim.gameOver=true; sim.won=true;
+  stopAutoplay(); updatePlaytestUI(); draw();
+}
+function simPlaceBlock(coord, blockId){
+  if(sim.gameOver) return false;
+  if(!inPlayableAreaSim(coord)) return false;
+  const k = key(coord);
+  if(sim.placedBlocks.has(k)) return false;
+  const terrain = sim.cellTerrain.get(k)||"empty";
+  if(terrain==="fire"||terrain==="pool"||terrain==="town") return false;
+  if(!sim.inventory[blockId] || sim.inventory[blockId]<=0) return false;
+  sim.placedBlocks.set(k, blockId);
+  sim.inventory[blockId]--;
+  return true;
+}
+function simRemoveBlock(coord){
+  const k = key(coord);
+  if(!sim.placedBlocks.has(k)) return false;
+  const id = sim.placedBlocks.get(k);
+  sim.placedBlocks.delete(k);
+  sim.inventory[id] = (sim.inventory[id]||0)+1;
+  return true;
+}
+
+/* --- playtest UI wiring --- */
+let autoplayTimer = null;
+function stopAutoplay(){ if(autoplayTimer){ clearInterval(autoplayTimer); autoplayTimer=null; }
+  document.getElementById("ptStart").textContent="Start"; }
+document.getElementById("ptStart").onclick = ()=>{
+  if(!sim || !sim.active) ptSetup(true);
+  if(autoplayTimer){ stopAutoplay(); return; }
+  document.getElementById("ptStart").textContent="Pause";
+  const speed = parseInt(document.getElementById("ptSpeed").value);
+  autoplayTimer = setInterval(()=>{
+    if(sim.gameOver){ stopAutoplay(); return; }
+    simTick(); updatePlaytestUI(); draw();
+  }, speed);
+};
+document.getElementById("ptSpeed").oninput = ()=>{
+  if(autoplayTimer){ clearInterval(autoplayTimer);
+    const speed = parseInt(document.getElementById("ptSpeed").value);
+    autoplayTimer = setInterval(()=>{
+      if(sim.gameOver){ stopAutoplay(); return; }
+      simTick(); updatePlaytestUI(); draw();
+    }, speed);
+  }
+};
+document.getElementById("ptStep").onclick = ()=>{
+  if(!sim || !sim.active) ptSetup(true);
+  simTick(); updatePlaytestUI(); draw();
+};
+document.getElementById("ptReset").onclick = ()=> ptSetup(true);
+
+function ptHandleTap(c){
+  if(!sim || !sim.active) return;
+  const k = key(c);
+  if(sim.placedBlocks.has(k)){
+    if(simRemoveBlock(c)){ renderPtInventory(); draw(); }
+    return;
+  }
+  if(!sim.selectedBlockId) return;
+  if(simPlaceBlock(c, sim.selectedBlockId)){ renderPtInventory(); draw(); }
+}
+function renderPtInventory(){
+  const el = document.getElementById("ptInventory");
+  el.innerHTML = "";
+  const ids = Object.keys(sim ? sim.inventory : state.startingInventory);
+  if(ids.length===0){ el.innerHTML = '<p class="hint">No blocks in this level\'s starting inventory yet — add some on the Inventory tab.</p>'; return; }
+  for(const id of ids){
+    const b = state.catalog.find(b=>b.id===id);
+    const count = sim ? (sim.inventory[id]||0) : 0;
+    const btn = document.createElement("div");
+    btn.className = "invbtn" + (sim && sim.selectedBlockId===id ? " selected":"");
+    if(count<=0) btn.setAttribute("disabled","");
+    btn.innerHTML = `<span><span class="swatch" style="background:${b?b.color:'#fff'};display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px"></span>${b?b.display_name:id}</span><b>${count}</b>`;
+    btn.onclick = ()=>{ if(count>0 && sim){ sim.selectedBlockId=id; renderPtInventory(); } };
+    el.appendChild(btn);
+  }
+}
+function updatePlaytestUI(){
+  document.getElementById("ptTick").textContent = sim ? sim.tick : 0;
+  document.getElementById("ptFires").textContent = sim ? sim.firesRemaining : 0;
+  const poolsEl = document.getElementById("ptPools");
+  poolsEl.innerHTML = "";
+  if(sim){
+    for(const k of state.poolCells){
+      const fill = sim.poolFill.get(k)||0;
+      const row = document.createElement("div");
+      row.className="row";
+      row.innerHTML = `<span>Pool (${k})</span><span class="poolbar">${
+        [0,1,2,3].map(i=>`<span class="${i<fill?'lit':''}"></span>`).join("")
+      }</span>`;
+      poolsEl.appendChild(row);
+    }
+  }
+  const statusEl = document.getElementById("playtestStatus");
+  if(!sim){ statusEl.className="idle"; statusEl.textContent="Not started."; return; }
+  if(sim.won){ statusEl.className="won"; statusEl.textContent=`Level complete! Won on tick ${sim.tick}.`; return; }
+  if(sim.gameOver){
+    statusEl.className="lost";
+    statusEl.textContent = sim.loseReason==="town" ? `The town flooded on tick ${sim.tick}! Tap Retry.`
+      : `Water overflowed the bottom edge on tick ${sim.tick}! Tap Retry.`;
+    return;
+  }
+  statusEl.className = autoplayTimer ? "playing" : "idle";
+  statusEl.textContent = autoplayTimer ? "Flowing…" : "Place blocks, then Start (or Step to advance one tick at a time).";
+}
+
+/* =========================================================================
+   IMPORT / EXPORT — .tres text, matching Godot's resource text format
+   ========================================================================= */
+function coordsArrayText(set){
+  const items = [...set].map(parseKey).map(c=>`Vector2i(${c.q}, ${c.r})`);
+  return `Array[Vector2i]([${items.join(", ")}])`;
+}
+function poolDictText(set){
+  if(set.size===0) return "{}";
+  const items = [...set].map(parseKey).map(c=>`Vector2i(${c.q}, ${c.r}): 4`);
+  return "{\n" + items.join(",\n") + "\n}";
+}
+function inventoryDictText(inv){
+  const keys = Object.keys(inv).filter(k=>inv[k]>0);
+  if(keys.length===0) return "{}";
+  const items = keys.map(k=>`"${k}": ${inv[k]}`);
+  return "{\n" + items.join(",\n") + "\n}";
+}
+function serializeLevel(){
+  return `[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = ${state.levelId}
+display_name = "${state.displayName}"
+grid_radius = ${state.gridRadius}
+water_sources = ${coordsArrayText(state.waterSources)}
+fire_cells = ${coordsArrayText(state.fireCells)}
+pool_targets = ${poolDictText(state.poolCells)}
+starting_inventory = ${inventoryDictText(state.startingInventory)}
+blocked_cells = ${coordsArrayText(state.blockedCells)}
+town_cells = ${coordsArrayText(state.townCells)}
+`;
+}
+function paddedLevelFilename(id){
+  return `level_${String(id).padStart(3,"0")}.tres`;
+}
+
+function parseCoordList(text){
+  const out = new Set();
+  const re = /Vector2i\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/g;
+  let m;
+  while((m = re.exec(text))) out.add(`${parseInt(m[1])},${parseInt(m[2])}`);
+  return out;
+}
+function extractBlock(source, fieldName){
+  // Grabs the RHS starting right after "field = " up to the matching close
+  // for either Array[Vector2i]([...]) or a {...} dictionary — good enough
+  // for the fixed shape Godot always writes for these fields.
+  const idx = source.indexOf(fieldName + " = ");
+  if(idx===-1) return null;
+  let i = idx + (fieldName+" = ").length;
+  const rest = source.slice(i);
+  if(rest.startsWith("Array[Vector2i](")){
+    const end = rest.indexOf("])");
+    return rest.slice(0, end+2);
+  }
+  if(rest.startsWith("{")){
+    // find matching closing brace
+    let depth=0, j=0;
+    for(; j<rest.length; j++){
+      if(rest[j]==="{") depth++;
+      else if(rest[j]==="}"){ depth--; if(depth===0){ j++; break; } }
+    }
+    return rest.slice(0,j);
+  }
+  return null;
+}
+function parseLevelTres(text){
+  const get = (re, def) => { const m = text.match(re); return m ? m[1] : def; };
+  const level = {
+    levelId: parseInt(get(/level_id\s*=\s*(\d+)/, "1")),
+    displayName: get(/display_name\s*=\s*"([^"]*)"/, "Level"),
+    gridRadius: parseInt(get(/grid_radius\s*=\s*(\d+)/, "4")),
+    waterSources: parseCoordList(extractBlock(text,"water_sources")||""),
+    fireCells: parseCoordList(extractBlock(text,"fire_cells")||""),
+    poolCells: parseCoordList(extractBlock(text,"pool_targets")||""),
+    blockedCells: parseCoordList(extractBlock(text,"blocked_cells")||""),
+    townCells: parseCoordList(extractBlock(text,"town_cells")||""),
+    startingInventory: {},
+  };
+  const invBlock = extractBlock(text, "starting_inventory") || "{}";
+  const invRe = /"([a-zA-Z0-9_]+)"\s*:\s*(\d+)/g;
+  let m;
+  while((m = invRe.exec(invBlock))) level.startingInventory[m[1]] = parseInt(m[2]);
+  return level;
+}
+function loadLevelIntoEditor(level){
+  state.levelId = level.levelId;
+  state.displayName = level.displayName;
+  state.gridRadius = level.gridRadius;
+  state.waterSources = level.waterSources;
+  state.fireCells = level.fireCells;
+  state.poolCells = level.poolCells;
+  state.blockedCells = level.blockedCells;
+  state.townCells = level.townCells;
+  state.startingInventory = level.startingInventory;
+  // make sure catalog has an entry for every referenced block id
+  for(const id of Object.keys(state.startingInventory)){
+    if(!state.catalog.some(b=>b.id===id)){
+      state.catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff"});
+    }
+  }
+  $levelId.value = state.levelId;
+  $displayName.value = state.displayName;
+  $gridRadius.value = state.gridRadius;
+  sim = null;
+  fitToView();
+  renderBlockList();
+  runValidation();
+  refreshExport();
+}
+
+function refreshExport(){
+  document.getElementById("exportArea").value = serializeLevel();
+  const fname = paddedLevelFilename(state.levelId);
+  document.getElementById("suggestedName").textContent = fname;
+  document.getElementById("levelPathLine").textContent = `"res://data/levels/${fname}",`;
+}
+document.getElementById("btnDownload").onclick = ()=>{
+  refreshExport();
+  triggerDownload(paddedLevelFilename(state.levelId), document.getElementById("exportArea").value);
+};
+document.getElementById("btnCopyPath").onclick = ()=>{
+  navigator.clipboard.writeText(document.getElementById("levelPathLine").textContent).catch(()=>{});
+};
+function triggerDownload(filename, text){
+  const blob = new Blob([text], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById("btnImport").onclick = ()=>{
+  const text = document.getElementById("importArea").value;
+  if(!text.trim()){ alert("Paste a level's .tres contents first."); return; }
+  try{
+    const level = parseLevelTres(text);
+    loadLevelIntoEditor(level);
+    alert(`Loaded "${level.displayName}" (id ${level.levelId}).`);
+  }catch(err){
+    alert("Couldn't parse that — is it a LevelData .tres file? " + err.message);
+  }
+};
+document.getElementById("btnLoadPreset").onclick = ()=>{
+  const idx = document.getElementById("presetSelect").value;
+  if(idx==="") return;
+  const level = parseLevelTres(LEVEL_PRESETS[idx].text);
+  loadLevelIntoEditor(level);
+};
+
+/* =========================================================================
+   VALIDATION
+   ========================================================================= */
+function computePlayableWidthTiles(){
+  const cells = playableCoords();
+  if(cells.length===0) return 0;
+  let minX=Infinity,maxX=-Infinity;
+  for(const c of cells){
+    const p = axialToPixel(c,1);
+    minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
+  }
+  // horizontal spacing between adjacent hex columns is sqrt(3)*SIZE
+  return Math.round((maxX-minX)/Math.sqrt(3)) + 1;
+}
+function runValidation(){
+  const el = document.getElementById("validation");
+  const items = [];
+  const width = computePlayableWidthTiles();
+  if(width>9) items.push({level:"warn", text:`Playable width ≈ ${width} tiles — over the project's 9-tile-wide design cap. Consider the corridor generator to narrow it.`});
+  else items.push({level:"ok", text:`Playable width ≈ ${width} tiles (within the 9-tile cap).`});
+
+  if(state.fireCells.size===0 && state.poolCells.size===0)
+    items.push({level:"bad", text:`No fire cells AND no pool cells — this level will instantly (vacuously) win on tick 1. Add at least one of each unless that's intended.`});
+
+  if(state.waterSources.size===0)
+    items.push({level:"bad", text:`No water sources — nothing will ever flow.`});
+
+  for(const k of state.waterSources){
+    if(state.blockedCells.has(k)) items.push({level:"warn", text:`A water source sits on a blocked cell (${k}) — it will spawn water that immediately vanishes.`});
+  }
+  if(state.townCells.size>0 && state.townCells.size!==4)
+    items.push({level:"warn", text:`Town has ${state.townCells.size} cell(s) — the project's authoring convention is exactly 4 edge-connected cells (not enforced by the game, just a convention).`});
+
+  const overlapCheck = [...state.fireCells].filter(k=>state.poolCells.has(k)||state.townCells.has(k));
+  if(overlapCheck.length) items.push({level:"bad", text:`Some cells are marked as more than one terrain type — check for overlaps.`});
+
+  if(items.every(i=>i.level==="ok")) items.push({level:"ok", text:"No issues detected."});
+  el.innerHTML = items.map(i=>`<div class="valitem ${i.level}">${i.text}</div>`).join("");
+}
+
+/* =========================================================================
+   EMBEDDED PRESETS — the 17 levels from the uploaded project, so you can
+   review/edit an existing level without leaving the tool.
+   ========================================================================= */
+const LEVEL_PRESETS = [{"name": "Level 1 (level_001.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 1\ndisplay_name = \"Level 1\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {\n\"divert_right\": 2,\n\"divert_left\": 1,\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 2 (level_002.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 2\ndisplay_name = \"Level 2\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -3)])\npool_targets = {\nVector2i(-2, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 3 (level_003.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 3\ndisplay_name = \"Level 3\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -1)])\npool_targets = {\nVector2i(-2, 1): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 4 (level_004.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 4\ndisplay_name = \"Level 4\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(1, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -3)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 5 (level_005.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 5\ndisplay_name = \"Level 5\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-2, -2)])\npool_targets = {\nVector2i(-3, 0): 4\n}\nstarting_inventory = {\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 6 (level_006.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 6\ndisplay_name = \"Level 6\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-3, -1)])\npool_targets = {\nVector2i(-4, 1): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([Vector2i(-1, -2)])\n"}, {"name": "Level 7 (level_007.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 7\ndisplay_name = \"Level 7\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -1)])\npool_targets = {\nVector2i(-3, 1): 4\n}\nstarting_inventory = {\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 8 (level_008.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 8\ndisplay_name = \"Level 8\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -3), Vector2i(-2, -1)])\npool_targets = {\nVector2i(-2, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 9 (level_009.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 9\ndisplay_name = \"Level 9\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4), Vector2i(2, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -2), Vector2i(1, -2)])\npool_targets = {\nVector2i(-3, 1): 4,\nVector2i(-1, 2): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 10 (level_010.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 10\ndisplay_name = \"Level 10\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2), Vector2i(-1, 0)])\npool_targets = {\nVector2i(-2, 2): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 11 (level_011.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 11\ndisplay_name = \"Level 11\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4), Vector2i(2, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(1, -1)])\npool_targets = {\nVector2i(-2, 2): 4,\nVector2i(-1, 1): 4,\nVector2i(0, 1): 4\n}\nstarting_inventory = {\n\"divert_right\": 1,\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 12 (level_012.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 12\ndisplay_name = \"Level 12\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -3)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\ntown_cells = Array[Vector2i]([Vector2i(-1, -3), Vector2i(-1, -2), Vector2i(-2, -1), Vector2i(-2, 0)])\n"}, {"name": "Level 13 (level_013.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_sdoqn\"]\n\n[resource]\nscript = ExtResource(\"1_sdoqn\")\nlevel_id = 13\ndisplay_name = \"Level 13\"\ngrid_radius = 8\nwater_sources = Array[Vector2i]([Vector2i(4, -8)])\nfire_cells = Array[Vector2i]([Vector2i(2, -5), Vector2i(0, 0), Vector2i(-2, 4)])\npool_targets = {\nVector2i(-3, 6): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 14 (level_014.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_npory\"]\n\n[resource]\nscript = ExtResource(\"1_npory\")\nlevel_id = 14\ndisplay_name = \"Level 14\"\ngrid_radius = 9\nwater_sources = Array[Vector2i]([Vector2i(5, -9)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 0)])\npool_targets = {\nVector2i(-4, 7): 4\n}\nstarting_inventory = {\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 15 (level_015.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_47jxv\"]\n\n[resource]\nscript = ExtResource(\"1_47jxv\")\nlevel_id = 15\ndisplay_name = \"Level 15\"\ngrid_radius = 10\nwater_sources = Array[Vector2i]([Vector2i(5, -10)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 0), Vector2i(0, 0)])\npool_targets = {\nVector2i(-4, 6): 4,\nVector2i(-3, 6): 4\n}\nstarting_inventory = {\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 16 (level_016.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_5wyyj\"]\n\n[resource]\nscript = ExtResource(\"1_5wyyj\")\nlevel_id = 16\ndisplay_name = \"Level 16\"\ngrid_radius = 10\nwater_sources = Array[Vector2i]([Vector2i(5, -10)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 4)])\npool_targets = {\nVector2i(-3, 8): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-7, 9), Vector2i(-7, 10), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-6, 7), Vector2i(-6, 8), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-5, 5), Vector2i(-5, 6), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-4, 3), Vector2i(-4, 4), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-3, 1), Vector2i(-3, 2), Vector2i(-3, 9), Vector2i(-3, 10), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 0), Vector2i(-2, 7), Vector2i(-2, 8), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, -2), Vector2i(-1, -1), Vector2i(-1, 5), Vector2i(-1, 6), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, -4), Vector2i(0, -3), Vector2i(0, 3), Vector2i(0, 4), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, -6), Vector2i(1, -5), Vector2i(1, 1), Vector2i(1, 2), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, -8), Vector2i(2, -7), Vector2i(2, 0), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(3, -10), Vector2i(3, -9), Vector2i(3, -2), Vector2i(3, -1), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(4, -4), Vector2i(4, -3), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(5, -6), Vector2i(5, -5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(6, -8), Vector2i(6, -7), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(7, -10), Vector2i(7, -9), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0)])\ntown_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(-1, 1), Vector2i(-1, 2)])\n"}, {"name": "Level 17 (level_017.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_4qrqn\"]\n\n[resource]\nscript = ExtResource(\"1_4qrqn\")\nlevel_id = 17\ndisplay_name = \"Level 17\"\ngrid_radius = 12\nwater_sources = Array[Vector2i]([Vector2i(6, -12)])\nfire_cells = Array[Vector2i]([Vector2i(4, -7), Vector2i(0, 3), Vector2i(-3, 8), Vector2i(-2, 8)])\npool_targets = {\nVector2i(-5, 11): 4,\nVector2i(-4, 11): 4\n}\nstarting_inventory = {\n\"divert_right\": 1,\n\"splitter\": 1,\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-12, 0), Vector2i(-12, 1), Vector2i(-12, 2), Vector2i(-12, 3), Vector2i(-12, 4), Vector2i(-12, 5), Vector2i(-12, 6), Vector2i(-12, 7), Vector2i(-12, 8), Vector2i(-12, 9), Vector2i(-12, 10), Vector2i(-12, 11), Vector2i(-12, 12), Vector2i(-11, -1), Vector2i(-11, 0), Vector2i(-11, 1), Vector2i(-11, 2), Vector2i(-11, 3), Vector2i(-11, 4), Vector2i(-11, 5), Vector2i(-11, 6), Vector2i(-11, 7), Vector2i(-11, 8), Vector2i(-11, 9), Vector2i(-11, 10), Vector2i(-11, 11), Vector2i(-11, 12), Vector2i(-10, -2), Vector2i(-10, -1), Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-10, 11), Vector2i(-10, 12), Vector2i(-9, -3), Vector2i(-9, -2), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-9, 11), Vector2i(-9, 12), Vector2i(-8, -4), Vector2i(-8, -3), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -5), Vector2i(-7, -4), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -6), Vector2i(-6, -5), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -7), Vector2i(-5, -6), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -8), Vector2i(-4, -7), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -9), Vector2i(-3, -8), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-3, 11), Vector2i(-3, 12), Vector2i(-2, -10), Vector2i(-2, -9), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-2, 11), Vector2i(-2, 12), Vector2i(-1, -11), Vector2i(-1, -10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(-1, 11), Vector2i(-1, 12), Vector2i(0, -12), Vector2i(0, -11), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(0, 11), Vector2i(0, 12), Vector2i(1, -12), Vector2i(1, -11), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(1, 10), Vector2i(1, 11), Vector2i(2, -12), Vector2i(2, -11), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(2, 9), Vector2i(2, 10), Vector2i(3, -12), Vector2i(3, -11), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(3, 8), Vector2i(3, 9), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(4, 7), Vector2i(4, 8), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(5, 6), Vector2i(5, 7), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(6, 5), Vector2i(6, 6), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 4), Vector2i(7, 5), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(8, 3), Vector2i(8, 4), Vector2i(9, -12), Vector2i(9, -11), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(9, 2), Vector2i(9, 3), Vector2i(10, -12), Vector2i(10, -11), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0), Vector2i(10, 1), Vector2i(10, 2), Vector2i(11, -12), Vector2i(11, -11), Vector2i(11, -10), Vector2i(11, -9), Vector2i(11, -8), Vector2i(11, -7), Vector2i(11, -6), Vector2i(11, -5), Vector2i(11, -4), Vector2i(11, -3), Vector2i(11, -2), Vector2i(11, -1), Vector2i(11, 0), Vector2i(11, 1), Vector2i(12, -12), Vector2i(12, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(12, -7), Vector2i(12, -6), Vector2i(12, -5), Vector2i(12, -4), Vector2i(12, -3), Vector2i(12, -2), Vector2i(12, -1), Vector2i(12, 0)])\ntown_cells = Array[Vector2i]([Vector2i(0, 1), Vector2i(0, 2), Vector2i(-1, 3), Vector2i(-1, 4)])\n"}];
+
+function buildPresetDropdown(){
+  const sel = document.getElementById("presetSelect");
+  LEVEL_PRESETS.forEach((p,i)=>{
+    const opt = document.createElement("option");
+    opt.value = i; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function init(){
+  renderBlockList();
+  buildPresetDropdown();
+  resizeCanvas();
+  fitToView();
+  runValidation();
+  refreshExport();
+  requestAnimationFrame(()=>{ resizeCanvas(); fitToView(); });
+}
+init();
+</script>
+</body>
+</html>

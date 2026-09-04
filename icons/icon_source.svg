@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Water source: river, three converging wavy strands flowing into the
+       first-move down-left arrow -->
+  <g fill="none" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 12 Q42 24 30 34 Q18 44 30 54" stroke="#8fd4ff" stroke-width="7"/>
+    <path d="M50 8  Q62 22 48 34 Q36 46 50 58" stroke="#3b9ee6" stroke-width="8"/>
+    <path d="M70 12 Q80 26 66 38 Q54 50 66 60" stroke="#8fd4ff" stroke-width="7"/>
+  </g>
+  <path d="M50 58 L36 74 L36 64 L26 64 L44 84 L58 68 L58 58 Z"
+        fill="#3b9ee6" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round"/>
+</svg>

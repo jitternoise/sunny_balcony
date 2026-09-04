@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BlockData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/BlockData.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/icons/icon_wall.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = "wall"
+display_name = "Wall"
+icon = ExtResource("2")
+behavior = 0
+color = Color(0.5, 0.5, 0.55, 1)
+footprint_offsets = Array[Vector2i]([Vector2i(1, 0)])

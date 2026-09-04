@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flash Flood — Icon Sheet</title>
+<style>
+  @page { size: 1000px 750px; margin: 0; }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:1000px; height:750px;
+    background:#0f1520; color:#e7edf5;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  }
+  .page{ width:1000px; height:750px; padding:36px 44px; }
+  .head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px;}
+  h1{font-size:22px; margin:0;}
+  .sub{font-size:12px; color:#93a2b8;}
+  .grid{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:18px;
+  }
+  .cell{
+    background:#161d2b; border:1px solid #22304a; border-radius:12px;
+    padding:14px 10px 12px; text-align:center;
+  }
+  .hex{
+    width:96px; height:83px; margin:0 auto 8px;
+    clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hex svg{width:92%; height:92%;}
+  .name{font-size:13px; font-weight:700;}
+  .hexcode{font-family:Consolas,monospace; font-size:10.5px; color:#93a2b8; margin-top:2px;}
+  .footer{margin-top:20px; font-size:11px; color:#5c6b83; text-align:center;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="head">
+    <h1>Flash Flood — Icon Sheet</h1>
+    <div class="sub">Block types + terrain, one page</div>
+  </div>
+
+  <div class="grid">
+
+    <div class="cell">
+      <div class="hex" style="background:#2b3a52"><svg viewBox="0 0 100 100"><g stroke="#3a332b" stroke-width="5" stroke-linejoin="round"><path d="M50 18 L69 25 L80 42 L75 64 L57 78 L39 75 L22 60 L20 39 L33 23 Z" fill="#9c9186"/><path d="M50 18 L69 25 L60 39 L43 35 Z" fill="#bcb2a2"/><path d="M39 75 L22 60 L32 49 L48 58 Z" fill="#786f62"/><line x1="43" y1="35" x2="48" y2="58" stroke-width="3"/><line x1="60" y1="39" x2="57" y2="78" stroke-width="3"/></g></svg></div>
+      <div class="name">Wall</div>
+      <div class="hexcode">#9C9186</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#2b3a52"><svg viewBox="0 0 100 100"><path d="M30 24 Q30 24 40 24 L58 42 L58 30 L74 46 L58 62 L58 50 L40 32 L40 24 Z" fill="#f7931e" stroke="#1e2530" stroke-width="5" stroke-linejoin="round"/></svg></div>
+      <div class="name">Diverter&nbsp;Right</div>
+      <div class="hexcode">#F7931E</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#2b3a52"><svg viewBox="0 0 100 100"><path d="M70 24 Q70 24 60 24 L42 42 L42 30 L26 46 L42 62 L42 50 L60 32 L60 24 Z" fill="#f7931e" stroke="#1e2530" stroke-width="5" stroke-linejoin="round"/></svg></div>
+      <div class="name">Diverter&nbsp;Left</div>
+      <div class="hexcode">#F7931E</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#2b3a52"><svg viewBox="0 0 100 100"><g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M43 18 L57 18 L57 40 L43 40 Z" fill="#a78bfa"/><path d="M50 40 L28 60 L28 50 L18 50 L34 66 L50 50 Z" fill="#a78bfa"/><path d="M50 40 L72 60 L72 50 L82 50 L66 66 L50 50 Z" fill="#a78bfa"/></g></svg></div>
+      <div class="name">Splitter</div>
+      <div class="hexcode">#A78BFA</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#3a1410"><svg viewBox="0 0 100 100"><defs><linearGradient id="fgp" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#ffd166"/><stop offset="55%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M50 14 C40 28 30 34 30 50 C30 66 40 78 50 78 C60 78 70 66 70 50 C70 40 64 36 62 30 C60 40 54 42 52 36 C50 28 54 22 50 14 Z" fill="url(#fgp)" stroke="#7a1a0a" stroke-width="5" stroke-linejoin="round"/></svg></div>
+      <div class="name">Fire</div>
+      <div class="hexcode">#F97316</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#0d2a44"><svg viewBox="0 0 100 100"><g stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 46 Q50 30 78 46 L74 66 Q50 78 26 66 Z" fill="#3b9ee6"/><path d="M30 50 Q38 44 46 50 T62 50 T78 50" fill="none" stroke="#eaf6ff" stroke-width="4"/></g><g stroke="#0b3d63" stroke-width="3"><rect x="16" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="16" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="16" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/><rect x="70" y="76" width="14" height="8" rx="2" fill="#bfe4ff"/></g></svg></div>
+      <div class="name">Pool</div>
+      <div class="hexcode">#3B9EE6</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#241207"><svg viewBox="0 0 100 100"><g stroke="#3f2410" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><rect x="28" y="46" width="44" height="32" fill="#b26a2b"/><path d="M22 48 L50 22 L78 48 Z" fill="#8a4a1c"/><rect x="45" y="58" width="12" height="20" fill="#3f2410"/></g></svg></div>
+      <div class="name">Town</div>
+      <div class="hexcode">#B26A2B</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#0d2a44"><svg viewBox="0 0 100 100"><g fill="none" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"><path d="M30 12 Q42 24 30 34 Q18 44 30 54" stroke="#8fd4ff" stroke-width="7"/><path d="M50 8 Q62 22 48 34 Q36 46 50 58" stroke="#3b9ee6" stroke-width="8"/><path d="M70 12 Q80 26 66 38 Q54 50 66 60" stroke="#8fd4ff" stroke-width="7"/></g><path d="M50 58 L36 74 L36 64 L26 64 L44 84 L58 68 L58 58 Z" fill="#3b9ee6" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round"/></svg></div>
+      <div class="name">Water Source</div>
+      <div class="hexcode">#3B9EE6</div>
+    </div>
+
+    <div class="cell">
+      <div class="hex" style="background:#1a2030"><svg viewBox="0 0 100 100"><g stroke="#4b5563" stroke-width="4"><line x1="20" y1="80" x2="80" y2="20"/><line x1="20" y1="60" x2="60" y2="20"/><line x1="40" y1="80" x2="80" y2="40"/></g></svg></div>
+      <div class="name">Blocked</div>
+      <div class="hexcode">#4B5563</div>
+    </div>
+
+    <div class="cell" style="display:flex; flex-direction:column; justify-content:center; text-align:left; padding:14px 16px;">
+      <div style="font-size:11.5px; line-height:1.5; color:#93a2b8;">
+        <b style="color:#e7edf5;">Rule:</b> silhouette first, color second.<br>
+        <b style="color:#e7edf5;">Cool</b> = player-placed blocks.<br>
+        <b style="color:#e7edf5;">Warm</b> = board consequences.<br>
+        <b style="color:#e7edf5;">Blue</b> = water-family (Pool/Source).
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Flash Flood — icon reference — full rationale in icon-system.md</div>
+</div>
+</body>
+</html>

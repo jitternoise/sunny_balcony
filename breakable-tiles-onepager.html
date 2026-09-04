@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flash Flood — Breakable Tiles</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0;
+    background:#0f1520; color:#e7edf5;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  }
+  .page{ max-width:1080px; margin:0 auto; padding:40px 44px 64px; }
+  .head{ margin-bottom:8px;}
+  h1{font-size:24px; margin:0 0 6px;}
+  .sub{font-size:13px; color:#93a2b8; margin-bottom:30px;}
+  h2{font-size:16px; margin:0 0 4px; color:#e7edf5;}
+  .section-sub{font-size:12px; color:#93a2b8; margin-bottom:16px;}
+
+  /* explainer strip */
+  .explainer{
+    background:#12192a; border:1px solid #22304a; border-radius:14px;
+    padding:24px 24px 20px; margin-bottom:44px;
+  }
+  .strip{ display:flex; align-items:center; gap:6px; margin-top:14px; }
+  .panel{
+    flex:1; background:#161d2b; border:1px solid #22304a; border-radius:12px;
+    padding:14px 10px 12px; text-align:center; position:relative;
+  }
+  .panel .hex{
+    width:84px; height:73px; margin:0 auto 8px; position:relative;
+    clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .panel .hex svg{width:88%; height:88%;}
+  .panel .caption{font-size:11.5px; font-weight:700;}
+  .panel .detail{font-size:10.5px; color:#93a2b8; margin-top:2px;}
+  .badge{
+    position:absolute; top:6px; right:6px; background:#e8563c; color:#fff;
+    font-size:10px; font-weight:800; width:20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; border:2px solid #0f1520;
+  }
+  .badge.zero{ background:#4b5563; }
+  .arrow{ color:#4b5f7a; font-size:20px; flex:0 0 auto; }
+
+  /* tile grid */
+  .grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:16px;
+    margin-bottom:36px;
+  }
+  .card{
+    background:#161d2b; border:1px solid #22304a; border-radius:14px;
+    padding:18px 20px; display:flex; gap:16px;
+  }
+  .card .hex{
+    width:88px; height:76px; flex:0 0 auto;
+    clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card .hex svg{width:90%; height:90%;}
+  .card .body{ flex:1; min-width:0; }
+  .card .name{font-size:15px; font-weight:700; margin-bottom:2px;}
+  .tag{
+    display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 7px; border-radius:6px; margin-bottom:8px;
+  }
+  .tag.timer{ background:#3a2a12; color:#e8a33d; }
+  .tag.contact{ background:#12242f; color:#3b9ee6; }
+  .tag.chain{ background:#2a1f30; color:#c084fc; }
+  .tag.grow{ background:#1a2a16; color:#8fc15a; }
+
+  .pill{
+    position:absolute; top:6px; right:6px; background:#3d5a24; color:#eaffd8;
+    font-size:10px; font-weight:800; padding:2px 7px; border-radius:9px;
+    border:2px solid #0f1520;
+  }
+  .pill.full{ background:#8fc15a; color:#12190a; }
+  .desc{font-size:12.5px; line-height:1.55; color:#c3cddd; margin-bottom:8px;}
+  .stat{font-size:11px; color:#93a2b8;}
+  .stat b{color:#e7edf5;}
+
+  .footer-note{
+    background:#12192a; border:1px solid #22304a; border-radius:14px;
+    padding:20px 22px; font-size:12px; line-height:1.6; color:#93a2b8;
+  }
+  .footer-note b{color:#e7edf5;}
+  .footer-note code{
+    background:#0c1220; border:1px solid #22304a; border-radius:4px;
+    padding:1px 5px; color:#9fd3ff; font-family:Consolas,monospace; font-size:11px;
+  }
+  .bottom{margin-top:26px; font-size:11px; color:#5c6b83; text-align:center;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <h1>Flash Flood — Breakable &amp; Delayed Tiles</h1>
+    <div class="sub">Design brainstorm: block/terrain types that change state after N ticks — some break down, one builds up. Companion to <code style="background:#0c1220;border:1px solid #22304a;border-radius:4px;padding:1px 5px;color:#9fd3ff;">icon-system.md</code>.</div>
+  </div>
+
+  <div class="explainer">
+    <h2>How a breakable tile plays out</h2>
+    <div class="section-sub">Example: a Sandbag Wall placed with a 3-tick fuse. Timer-based tiles count down every tick regardless of water contact; contact-based tiles only count down while water is pressing on them.</div>
+    <div class="strip">
+      <div class="panel">
+        <div class="badge">3</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3a1f" stroke-width="4" stroke-linejoin="round">
+              <rect x="14" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="38" y="60" width="26" height="20" rx="10" fill="#d9b87c"/>
+              <rect x="62" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="26" y="40" width="26" height="20" rx="10" fill="#d9b87c"/>
+              <rect x="50" y="40" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="38" y="20" width="26" height="20" rx="10" fill="#d9b87c"/>
+            </g>
+          </svg>
+        </div>
+        <div class="caption">Tick 0 — placed</div>
+        <div class="detail">Blocks water like a Wall</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="badge">1</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3a1f" stroke-width="4" stroke-linejoin="round">
+              <rect x="14" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="38" y="60" width="26" height="20" rx="10" fill="#d9b87c"/>
+              <rect x="62" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="26" y="40" width="26" height="20" rx="10" fill="#d9b87c"/>
+              <rect x="50" y="40" width="26" height="20" rx="10" fill="#c9a66b"/>
+              <rect x="38" y="20" width="26" height="20" rx="10" fill="#d9b87c"/>
+            </g>
+            <path d="M50 18 L44 34 L54 46 L42 60 L52 76 L46 82" fill="none" stroke="#e8563c" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="caption">Tick 2 — cracking</div>
+        <div class="detail">Visible crack warns the player</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="badge zero">0</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3a1f" stroke-width="3" stroke-linejoin="round" opacity="0.85">
+              <rect x="10" y="66" width="20" height="14" rx="7" fill="#c9a66b" transform="rotate(-8 20 73)"/>
+              <rect x="40" y="70" width="20" height="14" rx="7" fill="#d9b87c" transform="rotate(6 50 77)"/>
+              <rect x="68" y="64" width="20" height="14" rx="7" fill="#c9a66b" transform="rotate(-4 78 71)"/>
+              <rect x="30" y="42" width="18" height="12" rx="6" fill="#d9b87c" transform="rotate(14 39 48)"/>
+              <rect x="54" y="38" width="18" height="12" rx="6" fill="#c9a66b" transform="rotate(-12 63 44)"/>
+            </g>
+          </svg>
+        </div>
+        <div class="caption">Tick 3 — breaks</div>
+        <div class="detail">Reverts to open terrain</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g fill="none" stroke="#3b9ee6" stroke-width="7" stroke-linecap="round">
+              <path d="M30 14 Q46 30 30 46 Q14 62 30 78"/>
+              <path d="M60 14 Q76 30 60 46 Q44 62 60 78"/>
+            </g>
+            <path d="M46 86 L34 70 L58 70 Z" fill="#3b9ee6"/>
+          </svg>
+        </div>
+        <div class="caption">After — open flow</div>
+        <div class="detail">Water passes through freely from here on</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="explainer">
+    <h2>How a delayed-appearance tile plays out</h2>
+    <div class="section-sub">Example: a Beaver Dam placed with a 4-tick build time. The mirror of a breakable tile — it starts dormant (water flows through untouched) and only becomes active once it finishes building.</div>
+    <div class="strip">
+      <div class="panel">
+        <div class="pill">0/4</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g fill="none" stroke="#3b9ee6" stroke-width="7" stroke-linecap="round">
+              <path d="M50 14 L50 46"/>
+              <path d="M50 54 L50 86"/>
+            </g>
+          </svg>
+        </div>
+        <div class="caption">Tick 0 — placed</div>
+        <div class="detail">Dormant, water passes straight through</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="pill">2/4</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3216" stroke-width="4" stroke-linejoin="round">
+              <rect x="20" y="58" width="60" height="12" rx="6" fill="#8b5a2b"/>
+              <rect x="26" y="44" width="48" height="12" rx="6" fill="#a06b34"/>
+            </g>
+            <path d="M50 20 L50 40" fill="none" stroke="#3b9ee6" stroke-width="7" stroke-linecap="round"/>
+            <path d="M50 76 L50 88" fill="none" stroke="#3b9ee6" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="caption">Tick 2 — building</div>
+        <div class="detail">Logs stacking up, still mostly passable</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="pill full">4/4</div>
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3216" stroke-width="4" stroke-linejoin="round">
+              <rect x="16" y="60" width="68" height="12" rx="6" fill="#8b5a2b"/>
+              <rect x="20" y="46" width="60" height="12" rx="6" fill="#a06b34"/>
+              <rect x="24" y="32" width="52" height="12" rx="6" fill="#8b5a2b"/>
+            </g>
+            <path d="M76 76 Q88 76 86 63 Q81 72 70 71 Z" fill="#5c3a1f" stroke="#2f1e10" stroke-width="3"/>
+          </svg>
+        </div>
+        <div class="caption">Tick 4 — dam complete</div>
+        <div class="detail">Now behaves as an active Diverter</div>
+      </div>
+      <div class="arrow">&#8594;</div>
+      <div class="panel">
+        <div class="hex" style="background:#2b3a52">
+          <svg viewBox="0 0 100 100">
+            <g stroke="#4a3216" stroke-width="4" stroke-linejoin="round">
+              <rect x="16" y="60" width="68" height="12" rx="6" fill="#8b5a2b"/>
+              <rect x="20" y="46" width="60" height="12" rx="6" fill="#a06b34"/>
+              <rect x="24" y="32" width="52" height="12" rx="6" fill="#8b5a2b"/>
+            </g>
+            <path d="M76 76 Q88 76 86 63 Q81 72 70 71 Z" fill="#5c3a1f" stroke="#2f1e10" stroke-width="3"/>
+            <path d="M22 82 Q50 94 78 82" fill="none" stroke="#3b9ee6" stroke-width="5" stroke-linecap="round"/>
+            <path d="M72 78 L79 82 L70 87" fill="none" stroke="#3b9ee6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="caption">After — flow diverted</div>
+        <div class="detail">Water now redirected around the dam</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Tile catalog</h2>
+  <div class="section-sub">8 concepts — 7 break down, 1 (the Beaver Dam) builds up.</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="hex" style="background:#2b3a52">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#4a3a1f" stroke-width="4" stroke-linejoin="round">
+            <rect x="14" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+            <rect x="38" y="60" width="26" height="20" rx="10" fill="#d9b87c"/>
+            <rect x="62" y="60" width="26" height="20" rx="10" fill="#c9a66b"/>
+            <rect x="26" y="40" width="26" height="20" rx="10" fill="#d9b87c"/>
+            <rect x="50" y="40" width="26" height="20" rx="10" fill="#c9a66b"/>
+            <rect x="38" y="20" width="26" height="20" rx="10" fill="#d9b87c"/>
+          </g>
+          <path d="M50 18 L44 34 L54 46 L42 60 L52 76 L46 82" fill="none" stroke="#e8563c" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Sandbag Wall</div>
+        <span class="tag timer">Timer</span>
+        <div class="desc">Behaves exactly like a Wall — fully blocks and backs up water — but crumbles to open terrain after a fixed number of ticks, whether or not water ever touched it. Teaches the whole mechanic: "hold the line just long enough," not permanent redirection.</div>
+        <div class="stat">Suggested fuse: <b>4–6 ticks</b> · breaks into <b>EMPTY</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#12283a">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#1c4f66" stroke-width="5" stroke-linejoin="round">
+            <path d="M20 82 L20 50 L30 34 L38 50 L46 30 L54 50 L62 32 L70 50 L80 50 L80 82 Z" fill="#bfe9f5"/>
+          </g>
+          <path d="M50 40 L44 56 L56 66 L48 80" fill="none" stroke="#e8563c" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Ice Dam</div>
+        <span class="tag timer">Timer</span>
+        <div class="desc">Same idea as the Sandbag Wall but a much shorter fuse — themed as melting rather than crumbling. Good as the very first breakable tile a player meets: it fails fast enough to be self-explanatory in one attempt.</div>
+        <div class="stat">Suggested fuse: <b>2–3 ticks</b> · breaks into <b>EMPTY</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#2f2416">
+        <svg viewBox="0 0 100 100">
+          <path d="M30 24 Q30 24 40 24 L58 42 L58 30 L74 46 L58 62 L58 50 L40 32 L40 24 Z" fill="#e8a33d" stroke="#5c3a12" stroke-width="5" stroke-linejoin="round" stroke-dasharray="6 4"/>
+          <g stroke="#5c3a12" stroke-width="3" stroke-linecap="round">
+            <line x1="26" y1="20" x2="19" y2="13"/>
+            <line x1="26" y1="26" x2="17" y2="24"/>
+            <line x1="26" y1="32" x2="19" y2="38"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Rope Bridge Diverter</div>
+        <span class="tag timer">Timer</span>
+        <div class="desc">A Diverter-Left/Right that only redirects for a set number of ticks, then goes slack and lets water fall straight through again. The interesting part isn't whether a block exists — it's that the <i>flow direction itself</i> changes mid-level.</div>
+        <div class="stat">Suggested fuse: <b>3–5 ticks</b> · breaks into <b>natural fall</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#241b10">
+        <svg viewBox="0 0 100 100">
+          <path d="M14 78 Q30 40 50 40 Q70 40 86 78 Z" fill="#8a5a2b" stroke="#4a3216" stroke-width="5" stroke-linejoin="round"/>
+          <g fill="none" stroke="#4a3216" stroke-width="3" stroke-linecap="round">
+            <path d="M26 78 Q30 70 26 62"/>
+            <path d="M50 80 Q54 70 48 60"/>
+            <path d="M74 78 Q78 70 72 62"/>
+          </g>
+          <g fill="#3b9ee6" opacity="0.85">
+            <circle cx="26" cy="86" r="4"/>
+            <circle cx="50" cy="88" r="4"/>
+            <circle cx="74" cy="86" r="4"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Mud Levee</div>
+        <span class="tag contact">Contact</span>
+        <div class="desc">Only counts down on ticks where water is actually pressing against it — it doesn't decay sitting idle. Rewards players who reroute flow away from it early to preserve it longer, and punishes brute-forcing water straight at it.</div>
+        <div class="stat">Suggested threshold: <b>3–4 contact ticks</b> · breaks into <b>EMPTY</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#1a2a16">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#2f5a2f" stroke-width="4" stroke-linecap="round">
+            <path d="M50 20 L50 44"/>
+            <path d="M50 44 L28 64 L28 54"/>
+            <path d="M50 44 L72 64 L72 54"/>
+            <path d="M46 24 L54 24"/>
+          </g>
+          <circle cx="50" cy="44" r="10" fill="#6b8f3f" stroke="#2f5a2f" stroke-width="4"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Reed Debris Catch</div>
+        <span class="tag contact">Contact</span>
+        <div class="desc">Acts like a Splitter, but clogs a little more with every pass. Once it hits its contact threshold it bursts, releasing every bit of water it had been diverting as one sudden surge in a single direction — a way to create a delayed second wave without a second source.</div>
+        <div class="stat">Suggested threshold: <b>3 contact ticks</b> · breaks into <b>surge + open fork</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#2f2416">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#4a3a1f" stroke-width="4">
+            <ellipse cx="22" cy="60" rx="14" ry="10" fill="#c9a66b"/>
+            <ellipse cx="50" cy="60" rx="14" ry="10" fill="#d9b87c"/>
+            <ellipse cx="78" cy="60" rx="14" ry="10" fill="#c9a66b"/>
+          </g>
+          <g stroke="#5c3a12" stroke-width="3" fill="none" stroke-dasharray="3 3">
+            <path d="M32 58 Q36 48 40 58"/>
+            <path d="M60 58 Q64 48 68 58"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Sandbag Row (Chain Levee)</div>
+        <span class="tag chain">Chain</span>
+        <div class="desc">Several adjacent breakable walls, linked: if one breaks early from overload, it shaves ticks off its neighbors' timers too, simulating a levee failure cascading sideways. Best saved for a climactic level rather than an early teaching moment.</div>
+        <div class="stat">Suggested fuse: <b>5 ticks each</b>, <b>–2</b> to neighbors on break</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#241207">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#3f2410" stroke-width="5" stroke-linejoin="round">
+            <path d="M22 82 L22 50 L30 50 L30 40 L38 40 L38 50 L62 50 L62 40 L70 40 L70 50 L78 50 L78 82 Z" fill="#e0c187"/>
+          </g>
+          <path d="M50 62 L38 78 L38 68 L28 68 L44 86 L56 72 L56 62 Z" fill="#8a4a1c" stroke="#3f2410" stroke-width="4" stroke-linejoin="round" opacity="0.92"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Sandcastle Town Shield</div>
+        <span class="tag timer">Timer</span>
+        <div class="desc">A temporary answer to "should towns get their own block?" — protects a town cell from instant-loss, but only for a fixed number of ticks. Forces the player to have a permanent redirect solution in place before the shield expires rather than relying on it alone.</div>
+        <div class="stat">Suggested fuse: <b>6–8 ticks</b> · breaks into <b>exposed Town</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hex" style="background:#241b10">
+        <svg viewBox="0 0 100 100">
+          <g stroke="#4a3216" stroke-width="4" stroke-linejoin="round">
+            <rect x="16" y="60" width="68" height="12" rx="6" fill="#8b5a2b"/>
+            <rect x="20" y="46" width="60" height="12" rx="6" fill="#a06b34"/>
+            <rect x="24" y="32" width="52" height="12" rx="6" fill="#8b5a2b"/>
+          </g>
+          <path d="M76 76 Q88 76 86 63 Q81 72 70 71 Z" fill="#5c3a1f" stroke="#2f1e10" stroke-width="3"/>
+          <path d="M22 82 Q50 92 78 82" fill="none" stroke="#3b9ee6" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="body">
+        <div class="name">Beaver Dam</div>
+        <span class="tag grow">Grows — Contact</span>
+        <div class="desc">The mirror of every other tile here: placed dormant — water flows straight through it untouched — and only becomes active once it finishes "building." Once complete it behaves like a Diverter, permanently redirecting water to one side. Builds only on ticks where water is actually flowing over the cell (a beaver needs the current to work with), so — like the Mud Levee — routing water away from it stalls its progress.</div>
+        <div class="stat">Suggested build time: <b>4 contact ticks</b> · becomes: <b>Diverter-Left/Right</b></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    <b>Implementation sketch.</b> This maps onto the existing <code>BlockData</code>/<code>TickBehavior</code> pattern with two new exported fields — <code>breaks_after_ticks: int</code> and <code>break_into: TickBehavior</code> (or a flag meaning "revert to EMPTY") — plus a per-cell counter dictionary in <code>HexBoard.gd</code>, the same pattern already used for <code>active_geysers</code>. Timer-based and contact-based tiles are the same system with a different increment rule: timer tiles increment every <code>tick()</code>, contact tiles increment only on ticks where <code>_try_enter()</code> lands on that cell. Chain tiles just need each break to look up its placed neighbors and dock their counters. Visual feedback (crack overlays like the explainer above) can key off <code>ticks_remaining / breaks_after_ticks</code> to show 2–3 wear stages without new art per tile.
+    <br><br>
+    <b>Beaver Dam is the same system inverted:</b> <code>appears_after_ticks: int</code> and <code>appear_into: TickBehavior</code> (here, a Diverter). Before the counter hits its target the cell behaves as plain <code>EMPTY</code> in the simulation; once it hits the target, <code>_resolve_block_targets()</code> starts treating that cell as if a Diverter block were placed there. Since it's contact-based like the Mud Levee, it shares the same "only increments on <code>_try_enter()</code>" hook — no new counter machinery needed, just a second dictionary (<code>growing_dams</code>, alongside <code>active_geysers</code>) and one more branch in the cell-behavior lookup.
+  </div>
+
+  <div class="bottom">Flash Flood — breakable tiles brainstorm — see chat/dev-progress.md for full mechanic writeup</div>
+</div>
+</body>
+</html>

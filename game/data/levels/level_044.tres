@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 44
+display_name = "44. Split Networks VI"
+intro_text = "One stream isn't enough here. Split it and serve every pool at once."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-3, 2), Vector2i(-4, 3), Vector2i(0, -2)])
+pool_targets = {
+Vector2i(-3, 4): 4,
+Vector2i(-4, 4): 4
+}
+starting_inventory = {
+"splitter": 1,
+"divert_left": 1
+}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

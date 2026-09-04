@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Diverter-Left: mirror of diverter-right -->
+  <g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M70 24
+             Q70 24 60 24
+             L42 42
+             L42 30
+             L26 46
+             L42 62
+             L42 50
+             L60 32
+             L60 24 Z"
+          fill="#f7931e"/>
+  </g>
+</svg>

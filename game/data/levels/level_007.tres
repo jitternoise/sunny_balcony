@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 7
+display_name = "7. Splitter Branch"
+intro_text = "A Splitter sends water down both directions at once. Place it well and one placement can reach both the fire and the pool."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(0, -4)])
+fire_cells = Array[Vector2i]([Vector2i(-1, -1)])
+pool_targets = {
+Vector2i(-3, 1): 4
+}
+starting_inventory = {
+"splitter": 1
+}
+blocked_cells = Array[Vector2i]([])
