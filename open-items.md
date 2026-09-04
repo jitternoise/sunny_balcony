@@ -96,6 +96,51 @@ the game is indistinguishable from finishing any other level.
 
 ---
 
+## 🟡 Found by the first real playtest (2026-09-04)
+
+Godot 4.7.2 is now available, so the project has been **run** for the first
+time, not just read. It imports cleanly (all 11 SVGs), every script compiles,
+and the main scene runs without errors. The two icon fixes above are confirmed
+by execution, not just by reference checking.
+
+Two headless tools were added under `game/tools/` to make this repeatable:
+
+- **`smoke_test.gd`** — loads all 100 levels and the block catalog, validates
+  ids, sources, win conditions, block references, and that terrain sits inside
+  each level's declared playable area. Exits non-zero on failure, so it can
+  gate a build.
+  `godot --headless --path game --script res://tools/smoke_test.gd`
+- **`LevelHarness.tscn`** — runs any level for N beats with no input and
+  reports water depth, live cells, fires remaining and win/loss state. With a
+  third argument it saves a PNG of the board, which is how the screenshots
+  below were produced.
+  `godot --headless --path game res://tools/LevelHarness.tscn -- 24 40`
+
+**19 levels have a water source one ring outside the playable area.** All 19
+are the same coordinate, `(-1, -4)` on a `grid_radius = 4` board — distance 5.
+Every other source in the game (88 of 107) sits exactly on the rim.
+
+This is **not** a simulation bug, which an A/B run confirmed: from `(-1, -4)`
+the down-left diagonal is off-board and gets skipped, and the fallback lands on
+exactly the cell an on-rim `(0, -4)` source would have reached. Level 24 run
+with each source produces identical output — same depth, same live cells, same
+fires.
+
+It *is* a rendering bug. `HexBoard._draw_source_marker()` is called for every
+entry in `water_sources` with no `in_playable_area()` check, so on these 19
+levels the source marker and its first flow-preview arrow draw detached from
+the grid, floating in the sky above and left of the board. Compare level 1
+(marker on a tile) with level 24 (marker on nothing).
+
+Fix is a one-cell data edit on 19 files — `(-1, -4)` → `(0, -4)` — or a guard
+in the draw call. The data edit is safer, since it also stops the smoke test
+flagging them.
+
+Affected: 24, 28, 29, 34, 38, 42, 46, 47, 48, 50, 53, 55, 56, 59, 60, 61, 62,
+66, 72.
+
+---
+
 ## 🆕 New items the old list predates
 
 **The solution book is roughly half invalid.** The 2026-08-31 change making the
