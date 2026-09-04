@@ -133,5 +133,9 @@ func run(level_path: String, plan: Dictionary = {}) -> Dictionary:
 		"placements_rejected": rejected,
 	}
 
-	board.queue_free()
+	# free(), not queue_free(): these tools run from a SceneTree script
+	# where no frames are processed, so a queued free never happens and
+	# thousands of boards pile up until the process is killed.
+	remove_child(board)
+	board.free()
 	return result
