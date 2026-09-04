@@ -14,26 +14,33 @@ anything *looks or feels* is verified — see "Needs a live playtest" at the end
 
 ---
 
-## 🔴 Blockers — the project does not currently run
+## ✅ Blockers cleared 2026-09-04
 
-Both are missing icon assets, and they are the first thing to fix. Neither
-appeared in the previous open-items list.
+Both missing icon assets have been supplied and installed, and every `res://`
+reference in the project now resolves (120 checked: scripts, scenes, block and
+level data, theme). The project should compile again.
 
-**1. `icon_hydro.svg` is missing and breaks compilation.**
-`HexBoard.gd:38` has `const ICON_HYDRO := preload("res://assets/icons/icon_hydro.svg")`.
-A `preload()` of a nonexistent path is a *parse-time* failure in Godot, so
-`HexBoard.gd` never compiles, `Level.tscn` can't instance its board, and the
-game cannot start at all — not just the hydro feature. `game/assets/icons/`
-contains 9 SVGs and this is not one of them.
+- **`icon_hydro.svg`** — was `preload()`ed as a `const` on `HexBoard.gd:38`
+  without existing, a parse-time failure that stopped the whole game loading,
+  not just the hydro feature. Now at `game/assets/icons/icon_hydro.svg`.
+- **`icon_catapult.svg`** — referenced as an `ext_resource` by
+  `game/data/blocks/bomb_catapult.tres`. Now present.
 
-**2. `icon_catapult.svg` is missing.**
-Referenced as an `ext_resource` by `game/data/blocks/bomb_catapult.tres:4`.
-Fails at resource load rather than parse, so it's the less severe of the two,
-but the Bomb Catapult block is unusable until it exists.
+Both arrived in the `hydro-catapult-tiles/` drop (commit `2a081ed`) and match
+the house style `icon-system.md` specifies — 100×100 viewBox, `#1e2530`
+outline, stroke-width 5, same as the existing Diverter and Splitter glyphs.
 
-Both were already flagged at the end of `gameplay-changes-2026-08-31.md` as
-"still outstanding from the 2026-08-25 revision check". They have not been
-addressed since.
+⚠️ **Compilation is inferred from static reference checking, not observed.**
+Godot still isn't installed here, so nothing has actually been launched. The
+first real playtest is still pending and is still the project's largest
+unknown.
+
+Note that the same drop also carried older copies of `HexBoard.gd`, `Level.gd`,
+`BlockData.gd` and `LevelData.gd` predating the 2026-08-31 session — they lack
+`_draw_block_direction_arrows`, `_block_target_offsets`, `_preview_arrows`,
+`_preview_from_cells` and `footprint_offsets`. **Those were deliberately not
+taken**; only the two icons were. Anyone revisiting commit `2a081ed` should
+know its scripts are a regression, not an update.
 
 ---
 
@@ -132,8 +139,8 @@ Unchanged as a category, and still the single largest risk: **no feature in
 this project has been confirmed running in a live Godot window.** All
 verification to date, including this reconciliation, has been static.
 
-Fix the two missing icons first — until then the game cannot launch, so none of
-this list can be checked. After that, the items worth confirming by eye are the
+With the two missing icons now in place the project should load, so this list
+is finally checkable. The items worth confirming by eye are the
 ones the old list named (buffered placement responsiveness, the beat-4 status
 reveal, scrolling on tall levels, the Jamboree inventory bar, icon and glyph
 rendering, Level Select word-wrap, the loss/intro/win popups, pre-start flow
