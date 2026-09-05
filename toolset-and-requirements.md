@@ -106,6 +106,34 @@
 - Optimization for size: release export template, single-architecture build, compressed textures
 - Xcode + a Mac, only if/when the iOS export is pursued (Apple platform requirement, not Godot-specific)
 
+## Android vs iOS: what actually differs
+
+From a **code** perspective, almost nothing — one codebase, same GDScript, scenes and
+`.tres` data. The complete set of platform-sensitive code is implemented and written up
+in `game/README.md` → "Platform handling (Android / iOS)": the Android Back button
+(routed per-screen instead of quitting the app), the Main Menu's Quit button (hidden on
+iOS, where a visible one is an App Store rejection risk), and the duplicate mouse events
+Godot synthesizes from touch (a touchscreen issue on both platforms, not a difference
+between them). Saves, the renderer setting and the safe-area situation need no branch.
+
+The real divergence is in **delivery**, not source:
+
+| | Android | iOS |
+| --- | --- | --- |
+| Build machine | any OS + Android SDK | **Mac + Xcode required** — Godot emits an Xcode project; you build, sign and upload from there |
+| Account | $25 one-off | $99/year |
+| Signing | your own keystore | certificates + provisioning profiles |
+| Review | largely automated, hours | human review, days, can reject |
+| Compliance | Play Data Safety form | `PrivacyInfo.xcprivacy` privacy manifest |
+| Architecture | build arm64-only for the size budget | arm64 only anyway |
+
+Both compliance declarations are near-empty for this game — offline, no analytics, no
+ads, no IAP, no networking — but both are mandatory.
+
+The reason the port stays cheap is the "Explicitly not needed" list below. Native
+plugins are where Android (Java/Kotlin AAR) and iOS (`.xcframework` + Objective-C) fork
+into two separate codebases needing their own GDExtension glue. This project uses none.
+
 ## Explicitly not needed
 No backend/server, no database, no networking library, no analytics SDK, no ads/IAP SDK, no physics engine, no external hex-grid or save-sync libraries.
 

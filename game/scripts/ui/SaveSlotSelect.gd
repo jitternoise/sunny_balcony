@@ -5,8 +5,22 @@ extends Control
 
 
 func _ready() -> void:
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MainMenu.tscn"))
+	back_button.pressed.connect(_go_back)
 	_build_slot_buttons()
+
+
+## The Back button's destination, pulled out of the old inline lambda so the
+## Android Back handler below can reuse it -- the two must always agree.
+func _go_back() -> void:
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
+## Android's hardware/gesture Back. See MainMenu.gd's _notification() for why
+## the engine's own quit_on_go_back handling is switched off project-wide.
+## Never fires on iOS.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_go_back()
 
 
 func _build_slot_buttons() -> void:

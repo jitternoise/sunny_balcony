@@ -139,10 +139,24 @@ const HEADER_HEIGHT := 40.0
 
 
 func _ready() -> void:
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/MainMenu.tscn"))
+	back_button.pressed.connect(_go_back)
 	debug_unlock_toggle.button_pressed = GameState.debug_unlock_all
 	debug_unlock_toggle.toggled.connect(_on_debug_unlock_toggled)
 	_build_level_buttons()
+
+
+## The Back button's destination, pulled out of the old inline lambda so the
+## Android Back handler below can reuse it -- the two must always agree.
+func _go_back() -> void:
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
+## Android's hardware/gesture Back. See MainMenu.gd's _notification() for why
+## the engine's own quit_on_go_back handling is switched off project-wide.
+## Never fires on iOS.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_go_back()
 
 
 func _on_debug_unlock_toggled(pressed: bool) -> void:

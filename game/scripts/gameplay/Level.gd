@@ -98,6 +98,25 @@ var _level_path: String = ""
 ## a grid taller than one screen (see HexBoard.max_scroll_down).
 const DRAG_THRESHOLD := 16.0
 
+## True once this level has seen a real touchscreen event. Godot's
+## input_devices/pointing/emulate_mouse_from_touch setting is on by default and
+## has to stay on -- Control nodes (every Button in the HUD, the inventory bar,
+## all four popups) only respond to taps because of it. The cost is that on a
+## phone each tap ALSO arrives here as a synthetic InputEventMouseButton, so
+## _unhandled_input() below would run its press AND release path twice for one
+## finger: _handle_tap() firing twice on the same coord inside
+## DOUBLE_TAP_WINDOW_MSEC reads as a deliberate double-tap and would activate a
+## Hydro Plant nobody double-tapped, and a place-then-pick-up pair would cancel
+## itself out. This latch drops the duplicate.
+##
+## Latching on the first real touch rather than testing `event.device == -1`
+## (Godot's DEVICE_ID_EMULATION) is deliberate: that check is reliable for
+## emulated InputEventMouseButton but not for emulated InputEventMouseMotion,
+## which has carried a real device id in shipped 4.x builds. Touch and mouse
+## are never mixed on one device in practice, so once touch is seen, mouse
+## input is emulation by definition.
+var _touch_input_seen: bool = false
+
 var _press_pos: Vector2 = Vector2.ZERO
 var _press_active: bool = false
 var _drag_active: bool = false # true once the current press has moved past DRAG_THRESHOLD
@@ -173,16 +192,61 @@ func _ready() -> void:
 	# HexBoard.place_block()/remove_block() and only takes effect on the
 	# next PLACEMENT beat -- see the beat-cycle doc comment above.
 
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
+	back_button.pressed.connect(_go_to_level_select)
 	start_button.pressed.connect(_on_start_pressed)
 	retry_button.pressed.connect(_on_retry_pressed)
 	lose_retry_button.pressed.connect(_on_retry_pressed)
-	lose_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
+	lose_level_select_button.pressed.connect(_go_to_level_select)
 	intro_got_it_button.pressed.connect(_on_intro_got_it_pressed)
 	win_next_button.pressed.connect(_on_win_next_pressed)
 
 	_build_inventory_bar()
 	_show_intro_popup_if_needed()
+
+
+## Where both the HUD Back button and the lose popup's "Level Select" button
+## go, pulled out of the old inline lambdas so the Android Back handler below
+## can reuse it -- all three must always agree.
+func _go_to_level_select() -> void:
+	get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn")
+
+
+## Android's hardware/gesture Back. See MainMenu.gd's _notification() for why
+## the engine's own quit_on_go_back handling is switched off project-wide.
+## Never fires on iOS.
+##
+## Back is treated as "undo the innermost thing on screen", so it unwinds in
+## the same order a player would expect to tap out of: dismiss the intro popup
+## first, then abandon an in-progress catapult aim, and only leave the level
+## once neither is up. The win/lose popups deliberately fall through to the
+## last case -- both already offer Level Select as a button, and Back agreeing
+## with that is less surprising than Back dismissing a popup that would leave
+## the player staring at a finished board with nothing to do.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_on_back_requested()
+
+
+func _on_back_requested() -> void:
+	if intro_panel.visible:
+		_on_intro_got_it_pressed()
+		return
+	if _catapult_aiming:
+		_cancel_catapult_aim()
+		return
+	_go_to_level_select()
+
+
+## Abandons a charging catapult shot WITHOUT firing it, restoring exactly the
+## state a press that never touched a catapult would have left behind. The
+## block is not spent -- fire_catapult() is the only thing that consumes one,
+## and it is deliberately not called here.
+func _cancel_catapult_aim() -> void:
+	_catapult_aiming = false
+	_catapult_press_active = false
+	_press_active = false
+	_drag_active = false
+	board.clear_catapult_aim()
 
 
 ## Shows the level-intro popup (see intro_panel doc comment above) if this
@@ -326,6 +390,15 @@ func _on_block_button_pressed(block_id: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Drop mouse events synthesized from touch -- see _touch_input_seen above.
+	# Ordering is safe: Godot dispatches the real InputEventScreenTouch before
+	# the mouse event it emulates from it, so the latch is always already set
+	# by the time the duplicate arrives.
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_touch_input_seen = true
+	elif _touch_input_seen and (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return
+
 	# Mouse wheel: a simple scroll shortcut for desktop testing. Grids that
 	# fit entirely on screen have max_scroll_down == 0, so this is a no-op
 	# for them.

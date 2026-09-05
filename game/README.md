@@ -39,6 +39,7 @@ A working Godot 4.6 skeleton for the hex-grid, tick-based water-diversion puzzle
 - **100 levels** (`data/levels/level_001.tres` through `level_100.tres`), each with a descriptive `display_name` and an `intro_text` blurb. Levels 1-22 are the hand-built originals; levels 23-100 were generated programmatically (solution-first templates + rejection sampling) and every one of the 100 -- parsed back from the shipped `.tres` files, not the generator's memory -- passes the full validation battery: its documented solution wins, a zero-interaction run NEVER wins (so at least one tap/placement is always genuinely required), all preplaced tiles respect the 2-row source clearance, and no placement touches a source. The Level Select screen shows a header row above each task group (see `LevelSelect.GROUPS`).
 - **Campaign structure (13 task groups)**: Riverbed Basics 1-12 (diverters, walls, splitters, towns -- the original teaching levels), Long Corridors 13-17 (scrolling), Special Waters 18-20 (geyser / jamboree / flat grid), Dig the River 21-22 (digging + the splitter cascade), Diverter Drills 23-30, Wall Work 31-38, Split Networks 39-46, Town Defense 47-54, Flat Fields 55-62 (flat grid), Geyser Country 63-70, Big Digs 71-78 (dig levels up to 25-row corridors), Jamboree Runs 79-86 (shared block budgets on corridors), and The Gauntlet 87-100 -- escalating corridor levels mixing everything: solution blocks, fixed preset splitters, dirt bands to dig through, towns, geysers, and budgets, growing from radius 10 to radius 20.
 - **Every level requires interaction**: the eight original "just watch" levels (2, 4, 6, 8, 9, 13, 18, 20) were retrofitted -- each now needs exactly one block placement (the pools were re-placed off the natural path via simulation search, keeping each level's original teaching subject: the hole-bounce on 6, the twin sources on 9, the geyser on 18 -- verified to still activate -- and the flat grid on 20)
+- **Android/iOS platform handling**: the Android hardware/gesture Back button is routed per-screen instead of quitting the app (`quit_on_go_back=false` plus a `_notification()` handler in each scene root), the Main Menu's Quit button is hidden on iOS, and `Level.gd` drops the duplicate mouse events Godot synthesizes from every touch. See "Platform handling (Android / iOS)" below for the full writeup and for the things that deliberately needed no change.
 - **Debug mode**: a "Debug: Unlock All" checkbox on the Level Select screen (top-right) makes every level selectable regardless of save progress. It's on by default when running from the editor or a debug export (`OS.is_debug_build()`), off by default in a release export -- but can be toggled either way at runtime. It's a session-only flag (`GameState.debug_unlock_all`): it never touches `highest_unlocked_level`/`completed_levels` and is never written to a save file, so toggling it can't corrupt real progress, and it resets to the build-type default next launch.
 
 ## Background
@@ -91,6 +92,76 @@ Every level picks its hex orientation via `LevelData.grid_style`, `"pointy"` (de
   - **Per-source flow style**: `LevelData.source_flow_style` is a `Vector2i -> String` map (water source coordinate -> `"straight"` or `"zigzag"`, defaulting to `"straight"` if a source isn't listed). Different sources on the same `"flat"` level can use different styles -- see Level 20, which has one of each. A `"straight"` source only ever tries `Hex.FLAT_DOWN`; a `"zigzag"` source alternates between the true down-left/down-right diagonals (`Hex.FLAT_DOWN_LEFT`/`Hex.FLAT_DOWN_RIGHT`), mirroring the pointy grid's zigzag but with this grid's own diagonal pair -- note this pair doesn't drift the way the pointy grid's zigzag does (see the code comment on `_advance_water_flat()` for why), it's a symmetric left-right oscillation instead. Active geysers on a `"flat"` level always use `"straight"` (not exposed as configurable per-geyser).
   - **Placed blocks work the same way as pointy** -- no new "flat" block types were added. Diverter-Left/Diverter-Right/Splitter conceptually always mean "send water down-and-to-the-left/right"; `HexBoard._resolve_block_targets()` just resolves that to whichever grid's actual directions apply (`Hex.DOWN_LEFT`/`DOWN_RIGHT` for pointy, `Hex.FLAT_DOWN_LEFT`/`FLAT_DOWN_RIGHT` for flat). One thing worth knowing: on a `"flat"` level, Diverter-Right sends water via the grid's TRUE down-right diagonal (`Hex.FLAT_DOWN_RIGHT`, a `(1,0)` axial step) which is a *different* direction than a `"straight"` source's own natural fall (`Hex.FLAT_DOWN`, a `(0,1)` step) -- so placing a Diverter-Right on a `"flat"` level genuinely reroutes a stream sideways, it doesn't just confirm the straight-down direction.
   - **Loss detection had to be generalized for this grid.** The pointy grid's "hit the true bottom edge = instant loss" shortcut relies on both its down-diagonals always increasing `r` by exactly 1 -- that's not true for `Hex.FLAT_DOWN_RIGHT` (a pure `q+1` step, `r` unchanged), so `_advance_water_flat()` instead checks each candidate direction directly against the grid's cube-coordinate radius (`HexBoard._cube_distance()`), independent of which axis the exit happens through, and only triggers a loss once *every* candidate direction for that stream has failed *and at least one of them failed specifically by exiting the level's true boundary* (as opposed to being blocked by a `blocked_cells` corridor wall, which just makes the water back up and pool the same way a Wall block would). This was verified against a from-scratch Python port of the new logic (see Level 20's playtesting note) before being written into `HexBoard.gd`.
+
+## Platform handling (Android / iOS)
+
+The game is one codebase for both platforms -- same GDScript, same scenes, same
+`.tres` data -- and everything below is the complete list of places where the two
+actually differ or where mobile input needed handling desktop never exercised.
+
+**The Quit button is Android-only.** `MainMenu.gd` hides it on iOS
+(`quit_button.visible = not OS.has_feature("ios")`). iOS ships no user-facing
+"quit the app" affordance: Apple's HIG treats programmatic termination as
+indistinguishable from a crash, and a visible Quit button is a routine App Store
+review rejection. `_on_quit_pressed()` and MainMenu's Back handler are the only
+`get_tree().quit()` calls in the project, and neither is reachable on iOS.
+
+**The Android Back button is handled per-screen.** `project.godot` sets
+`application/config/quit_on_go_back=false`, which switches off the engine default
+of killing the app the instant Back is pressed on *any* screen -- previously a Back
+press mid-level would have quit the game outright, losing the attempt. Each scene
+root now implements `_notification()` and routes `NOTIFICATION_WM_GO_BACK_REQUEST`
+to its own Back destination:
+
+| Screen | Back does |
+| --- | --- |
+| `MainMenu` | quits (top of the navigation stack -- the one screen where the old default was right) |
+| `SaveSlotSelect` | → Main Menu (same as its Back button) |
+| `LevelSelect` | → Main Menu (same as its Back button) |
+| `Level` | dismisses the intro popup if it's up; else cancels an in-progress catapult aim; else → Level Select |
+
+In `Level.gd` the destination lives in `_go_to_level_select()` so the HUD Back
+button, the lose popup's "Level Select" button and the Back handler can never drift
+apart. Cancelling a catapult aim (`_cancel_catapult_aim()`) deliberately does *not*
+call `fire_catapult()`, so backing out of an aim never spends the block. The win and
+lose popups intentionally fall through to "leave the level" rather than being
+dismissed -- both already offer Level Select as a button, and Back agreeing with that
+beats dismissing a popup and leaving the player on a finished board.
+
+None of this fires on iOS, which has no system back event -- it is inert code there,
+not a branch.
+
+**Touch input arrives twice, and `Level.gd` now drops the duplicate.** Godot's
+`input_devices/pointing/emulate_mouse_from_touch` is on by default and has to stay
+on -- every `Control` in the project (HUD buttons, the inventory bar, all four
+popups) only responds to taps because of it. The side effect is that on a phone each
+tap also reaches `_unhandled_input()` as a synthetic `InputEventMouseButton`, so the
+press *and* release paths would run twice for one finger: `_handle_tap()` firing
+twice on the same coord inside `DOUBLE_TAP_WINDOW_MSEC` reads as a deliberate
+double-tap and would activate a Hydro Plant nobody double-tapped, and a
+place-then-pick-up pair would silently cancel itself out. `Level.gd` latches
+`_touch_input_seen` on the first real `InputEventScreenTouch`/`ScreenDrag` and
+ignores mouse events from then on. This affects Android and iOS identically -- it is
+a touchscreen issue, not a platform difference -- and is inert on desktop, where no
+touch event ever arrives and the existing mouse/wheel paths are untouched.
+
+**Deliberately unchanged, and why:**
+
+- **Saves.** `user://saves/slot_N.save` via `FileAccess` maps to each platform's own
+  sandbox automatically. No permissions, no shared storage, no code branch. Nothing
+  is written outside `user://`.
+- **Renderer.** `renderer/rendering_method.mobile="gl_compatibility"` already covers
+  both: Godot's `mobile` feature tag means Android *and* iOS. Compatibility is the
+  right pick for a 2D game and the widest-hardware option.
+- **Safe area / notches.** `display/window/stretch/aspect="keep"` at 720x1280
+  letterboxes on modern tall phones, which keeps the whole UI clear of notches and
+  the iOS home indicator without any inset code. If that is ever changed to
+  `"expand"` to fill the screen, `DisplayServer.get_display_safe_area()` becomes
+  necessary and iOS is the stricter case.
+- **No native plugins.** No ads, IAP, analytics or networking (see
+  `toolset-and-requirements.md`). Plugins are where Android (Java/Kotlin AAR) and
+  iOS (`.xcframework` + Objective-C) genuinely fork into two codebases; having none
+  is why this port stays a single codebase.
 
 ## Project structure
 
@@ -233,4 +304,6 @@ The biggest level in the game: grid radius 50 (101 rows, ~10x deeper than any pr
 - The scrolling levels (13-17) haven't been playtested with real touch/mouse drag input in a live Godot window, only verified via the underlying layout math (`max_scroll_down`, clamping) and the simulation itself -- worth a hands-on pass to confirm the drag feel and threshold (`Level.DRAG_THRESHOLD`) feel right
 - Level 18's `.tres` was reconstructed this session (see note under its Playtesting entry above) -- worth confirming in a live Godot window since it wasn't re-verified through the actual engine
 - The icon-glyph rendering (`HexBoard._draw_icon()` and the `icon` field wired onto the 4 block `.tres` files), the Level Select screen's wider/word-wrapped name buttons, the lose popup panel, the level-intro popup and win popup (centering/wrapping/that each actually blocks input as intended, and that the win popup's Next button correctly advances and shows the next level's own intro popup), the pre-start flow-preview arrows (that they render/fade/disappear-on-Start correctly and read clearly on an actual device screen), the sky/grass background on every screen, the town-flood light-blue color, the geyser's automatic feed-blocking, the new `"flat"` grid orientation (rendering, source markers, and Level 20's specific fire/pool placements), and the new "Dig the River" mechanic (the dirt color stages reading clearly as dig progress, the trench color reading as a carved channel, the tap-vs-drag threshold not eating dig taps on a scrolled board, and Level 21's overall feel -- especially whether 3 taps per hex is the right effort-per-cell on a real touchscreen) have not been visually confirmed in a live Godot window yet either -- all still headless/Python-simulation-verified or inspection-verified only (no script errors, correct node paths/signal wiring by inspection, matching simulation outcomes) -- worth a hands-on look together, the flat grid especially since its pixel/corner math has never actually been rendered
+- The Android/iOS platform handling (see that section above) is inspection-verified only, like everything else in this project -- nothing has run on a real handset. The three things to confirm first on an Android device: that Back steps back one screen at a time instead of quitting, that a single tap places exactly one block (the `_touch_input_seen` latch doing its job), and that a tap on a HUD button doesn't also register as a board tap underneath it -- that last one is a separate, pre-existing question the latch does not address, since the raw touch event may reach `_unhandled_input()` even when the emulated mouse event is consumed by the `Control`
+- **No pause on focus loss.** A phone call, a notification pull-down or an app switch mid-level leaves the tick timer's state to whatever the OS does with the process; a player could return to a level that lost itself while they were away. Handling `NOTIFICATION_APPLICATION_FOCUS_OUT` (pause the timer, show a resume prompt) applies equally to Android and iOS and is a design decision -- auto-pause silently, or pause with a visible overlay -- not a mechanical port fix, so it was deliberately left out of the platform pass
 - The `"flat"` grid's `"zigzag"` mode only ever uses the two true down-left/down-right diagonals for NATURAL fall (no straight-down fallback) -- a stream in that mode drifts off the grid's edge after roughly `2 * (grid_radius - starting_offset)` ticks if nothing catches it first, similar in spirit to the pointy grid's drift but confined to a fixed 2-column band instead of trending steadily sideways; worth knowing when authoring more `"flat"` levels (see Level 20's writeup above for the exact mechanism)

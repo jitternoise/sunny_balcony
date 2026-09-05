@@ -9,6 +9,13 @@ config_version=5
 config/name="Flash Flood"
 run/main_scene="res://scenes/MainMenu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
+; Android only: stop the engine quitting the app by itself the moment the
+; hardware/gesture Back button is pressed, on whatever screen the player
+; happens to be on. Each scene root handles NOTIFICATION_WM_GO_BACK_REQUEST
+; and routes Back to its own Back destination instead (MainMenu quits, every
+; other screen steps back one level). No effect on iOS, which never sends the
+; notification, or on desktop.
+config/quit_on_go_back=false
 
 [autoload]
 
