@@ -138,7 +138,7 @@ Start with the solution applied before pressing Start.
 - **94. The Gauntlet VIII** — wall (3, -6) + wall (4, -5) + dig 6 cells: [(7, -13), (6, -12), (-4, 7), (-3, 7), (-5, 8), (-4, 8)] | win 38
 - **95. The Gauntlet IX** — divert-left (-7, 13) + divert-right (1, -3) + dig 6 cells: [(7, -14), (6, -13), (-3, 4), (-2, 4), (-4, 5), (-3, 5)] | win 41
 - **96. The Gauntlet X** — wall (-6, 13) + divert-right (-9, 17) + dig 8 cells: [(1, -2), (2, -2), (1, -1), (2, -1), (-4, 9), (-3, 9), (-5, 10), (-4, 10)] | win 42
-- **97. The Gauntlet XI** — wall (-3, 6) + divert-right (3, -6) + dig 8 cells: [(6, -13), (6, -12), (-8, 14), (-6, 14), (-5, 14), (-9, 15), (-7, 15), (-6, 15)] | win 44
-- **98. The Gauntlet XII** — wall (7, -15) + dig 6 cells: [(5, -9), (5, -8), (0, 2), (1, 2), (-1, 3), (0, 3)] | win 46
+- **97. The Gauntlet XI** — wall (-9, 13) + divert-right (3, -6) + dig 8 cells: [(6, -13), (6, -12), (-8, 14), (-6, 14), (-5, 14), (-9, 15), (-7, 15), (-6, 15)] | win 44
+- **98. The Gauntlet XII** — wall (-12, 19) + dig 6 cells: [(5, -9), (5, -8), (0, 2), (1, 2), (-1, 3), (0, 3)] | win 46
 - **99. The Gauntlet XIII** — wall (-4, 8) + divert-right (-9, 16) + dig 12 cells: [(-4, 5), (-3, 5), (-2, 5), (-4, 6), (-3, 6), (-2, 6), (-6, 9), (-4, 9), (-3, 9), (-6, 10), (-4, 10), (-3, 10)] | win 44
 - **100. The Gauntlet XIV** — divert-right (-3, 6) + dig 8 cells: [(4, -9), (5, -9), (4, -8), (5, -8), (1, -2), (2, -2), (0, -1), (1, -1)] | win 45
