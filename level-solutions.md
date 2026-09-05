@@ -7,7 +7,7 @@ Start with the solution applied before pressing Start.
 ## Riverbed Basics (levels 1-12)
 
 - **Level 1** — Wall (-1,-3) | win 8
-- **Level 2** (retrofitted) — wall (-4, 3) | win 12
+- **Level 2** (retrofitted) — wall (-4, 1) | win 12
 - **Level 3** — Diverter-Right (-1,-2) | win 9
 - **Level 4** (retrofitted) — divert-right (-2, 2) | win 12
 - **Level 5** — Wall (-1,-2) | win 8
@@ -17,7 +17,7 @@ Start with the solution applied before pressing Start.
 - **Level 9** (retrofitted) — divert-left (-1, 1) | win 12
 - **Level 10** — Wall (-1,-3) | win 11
 - **Level 11** — Wall (-1,-3) + Splitter (1,-2) | win 11
-- **Level 12** — Wall (-1,-3) | win 8
+- **Level 12** — divert-right (-1, -2) | win 8
 
 ## Long Corridors (levels 13-17)
 
@@ -25,7 +25,7 @@ Start with the solution applied before pressing Start.
 - **Level 14** — Wall (1,-1) | win 21
 - **Level 15** — Splitter (1,-3) | win 21
 - **Level 16** — Diverter-Right (1,-2) | win 23
-- **Level 17** — Wall (4,-9) + Diverter-Right (1,0) + Splitter (-2,7) | win 29
+- **Level 17** — wall (2, -7) + divert-right (1, 0) + splitter (-2, 7) | win 29
 
 ## Special Waters (levels 18-20)
 
@@ -52,8 +52,8 @@ Start with the solution applied before pressing Start.
 ## Wall Work (levels 31-38)
 
 - **31. Wall Work I** — wall (-2, 2) | win 12
-- **32. Wall Work II** — wall (-2, 1) | win 13
-- **33. Wall Work III** — wall (-3, 3) | win 12
+- **32. Wall Work II** — wall (-3, 1) | win 13
+- **33. Wall Work III** — wall (-4, 3) | win 12
 - **34. Wall Work IV** — wall (-1, -2) | win 13
 - **35. Wall Work V** — divert-right (-1, 0) + wall (-1, 2) | win 12
 - **36. Wall Work VI** — divert-left (0, -3) + divert-left (-3, 1) | win 13
@@ -80,7 +80,7 @@ Start with the solution applied before pressing Start.
 - **51. Town Defense V** — divert-left (-1, -1) + divert-left (0, -2) | win 12
 - **52. Town Defense VI** — divert-right (-3, 1) + wall (-2, 0) | win 13
 - **53. Town Defense VII** — divert-right (-1, -2) + wall (-2, 2) | win 12
-- **54. Town Defense VIII** — wall (0, -3) + wall (0, 0) | win 13
+- **54. Town Defense VIII** — wall (-1, -3) + wall (0, 0) | win 13
 
 ## Flat Fields (levels 55-62)
 
@@ -119,12 +119,12 @@ Start with the solution applied before pressing Start.
 
 - **79. Jamboree Runs I** — splitter (0, 2) | win 20
 - **80. Jamboree Runs II** — divert-left (0, 1) + divert-left (-3, 6) | win 23
-- **81. Jamboree Runs III** — wall (-5, 9) | win 26
-- **82. Jamboree Runs IV** — splitter (0, -2) + wall (2, -7) | win 20
-- **83. Jamboree Runs V** — wall (-5, 8) | win 23
+- **81. Jamboree Runs III** — wall (-6, 9) | win 26
+- **82. Jamboree Runs IV** — splitter (0, -2) + wall (-6, 8) | win 20
+- **83. Jamboree Runs V** — wall (-6, 8) | win 23
 - **84. Jamboree Runs VI** — divert-left (2, -7) + wall (-3, 4) | win 26
-- **85. Jamboree Runs VII** — wall (1, -1) | win 20
-- **86. Jamboree Runs VIII** — wall (2, -5) + splitter (3, -7) | win 22
+- **85. Jamboree Runs VII** — wall (-2, 3) | win 20
+- **86. Jamboree Runs VIII** — catapult (-4, 7) + splitter (2, -5) | win 22
 
 ## The Gauntlet (levels 87-100)
 
@@ -132,9 +132,9 @@ Start with the solution applied before pressing Start.
 - **88. The Gauntlet II** — wall (3, -5) + dig 2 cells: [(1, -4), (1, -3)] | win 27
 - **89. The Gauntlet III** — divert-left (-5, 9) + dig 2 cells: [(-2, 3), (-2, 4)] | win 41
 - **90. The Gauntlet IV** — divert-right (2, -3) + dig 2 cells: [(-2, 6), (-2, 7)] | win 30
-- **91. The Gauntlet V** — divert-left (-3, 6) + wall (4, -9) + dig 4 cells: [(-4, 10), (-3, 10), (-5, 11), (-4, 11)] | win 33
+- **91. The Gauntlet V** — divert-left (-3, 6) + wall (-3, 3) + dig 4 cells: [(-4, 10), (-3, 10), (-5, 11), (-4, 11)] | win 33
 - **92. The Gauntlet VI** — wall (0, 0) + dig 4 cells: [(3, -8), (4, -8), (3, -7), (4, -7)] | win 37
-- **93. The Gauntlet VII** — wall (0, -1) + divert-left (-4, 10) + dig 4 cells: [(-5, 12), (-4, 12), (-6, 13), (-5, 13)] | win 35
+- **93. The Gauntlet VII** — wall (-2, 1) + divert-left (-4, 10) + dig 4 cells: [(-5, 12), (-4, 12), (-6, 13), (-5, 13)] | win 35
 - **94. The Gauntlet VIII** — wall (3, -6) + wall (4, -5) + dig 6 cells: [(7, -13), (6, -12), (-4, 7), (-3, 7), (-5, 8), (-4, 8)] | win 38
 - **95. The Gauntlet IX** — divert-left (-7, 13) + divert-right (1, -3) + dig 6 cells: [(7, -14), (6, -13), (-3, 4), (-2, 4), (-4, 5), (-3, 5)] | win 41
 - **96. The Gauntlet X** — wall (-6, 13) + divert-right (-9, 17) + dig 8 cells: [(1, -2), (2, -2), (1, -1), (2, -1), (-4, 9), (-3, 9), (-5, 10), (-4, 10)] | win 42
