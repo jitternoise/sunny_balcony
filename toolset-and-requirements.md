@@ -128,7 +128,11 @@ The real divergence is in **delivery**, not source:
 | Architecture | build arm64-only for the size budget | arm64 only anyway |
 
 Both compliance declarations are near-empty for this game — offline, no analytics, no
-ads, no IAP, no networking — but both are mandatory.
+ads, no IAP, no networking — but both are mandatory. Godot's iOS export preset carries
+the privacy manifest as `privacy/collected_data/*` options (each data type: collected,
+purposes, linked to user, used for tracking), so it is filled in from the export dialog
+rather than by hand-editing `PrivacyInfo.xcprivacy`. On Android the single-architecture
+size saving is the `architectures/arm64-v8a` / `armeabi-v7a` toggles on the preset.
 
 The reason the port stays cheap is the "Explicitly not needed" list below. Native
 plugins are where Android (Java/Kotlin AAR) and iOS (`.xcframework` + Objective-C) fork

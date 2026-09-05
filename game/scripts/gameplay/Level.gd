@@ -98,25 +98,6 @@ var _level_path: String = ""
 ## a grid taller than one screen (see HexBoard.max_scroll_down).
 const DRAG_THRESHOLD := 16.0
 
-## True once this level has seen a real touchscreen event. Godot's
-## input_devices/pointing/emulate_mouse_from_touch setting is on by default and
-## has to stay on -- Control nodes (every Button in the HUD, the inventory bar,
-## all four popups) only respond to taps because of it. The cost is that on a
-## phone each tap ALSO arrives here as a synthetic InputEventMouseButton, so
-## _unhandled_input() below would run its press AND release path twice for one
-## finger: _handle_tap() firing twice on the same coord inside
-## DOUBLE_TAP_WINDOW_MSEC reads as a deliberate double-tap and would activate a
-## Hydro Plant nobody double-tapped, and a place-then-pick-up pair would cancel
-## itself out. This latch drops the duplicate.
-##
-## Latching on the first real touch rather than testing `event.device == -1`
-## (Godot's DEVICE_ID_EMULATION) is deliberate: that check is reliable for
-## emulated InputEventMouseButton but not for emulated InputEventMouseMotion,
-## which has carried a real device id in shipped 4.x builds. Touch and mouse
-## are never mixed on one device in practice, so once touch is seen, mouse
-## input is emulation by definition.
-var _touch_input_seen: bool = false
-
 var _press_pos: Vector2 = Vector2.ZERO
 var _press_active: bool = false
 var _drag_active: bool = false # true once the current press has moved past DRAG_THRESHOLD
@@ -390,13 +371,25 @@ func _on_block_button_pressed(block_id: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Drop mouse events synthesized from touch -- see _touch_input_seen above.
-	# Ordering is safe: Godot dispatches the real InputEventScreenTouch before
-	# the mouse event it emulates from it, so the latch is always already set
-	# by the time the duplicate arrives.
-	if event is InputEventScreenTouch or event is InputEventScreenDrag:
-		_touch_input_seen = true
-	elif _touch_input_seen and (event is InputEventMouseButton or event is InputEventMouseMotion):
+	# Drop the mouse events Godot synthesizes from touch. The project setting
+	# input_devices/pointing/emulate_mouse_from_touch is on by default and has
+	# to stay on: BaseButton only ever looks at InputEventMouseButton, never
+	# InputEventScreenTouch, so every Button in the HUD, the inventory bar and
+	# the popups is tapped purely through this emulation. The cost is that on a
+	# phone each touch ALSO arrives here as a synthetic mouse event -- and the
+	# engine dispatches that copy FIRST, before the real InputEventScreenTouch
+	# (Input::_parse_input_event_impl recurses into the emulated event before
+	# dispatching the original). Without this guard one finger ran the press
+	# and release paths twice: two _handle_tap() calls on the same coord inside
+	# DOUBLE_TAP_WINDOW_MSEC read as a deliberate double-tap and activated a
+	# Hydro Plant nobody double-tapped, and a place-then-pick-up pair cancelled
+	# itself out.
+	#
+	# Every emulated event, button and motion alike, carries
+	# InputEvent.DEVICE_ID_EMULATION (-1) as its device id -- the documented
+	# way to tell it from a physical mouse. A real desktop mouse keeps its
+	# non-negative device id, so the mouse and wheel paths below are unaffected.
+	if event.device == InputEvent.DEVICE_ID_EMULATION:
 		return
 
 	# Mouse wheel: a simple scroll shortcut for desktop testing. Grids that

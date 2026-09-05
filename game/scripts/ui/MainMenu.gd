@@ -10,12 +10,13 @@ func _ready() -> void:
 	new_game_button.pressed.connect(_on_new_game_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 
-	# iOS ships no user-facing "quit the app" affordance: Apple's HIG treats
-	# programmatic termination as indistinguishable from a crash, and a visible
-	# Quit button is a routine App Store review rejection. Android (and desktop,
-	# for editor testing) keeps it. _on_quit_pressed() and the Back handler
-	# below are the only get_tree().quit() calls in the project, and neither is
-	# reachable on iOS once this button is hidden -- Back doesn't exist there.
+	# iOS ships no user-facing "quit the app" affordance: Apple's guidelines
+	# say never to quit an iOS app programmatically, because people read it as
+	# a crash, and a visible Quit button is a well-known App Store review
+	# flag. Android (and desktop, for editor testing) keeps it.
+	# _on_quit_pressed() and the Back handler below are the only
+	# get_tree().quit() calls in the project, and neither is reachable on iOS
+	# once this button is hidden -- Back doesn't exist there.
 	quit_button.visible = not OS.has_feature("ios")
 
 	continue_button.disabled = not _any_save_exists()
