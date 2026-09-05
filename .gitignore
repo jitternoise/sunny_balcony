@@ -21,3 +21,4 @@ Thumbs.db
 
 # transient tool output
 .solve_remaining.log
+.solution_space.log
