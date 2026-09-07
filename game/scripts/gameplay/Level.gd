@@ -41,7 +41,19 @@ var _subtick_count: int = 0
 @onready var back_button: Button = $UI/HUD/BackButton
 @onready var start_button: Button = $UI/HUD/StartButton
 @onready var retry_button: Button = $UI/HUD/RetryButton
+@onready var pause_button: Button = $UI/HUD/PauseButton
 @onready var tick_timer: Timer = $TickTimer
+
+## Modal-style popup shown while the game is paused (see _on_pause_pressed()):
+## a dimmed overlay that swallows every board tap/drag underneath it, plus a
+## centered "Paused" panel with Resume / Retry / Level Select buttons. Unlike
+## the lose popup, this one is meant to block the board entirely -- a paused
+## game shouldn't let the player keep placing or picking up blocks while the
+## water is frozen.
+@onready var pause_panel: Control = $UI/PausePanel
+@onready var pause_resume_button: Button = $UI/PausePanel/Center/Panel/VBox/ResumeButton
+@onready var pause_retry_button: Button = $UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton
+@onready var pause_level_select_button: Button = $UI/PausePanel/Center/Panel/VBox/ButtonRow/LevelSelectButton
 
 ## Small modal-style popup shown on a loss (see _on_level_lost()): a dimmed
 ## overlay plus a centered panel with the loss reason and two buttons,
@@ -84,6 +96,19 @@ var _subtick_count: int = 0
 var level_data: LevelData
 var block_catalog: Dictionary = {}
 var started: bool = false
+
+## True while the pause popup is up (see _on_pause_pressed()). The tick timer
+## is held (tick_timer.paused) rather than stopped, so resuming picks the
+## beat cycle back up exactly where it left off, mid-measure and all.
+var paused: bool = false
+
+## True while the inventory bar's Delete button is toggled on (see
+## _build_inventory_bar() / _on_delete_button_toggled()). In this mode a tap
+## on a placed block removes it (refunding it to inventory) and a tap on an
+## empty cell does nothing -- no block is ever placed, whatever was selected
+## before. Picking a block from the inventory bar switches the mode back off.
+var delete_mode: bool = false
+const DELETE_BUTTON_NAME := "delete_mode"
 
 ## The res://data/levels/*.tres path this scene was loaded with (captured
 ## from GameState.pending_level_path at the very start of _ready(), before
@@ -176,6 +201,10 @@ func _ready() -> void:
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
 	start_button.pressed.connect(_on_start_pressed)
 	retry_button.pressed.connect(_on_retry_pressed)
+	pause_button.pressed.connect(_on_pause_pressed)
+	pause_resume_button.pressed.connect(_on_resume_pressed)
+	pause_retry_button.pressed.connect(_on_retry_pressed)
+	pause_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
 	lose_retry_button.pressed.connect(_on_retry_pressed)
 	lose_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
 	intro_got_it_button.pressed.connect(_on_intro_got_it_pressed)
@@ -213,6 +242,7 @@ func _on_start_pressed() -> void:
 		return
 	started = true
 	start_button.disabled = true
+	pause_button.disabled = false # nothing to freeze before the water starts flowing
 	# From here on, block placements/removals buffer to the next
 	# PLACEMENT beat instead of landing immediately -- see HexBoard.started.
 	board.started = true
@@ -238,8 +268,13 @@ func _on_start_pressed() -> void:
 func _on_retry_pressed() -> void:
 	lose_panel.visible = false
 	win_panel.visible = false
+	pause_panel.visible = false
+	paused = false
+	tick_timer.paused = false
 	tick_timer.stop()
 	started = false
+	pause_button.disabled = true
+	delete_mode = false
 	current_beat = BeatPhase.PLACEMENT
 	_subtick_count = 0
 	start_button.disabled = false
@@ -248,6 +283,37 @@ func _on_retry_pressed() -> void:
 	board.setup(level_data, block_catalog)
 	_build_inventory_bar()
 	status_label.text = "Fires remaining: %d" % board.fires_remaining
+
+
+## Freezes the game: holds the tick timer (so no beat advances and the water
+## stops mid-flow), cancels any press/aim in progress so a half-charged
+## catapult can't fire on resume, and raises the pause popup, whose dimmed
+## overlay swallows every board tap until Resume is pressed. Only meaningful
+## once Start has been pressed -- before that nothing is moving, so the HUD
+## Pause button stays disabled (see _on_start_pressed()).
+func _on_pause_pressed() -> void:
+	if not started or paused or board.game_over:
+		return
+	paused = true
+	tick_timer.paused = true
+	_press_active = false
+	_drag_active = false
+	_catapult_press_active = false
+	_catapult_aiming = false
+	board.clear_catapult_aim()
+	pause_button.disabled = true
+	pause_panel.visible = true
+
+
+## Unfreezes a paused game -- the tick timer resumes from exactly where it
+## was held, so the beat cycle continues on the same sub-tick.
+func _on_resume_pressed() -> void:
+	if not paused:
+		return
+	paused = false
+	tick_timer.paused = false
+	pause_button.disabled = false
+	pause_panel.visible = false
 
 
 ## Loads every BlockData .tres under res://data/blocks/ so adding a new
@@ -286,6 +352,17 @@ func _build_inventory_bar() -> void:
 		inventory_bar.remove_child(child)
 		child.queue_free()
 
+	# Delete (eraser) mode toggle -- always the first button in the bar, on
+	# every level, since every level lets the player pick blocks back up.
+	# See delete_mode / _on_delete_button_toggled().
+	var delete_button := Button.new()
+	delete_button.name = DELETE_BUTTON_NAME
+	delete_button.text = "Delete"
+	delete_button.toggle_mode = true
+	delete_button.button_pressed = delete_mode
+	delete_button.toggled.connect(_on_delete_button_toggled)
+	inventory_bar.add_child(delete_button)
+
 	var block_ids: Array = block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys()
 	for block_id in block_ids:
 		var button := Button.new()
@@ -323,9 +400,34 @@ func _refresh_inventory_labels() -> void:
 
 func _on_block_button_pressed(block_id: String) -> void:
 	board.selected_block_id = block_id
+	_set_delete_mode(false)
+
+
+## Toggled by the inventory bar's Delete button. Turning it on deselects
+## whatever block was selected so the next tap can only ever remove, never
+## place; turning it off just returns to the ordinary tap-to-place flow
+## with nothing selected.
+func _on_delete_button_toggled(toggled_on: bool) -> void:
+	delete_mode = toggled_on
+	if toggled_on:
+		board.selected_block_id = ""
+
+
+func _set_delete_mode(enabled: bool) -> void:
+	delete_mode = enabled
+	var delete_button: Button = inventory_bar.get_node_or_null(DELETE_BUTTON_NAME)
+	if delete_button and delete_button.button_pressed != enabled:
+		delete_button.set_pressed_no_signal(enabled)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# A paused game is frozen for input too. The pause popup's dimmed
+	# overlay already swallows taps/drags before they get here, but a
+	# scroll wheel or a stray release event can still arrive -- ignore
+	# everything until Resume.
+	if paused:
+		return
+
 	# Mouse wheel: a simple scroll shortcut for desktop testing. Grids that
 	# fit entirely on screen have max_scroll_down == 0, so this is a no-op
 	# for them.
@@ -428,6 +530,8 @@ func _unhandled_input(event: InputEvent) -> void:
 ## finger/cursor hasn't moved at all -- see _update_catapult_aim()).
 ## A no-op every frame for any press that isn't on a catapult.
 func _process(_delta: float) -> void:
+	if paused:
+		return
 	if _catapult_aiming:
 		_update_catapult_aim()
 		return
@@ -565,6 +669,15 @@ func _handle_tap(screen_pos: Vector2) -> void:
 			_refresh_inventory_labels()
 		return
 
+	# Delete mode (see delete_mode): also lets a tap cancel a block that is
+	# still queued for the next PLACEMENT beat (remove_block() handles the
+	# pending case itself), and a tap that didn't land on anything is
+	# simply a miss -- never fall through to placing something.
+	if delete_mode:
+		if board.remove_block(coord):
+			_refresh_inventory_labels()
+		return
+
 	if board.selected_block_id == "":
 		return
 
@@ -615,6 +728,7 @@ func _update_status_label() -> void:
 ## under them a second and a half later.
 func _on_level_won() -> void:
 	tick_timer.stop()
+	pause_button.disabled = true
 	retry_button.disabled = true # avoid interfering with the win popup below
 	status_label.text = "Level complete!"
 	GameState.mark_level_complete(level_data.level_id)
@@ -662,6 +776,7 @@ func _on_win_next_pressed() -> void:
 ## this is just the primary, hard-to-miss prompt at the moment of failure.
 func _on_level_lost() -> void:
 	tick_timer.stop()
+	pause_button.disabled = true
 	match board.lose_reason:
 		HexBoard.LoseReason.TOWN:
 			status_label.text = "The town flooded!"

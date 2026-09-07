@@ -62,6 +62,17 @@ offset_right = 130.0
 offset_bottom = 48.0
 text = "Retry"
 
+[node name="PauseButton" type="Button" parent="UI/HUD"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 16.0
+offset_right = -110.0
+offset_bottom = 48.0
+disabled = true
+text = "Pause"
+
 [node name="BackButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
 anchor_left = 1.0
@@ -224,3 +235,57 @@ theme_override_font_sizes/font_size = 24
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 text = "Next"
+
+[node name="PausePanel" type="Control" parent="UI"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="UI/PausePanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 0
+
+[node name="Center" type="CenterContainer" parent="UI/PausePanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="UI/PausePanel/Center"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+
+[node name="VBox" type="VBoxContainer" parent="UI/PausePanel/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="UI/PausePanel/Center/Panel/VBox"]
+layout_mode = 2
+text = "Paused"
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 24
+
+[node name="ResumeButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+text = "Resume"
+
+[node name="ButtonRow" type="HBoxContainer" parent="UI/PausePanel/Center/Panel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RetryButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 40)
+text = "Retry"
+
+[node name="LevelSelectButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(130, 40)
+text = "Level Select"

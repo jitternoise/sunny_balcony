@@ -85,7 +85,7 @@ has exactly one occurrence in the codebase — its own definition. Nothing calls
 it.
 
 **Never built at all** (each confirmed by grep returning zero hits): scoring;
-pause handling; sound and music (no `AudioStreamPlayer` anywhere); a settings
+sound and music (no `AudioStreamPlayer` anywhere); a settings
 menu; an accessibility pass; level-complete visual polish; any level curriculum
 beyond `GameState.is_level_unlocked()`'s linear gate.
 
