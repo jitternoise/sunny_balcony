@@ -254,3 +254,21 @@ states, from `game/`:
 SHOT_DIR=/tmp/shots xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/Screenshots.tscn
 ```
+
+## Level simulation checks
+
+`tests/LevelSim.gd` replays a level headlessly straight off `HexBoard`'s
+four beat phases, with no timers or scenes. Two suites build on it, both
+run from `game/`:
+
+```
+godot --headless res://tests/VerifySolutions.tscn   # every documented solution still wins
+godot --headless res://tests/VerifyHydroBonus.tscn  # the optional Hydro Plant bonus
+```
+
+`VerifySolutions` replays each solution in `level-solutions.md`. 67 of the
+76 parsable entries reproduce their documented win measure exactly; the 9
+that do not are pre-existing and listed in `open-items.md`.
+
+`tests/HydroSiting.tscn` is the search tool used to choose where a Hydro
+Plant can be added without changing how a level plays.
