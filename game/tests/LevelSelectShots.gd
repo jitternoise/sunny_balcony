@@ -27,13 +27,13 @@ func _ready() -> void:
 	GameState.highest_unlocked_level = 16
 	for i in range(1, 16):
 		GameState.completed_levels[i] = true
-	screen._build_level_buttons()
+	screen._build_map()
 	await _settle(8)
 	await _shot("11_mid_campaign_bottom")
 
 	# Scrolled up into the group headers.
 	var scroll: ScrollContainer = screen.get_node("ScrollContainer")
-	scroll.scroll_vertical = maxi(0, scroll.scroll_vertical - 700)
+	scroll.scroll_vertical = maxi(0, scroll.scroll_vertical - 1500)
 	await _settle(4)
 	await _shot("12_mid_campaign_scrolled")
 

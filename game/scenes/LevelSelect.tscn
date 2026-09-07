@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/LevelSelect.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/LevelMap.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://cqvescchdo1dq" path="res://assets/icons/ui_exit.svg" id="3"]
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -8,16 +10,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1")
 
-[node name="Sky" type="ColorRect" parent="."]
-layout_mode = 1
-anchor_right = 1.0
-anchor_bottom = 0.2
-mouse_filter = 2
-color = Color(0.53, 0.81, 0.92, 1)
-
 [node name="Grass" type="ColorRect" parent="."]
 layout_mode = 1
-anchor_top = 0.2
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
@@ -25,31 +19,45 @@ color = Color(0.3, 0.69, 0.31, 1)
 
 [node name="ScrollContainer" type="ScrollContainer" parent="."]
 layout_mode = 1
-offset_left = 20.0
-offset_top = 70.0
-offset_right = 700.0
-offset_bottom = 1200.0
+anchor_right = 1.0
+anchor_bottom = 1.0
 horizontal_scroll_mode = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+[node name="MapRoot" type="Control" parent="ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+script = ExtResource("2")
+
+[node name="HeaderBar" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+offset_bottom = 88.0
+color = Color(0.53, 0.81, 0.92, 1)
+
+[node name="HeaderShadow" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+offset_top = 88.0
+offset_bottom = 92.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.15)
 
 [node name="BackButton" type="Button" parent="."]
 layout_mode = 1
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 96.0
-offset_bottom = 48.0
-text = "Back"
+offset_right = 111.0
+offset_bottom = 72.0
+tooltip_text = "Main Menu"
+icon = ExtResource("3")
+icon_alignment = 1
 
 [node name="DebugUnlockToggle" type="CheckButton" parent="."]
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
-offset_top = 16.0
+offset_left = -290.0
+offset_top = 20.0
 offset_right = -16.0
-offset_bottom = 48.0
-text = "Debug: Unlock All"
+offset_bottom = 68.0
+text = "Unlock All"

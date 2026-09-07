@@ -272,3 +272,7 @@ that do not are pre-existing and listed in `open-items.md`.
 
 `tests/HydroSiting.tscn` is the search tool used to choose where a Hydro
 Plant can be added without changing how a level plays.
+
+`tests/VerifyLevelMap.tscn` checks the Level Select map: one node per level
+along a connected trail, locks and checks following save progress, and the
+turbine bonus badge only on levels that ship a Hydro Plant.
