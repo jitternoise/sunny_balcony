@@ -245,3 +245,27 @@ multiple aspect ratios, town-flood coloring, geyser feed-blocking), plus the new
 direction arrows above. Note that popup routing now needs checking at level
 **100**, not 20, and that `level_018.tres` — reconstructed from a README
 description and never re-verified against the engine — is still unconfirmed.
+
+## Documented solutions that no longer reproduce (found 2026-09-07)
+
+`game/tests/VerifySolutions.tscn` replays every solution in
+`level-solutions.md` through the real `HexBoard` beat phases. 67 of the 76
+parsable entries win on exactly their documented measure. Nine do not, all
+pre-dating the Hydro Plant bonus work that added the harness:
+
+- **Levels 1, 6, 10, 11** — the documented `Wall (-1,-3)` never wins; water
+  stalls on the source forever. Each of these levels has its source at
+  `(0,-4)`, whose only two down-targets are `(-1,-3)` and `(0,-3)`. The Wall
+  is 2 tiles wide (`BlockData.footprint_offsets`), so placing it at
+  `(-1,-3)` covers both and seals the source in. These solutions were almost
+  certainly authored while the Wall was still a single tile. The levels may
+  still be winnable by another placement — that has not been checked.
+- **Levels 64, 66** — the documented solution stalls out (no win within 300
+  measures).
+- **Levels 67, 68, 69** — the documented solution loses to a bottom-edge
+  overflow several measures before its documented win. On level 68 one of
+  the documented placements is also rejected outright.
+
+None of these were introduced by the Hydro Plant change: the same nine fail
+identically with the plants removed. Worth deciding whether the levels or
+the solutions document is the thing that is wrong.
