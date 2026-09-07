@@ -40,7 +40,6 @@ var _subtick_count: int = 0
 @onready var inventory_bar: HBoxContainer = $UI/HUD/InventoryBar
 @onready var back_button: Button = $UI/HUD/BackButton
 @onready var start_button: Button = $UI/HUD/StartButton
-@onready var retry_button: Button = $UI/HUD/RetryButton
 @onready var pause_button: Button = $UI/HUD/PauseButton
 @onready var tick_timer: Timer = $TickTimer
 
@@ -57,10 +56,8 @@ var _subtick_count: int = 0
 
 ## Small modal-style popup shown on a loss (see _on_level_lost()): a dimmed
 ## overlay plus a centered panel with the loss reason and two buttons,
-## Retry and Level Select. Sits on top of the always-visible HUD
-## Retry/Back buttons -- those still work too (e.g. if the player dismisses
-## this panel some other way in the future), this is just a more obvious,
-## harder-to-miss prompt right at the moment of failure.
+## Retry and Level Select. Sits on top of the HUD's Back button, which
+## still works too; this panel carries the only Retry available on a loss.
 @onready var lose_panel: Control = $UI/LosePanel
 @onready var lose_reason_label: Label = $UI/LosePanel/Center/Panel/VBox/ReasonLabel
 @onready var lose_retry_button: Button = $UI/LosePanel/Center/Panel/VBox/ButtonRow/RetryButton
@@ -71,7 +68,7 @@ var _subtick_count: int = 0
 ## Structured identically to lose_panel above (dimmed ColorRect + centered
 ## PanelContainer) and, like lose_panel, is added as the LAST child under
 ## UI so it draws on top of -- and is hit-tested before -- every other UI
-## node, including the HUD's Start/Retry/Back buttons and the inventory
+## node, including the HUD's Start/Pause/Back buttons and the inventory
 ## bar. Its Dim rect has mouse_filter = MOUSE_FILTER_STOP (1), so while
 ## intro_panel.visible is true, any tap/click anywhere on screen is
 ## consumed by that rect and never reaches a button underneath -- this is
@@ -109,6 +106,7 @@ var paused: bool = false
 ## before. Picking a block from the inventory bar switches the mode back off.
 var delete_mode: bool = false
 const DELETE_BUTTON_NAME := "delete_mode"
+const DELETE_ICON := preload("res://assets/icons/ui_trash.svg")
 
 ## The res://data/levels/*.tres path this scene was loaded with (captured
 ## from GameState.pending_level_path at the very start of _ready(), before
@@ -200,7 +198,6 @@ func _ready() -> void:
 
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
 	start_button.pressed.connect(_on_start_pressed)
-	retry_button.pressed.connect(_on_retry_pressed)
 	pause_button.pressed.connect(_on_pause_pressed)
 	pause_resume_button.pressed.connect(_on_resume_pressed)
 	pause_retry_button.pressed.connect(_on_retry_pressed)
@@ -242,7 +239,6 @@ func _on_start_pressed() -> void:
 		return
 	started = true
 	start_button.disabled = true
-	pause_button.disabled = false # nothing to freeze before the water starts flowing
 	# From here on, block placements/removals buffer to the next
 	# PLACEMENT beat instead of landing immediately -- see HexBoard.started.
 	board.started = true
@@ -256,8 +252,9 @@ func _on_start_pressed() -> void:
 ## the board (clearing terrain/water/inventory back to the level's starting
 ## state), stops the timer, and re-arms the Start button. Available at any
 ## time, including after a loss or mid-flow, so retrying a level never
-## requires a round trip through Level Select. Shared by both the always-on
-## HUD Retry button and the lose-popup's Retry button. Deliberately does
+## requires a round trip through Level Select. Shared by the pause menu's
+## Retry button and the lose-popup's Retry button -- the HUD itself no
+## longer carries one. Deliberately does
 ## NOT re-show the intro popup -- the player has already seen it once this
 ## visit to the level, and a Retry mid-attempt shouldn't re-block input on
 ## something they've already acknowledged. board.setup() (called below)
@@ -273,12 +270,11 @@ func _on_retry_pressed() -> void:
 	tick_timer.paused = false
 	tick_timer.stop()
 	started = false
-	pause_button.disabled = true
+	pause_button.disabled = false
 	delete_mode = false
 	current_beat = BeatPhase.PLACEMENT
 	_subtick_count = 0
 	start_button.disabled = false
-	retry_button.disabled = false
 	board.selected_block_id = ""
 	board.setup(level_data, block_catalog)
 	_build_inventory_bar()
@@ -288,11 +284,16 @@ func _on_retry_pressed() -> void:
 ## Freezes the game: holds the tick timer (so no beat advances and the water
 ## stops mid-flow), cancels any press/aim in progress so a half-charged
 ## catapult can't fire on resume, and raises the pause popup, whose dimmed
-## overlay swallows every board tap until Resume is pressed. Only meaningful
-## once Start has been pressed -- before that nothing is moving, so the HUD
-## Pause button stays disabled (see _on_start_pressed()).
+## overlay swallows every board tap until Resume is pressed.
+##
+## Available before Start as well, where it acts as the in-level menu: since
+## the HUD no longer carries its own Retry button, this panel is the only
+## route to Retry, and a player who mis-planned their pre-start layout still
+## needs a way to reset it. Pausing a game that has not started is harmless
+## -- the tick timer is already stopped, so holding it changes nothing, and
+## Resume just closes the panel.
 func _on_pause_pressed() -> void:
-	if not started or paused or board.game_over:
+	if paused or board.game_over:
 		return
 	paused = true
 	tick_timer.paused = true
@@ -357,7 +358,8 @@ func _build_inventory_bar() -> void:
 	# See delete_mode / _on_delete_button_toggled().
 	var delete_button := Button.new()
 	delete_button.name = DELETE_BUTTON_NAME
-	delete_button.text = "Delete"
+	delete_button.icon = DELETE_ICON
+	delete_button.tooltip_text = "Delete blocks"
 	delete_button.toggle_mode = true
 	delete_button.button_pressed = delete_mode
 	delete_button.toggled.connect(_on_delete_button_toggled)
@@ -729,7 +731,6 @@ func _update_status_label() -> void:
 func _on_level_won() -> void:
 	tick_timer.stop()
 	pause_button.disabled = true
-	retry_button.disabled = true # avoid interfering with the win popup below
 	status_label.text = "Level complete!"
 	GameState.mark_level_complete(level_data.level_id)
 
@@ -771,9 +772,10 @@ func _on_win_next_pressed() -> void:
 
 
 ## On a loss, stop the timer and pop up the small Retry / Level Select
-## panel (see lose_panel above) with a reason-specific message -- the
-## always-visible HUD Retry/Back buttons keep working underneath it too,
-## this is just the primary, hard-to-miss prompt at the moment of failure.
+## panel (see lose_panel above) with a reason-specific message. With no
+## HUD Retry button any more this panel is the only Retry available at
+## that point, so it is both the prompt and the way out. The HUD's Back
+## button still works underneath it.
 func _on_level_lost() -> void:
 	tick_timer.stop()
 	pause_button.disabled = true

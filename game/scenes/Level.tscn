@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/Level.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/gameplay/HexBoard.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://dvjniyu3242vd" path="res://assets/icons/ui_play.svg" id="3"]
+[ext_resource type="Texture2D" uid="uid://cwfw4rp1mc1up" path="res://assets/icons/ui_pause.svg" id="4"]
 
 [node name="Level" type="Node2D"]
 script = ExtResource("1")
@@ -39,39 +41,31 @@ mouse_filter = 2
 [node name="StatusLabel" type="Label" parent="UI/HUD"]
 layout_mode = 1
 offset_left = 16.0
-offset_top = 16.0
-offset_right = 400.0
-offset_bottom = 44.0
-text = "Place your blocks, then press Start"
+offset_top = 28.0
+offset_right = 230.0
+offset_bottom = 56.0
+autowrap_mode = 3
+text = "Place your blocks, then press play"
 
 [node name="StartButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
 anchor_left = 0.5
-offset_left = -130.0
+offset_left = -105.0
 offset_top = 16.0
 offset_right = -10.0
-offset_bottom = 48.0
-text = "Start"
+offset_bottom = 72.0
+tooltip_text = "Start"
+icon = ExtResource("3")
 
-[node name="RetryButton" type="Button" parent="UI/HUD"]
+[node name="PauseButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
 anchor_left = 0.5
 offset_left = 10.0
 offset_top = 16.0
-offset_right = 130.0
-offset_bottom = 48.0
-text = "Retry"
-
-[node name="PauseButton" type="Button" parent="UI/HUD"]
-layout_mode = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -220.0
-offset_top = 16.0
-offset_right = -110.0
-offset_bottom = 48.0
-disabled = true
-text = "Pause"
+offset_right = 105.0
+offset_bottom = 72.0
+tooltip_text = "Pause"
+icon = ExtResource("4")
 
 [node name="BackButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
@@ -80,7 +74,7 @@ anchor_right = 1.0
 offset_left = -100.0
 offset_top = 16.0
 offset_right = -16.0
-offset_bottom = 48.0
+offset_bottom = 72.0
 text = "Back"
 
 [node name="BudgetLabel" type="Label" parent="UI/HUD"]

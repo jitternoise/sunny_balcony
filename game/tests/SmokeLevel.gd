@@ -32,11 +32,24 @@ func _ready() -> void:
 	var board = level.get_node("Board")
 
 	print("Pre-start")
-	_check(pause_button.disabled, "Pause disabled before Start")
+	# Pause doubles as the in-level menu and is the only route to Retry, so
+	# unlike Start it is live from the moment the level loads.
+	_check(not pause_button.disabled, "Pause enabled before Start (it is the menu)")
 	_check(not pause_panel.visible, "pause panel hidden before Start")
+	_check(level.get_node_or_null("UI/HUD/RetryButton") == null, "no Retry button on the HUD")
+	_check(pause_button.icon != null and pause_button.text == "", "Pause is icon-only")
+	_check(level.get_node("UI/HUD/StartButton").icon != null, "Start is icon-only")
 	var delete_button: Button = inventory_bar.get_node_or_null("delete_mode")
 	_check(delete_button != null and delete_button.toggle_mode, "Delete toggle present in inventory bar")
+	_check(delete_button.icon != null and delete_button.text == "", "Delete is icon-only")
 	_check(inventory_bar.get_child(0) == delete_button, "Delete is first button in bar")
+
+	# The pause menu must be reachable before Start, since it now holds the
+	# only Retry.
+	pause_button.pressed.emit()
+	_check(pause_panel.visible, "pause menu opens before Start")
+	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
+	_check(not pause_panel.visible, "pause menu closes again before Start")
 
 	print("Delete mode")
 	var block_ids: Array = board.inventory.keys()
@@ -66,7 +79,7 @@ func _ready() -> void:
 	print("Pause / Resume")
 	level.get_node("UI/HUD/StartButton").pressed.emit()
 	_check(level.started and not tick_timer.is_stopped(), "Start runs the tick timer")
-	_check(not pause_button.disabled, "Pause enabled after Start")
+	_check(not pause_button.disabled, "Pause still enabled after Start")
 	var beat_before: int = level.current_beat
 	pause_button.pressed.emit()
 	_check(level.paused and tick_timer.paused, "Pause holds the tick timer")
@@ -85,7 +98,8 @@ func _ready() -> void:
 	pause_button.pressed.emit()
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton").pressed.emit()
 	_check(not level.paused and not pause_panel.visible, "Retry from pause popup unpauses")
-	_check(tick_timer.is_stopped() and pause_button.disabled, "Retry stops timer and disables Pause")
+	_check(tick_timer.is_stopped(), "Retry stops the timer")
+	_check(not pause_button.disabled, "Pause still available after Retry")
 	_check(inventory_bar.get_node_or_null("delete_mode") != null, "Delete button rebuilt after Retry")
 
 	if _failures == 0:
