@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+  <!-- Pause menu: retry (circular arrow). White glyph for the blue pills. -->
+  <path d="M50 22 A28 28 0 1 0 78 50" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round"/>
+  <path d="M78 24 L93 49 L63 49 Z" fill="#ffffff"/>
+</svg>

@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/Level.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/gameplay/HexBoard.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://dvjniyu3242vd" path="res://assets/icons/ui_play.svg" id="3"]
 [ext_resource type="Texture2D" uid="uid://cwfw4rp1mc1up" path="res://assets/icons/ui_pause.svg" id="4"]
+[ext_resource type="Texture2D" uid="uid://3g5pox51ih3o" path="res://assets/icons/ui_retry.svg" id="5"]
+[ext_resource type="Texture2D" uid="uid://cqvescchdo1dq" path="res://assets/icons/ui_exit.svg" id="6"]
 
 [node name="Level" type="Node2D"]
 script = ExtResource("1")
@@ -56,6 +58,7 @@ offset_right = -10.0
 offset_bottom = 72.0
 tooltip_text = "Start"
 icon = ExtResource("3")
+icon_alignment = 1
 
 [node name="PauseButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
@@ -66,6 +69,7 @@ offset_right = 105.0
 offset_bottom = 72.0
 tooltip_text = "Pause"
 icon = ExtResource("4")
+icon_alignment = 1
 
 [node name="BackButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
@@ -266,8 +270,10 @@ theme_override_font_sizes/font_size = 24
 
 [node name="ResumeButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
-text = "Resume"
+custom_minimum_size = Vector2(0, 56)
+tooltip_text = "Resume"
+icon = ExtResource("3")
+icon_alignment = 1
 
 [node name="ButtonRow" type="HBoxContainer" parent="UI/PausePanel/Center/Panel/VBox"]
 layout_mode = 2
@@ -276,10 +282,14 @@ theme_override_constants/separation = 12
 
 [node name="RetryButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(100, 40)
-text = "Retry"
+custom_minimum_size = Vector2(104, 56)
+tooltip_text = "Retry"
+icon = ExtResource("5")
+icon_alignment = 1
 
 [node name="LevelSelectButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(130, 40)
-text = "Level Select"
+custom_minimum_size = Vector2(104, 56)
+tooltip_text = "Level Select"
+icon = ExtResource("6")
+icon_alignment = 1

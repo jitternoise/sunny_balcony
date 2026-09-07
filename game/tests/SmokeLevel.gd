@@ -48,6 +48,10 @@ func _ready() -> void:
 	# only Retry.
 	pause_button.pressed.emit()
 	_check(pause_panel.visible, "pause menu opens before Start")
+	for entry in [["ResumeButton", "Resume"], ["ButtonRow/RetryButton", "Retry"], ["ButtonRow/LevelSelectButton", "Level Select"]]:
+		var b: Button = level.get_node("UI/PausePanel/Center/Panel/VBox/%s" % entry[0])
+		_check(b.icon != null and b.text == "", "pause menu %s is icon-only" % entry[1])
+		_check(b.tooltip_text == entry[1], "pause menu %s keeps a tooltip" % entry[1])
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
 	_check(not pause_panel.visible, "pause menu closes again before Start")
 
