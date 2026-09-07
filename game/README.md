@@ -246,3 +246,11 @@ godot --headless res://tests/SmokeLevel.tscn
 
 It loads level 1 into the real `Level.tscn`, drives Start / Pause / Resume /
 Delete / Retry through their button signals, and exits non-zero on failure.
+
+To render the level in a real (virtual) window and capture PNGs of the HUD
+states, from `game/`:
+
+```
+SHOT_DIR=/tmp/shots xvfb-run -a --server-args="-screen 0 720x1280x24" \
+  godot --resolution 720x1280 res://tests/Screenshots.tscn
+```
