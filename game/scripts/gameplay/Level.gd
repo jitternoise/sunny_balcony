@@ -90,6 +90,11 @@ var _subtick_count: int = 0
 @onready var win_panel: Control = $UI/WinPanel
 @onready var win_next_button: Button = $UI/WinPanel/Center/Panel/VBox/NextButton
 
+## Reports the optional Hydro Plant bonus on the win popup (see
+## _on_level_won()). Stays hidden on the levels that have no plant, which
+## is most of them.
+@onready var win_bonus_label: Label = $UI/WinPanel/Center/Panel/VBox/BonusLabel
+
 var level_data: LevelData
 var block_catalog: Dictionary = {}
 var started: bool = false
@@ -774,6 +779,19 @@ func _on_level_won() -> void:
 	pause_button.disabled = true
 	status_label.text = "Level complete!"
 	GameState.mark_level_complete(level_data.level_id)
+
+	# Optional Hydro Plant bonus: never required to finish the level, just
+	# recorded when the plant is running as the level ends. Levels without
+	# a plant show nothing at all here.
+	if board.has_hydro_plants():
+		var earned := board.all_hydro_plants_running()
+		if earned:
+			GameState.mark_hydro_bonus(level_data.level_id)
+		win_bonus_label.visible = true
+		win_bonus_label.text = "Bonus: power plant running" if earned \
+			else "Bonus missed: the power plant never ran"
+	else:
+		win_bonus_label.visible = false
 
 	# Next's label reflects what it's actually about to do: "Next" when
 	# there's another level after this one in LevelSelect.LEVEL_PATHS,

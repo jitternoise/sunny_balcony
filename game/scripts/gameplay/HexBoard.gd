@@ -1646,6 +1646,31 @@ func _check_end_conditions() -> void:
 		_win()
 
 
+## True if this level has a Hydro Plant at all -- i.e. whether the optional
+## bonus objective even applies here. Most levels have none, and those are
+## unaffected by any of it.
+func has_hydro_plants() -> bool:
+	return not hydro_plants.is_empty()
+
+
+## True if every Hydro Plant on this level is running. A plant never
+## switches back off once activated (try_activate_hydro() turns its cells
+## into permanent water sources), so "running at the end of the level" and
+## "was switched on at some point this attempt" are the same thing -- there
+## is no way to earn this and then lose it before the level ends.
+##
+## Deliberately requires ALL plants rather than any: a level with two plants
+## should ask for both. Returns false on a level with no plants at all, so
+## callers can use it directly without checking has_hydro_plants() first.
+func all_hydro_plants_running() -> bool:
+	if hydro_plants.is_empty():
+		return false
+	for anchor in hydro_plants:
+		if not (hydro_plants[anchor].get("active", false) as bool):
+			return false
+	return true
+
+
 func _lose(reason: String) -> void:
 	if game_over:
 		return

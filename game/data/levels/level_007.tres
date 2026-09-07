@@ -17,3 +17,4 @@ starting_inventory = {
 "splitter": 1
 }
 blocked_cells = Array[Vector2i]([])
+hydro_plant_cells = Array[Vector2i]([Vector2i(-1, 2)])

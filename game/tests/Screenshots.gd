@@ -19,7 +19,12 @@ func _ready() -> void:
 	# one _on_level_won() below pushes a "no active save slot" error that
 	# has nothing to do with what is being captured.
 	GameState.current_slot = 0
-	GameState.pending_level_path = "res://data/levels/level_001.tres"
+	GameState.hydro_bonus_levels = {}
+	# Level 7 ships a Hydro Plant, so its win popup carries the bonus line.
+	var level_path := OS.get_environment("LEVEL")
+	if level_path == "":
+		level_path = "res://data/levels/level_001.tres"
+	GameState.pending_level_path = level_path
 	var level: Node = load("res://scenes/Level.tscn").instantiate()
 	add_child(level)
 	await _settle()

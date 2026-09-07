@@ -21,3 +21,4 @@ blocked_cells = Array[Vector2i]([])
 town_cells = Array[Vector2i]([Vector2i(-3, 2), Vector2i(-2, 2), Vector2i(-2, 1), Vector2i(-3, 3)])
 geyser_cells = Array[Vector2i]([])
 total_block_budget = 0
+hydro_plant_cells = Array[Vector2i]([Vector2i(0, -2)])

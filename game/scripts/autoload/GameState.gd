@@ -11,6 +11,14 @@ var current_slot: int = -1
 var highest_unlocked_level: int = 1
 var completed_levels: Dictionary = {} # level_id (int) -> true
 
+## Levels whose optional Hydro Plant bonus has been earned -- see
+## Level._on_level_won(). Deliberately separate from completed_levels:
+## only some levels have a plant at all, finishing one never requires
+## switching its plant on, and the bonus is recorded only on a win. A level
+## can therefore be completed with the bonus still outstanding, and earning
+## it later just adds it here without changing completion.
+var hydro_bonus_levels: Dictionary = {} # level_id (int) -> true
+
 ## Debug mode: when true, every level is treated as unlocked regardless of
 ## save progress (is_level_unlocked() always returns true). Does NOT touch
 ## highest_unlocked_level or completed_levels, and is never written to a
@@ -44,6 +52,7 @@ func load_slot(slot: int) -> void:
 	current_slot = slot
 	highest_unlocked_level = 1
 	completed_levels.clear()
+	hydro_bonus_levels.clear()
 
 	if not slot_exists(slot):
 		return
@@ -66,6 +75,12 @@ func load_slot(slot: int) -> void:
 	completed_levels.clear()
 	for level_id in completed:
 		completed_levels[int(level_id)] = true
+	# Missing in saves written before the bonus existed -- those simply
+	# start with no bonuses earned.
+	var bonuses = parsed.get("hydro_bonus_levels", [])
+	hydro_bonus_levels.clear()
+	for level_id in bonuses:
+		hydro_bonus_levels[int(level_id)] = true
 
 
 func save_current_slot() -> void:
@@ -76,6 +91,7 @@ func save_current_slot() -> void:
 	var data := {
 		"highest_unlocked_level": highest_unlocked_level,
 		"completed_levels": completed_levels.keys(),
+		"hydro_bonus_levels": hydro_bonus_levels.keys(),
 	}
 
 	var file := FileAccess.open(_save_path(current_slot), FileAccess.WRITE)
@@ -97,6 +113,20 @@ func mark_level_complete(level_id: int) -> void:
 	if level_id + 1 > highest_unlocked_level:
 		highest_unlocked_level = level_id + 1
 	save_current_slot()
+
+
+## Records that this level's Hydro Plant bonus has been earned. Never
+## unlocks or completes anything on its own -- the bonus is purely a
+## record, so a level's progression is identical whether or not it is met.
+func mark_hydro_bonus(level_id: int) -> void:
+	if hydro_bonus_levels.has(level_id):
+		return
+	hydro_bonus_levels[level_id] = true
+	save_current_slot()
+
+
+func has_hydro_bonus(level_id: int) -> bool:
+	return hydro_bonus_levels.has(level_id)
 
 
 func is_level_unlocked(level_id: int) -> bool:
