@@ -234,3 +234,15 @@ The biggest level in the game: grid radius 50 (101 rows, ~10x deeper than any pr
 - Level 18's `.tres` was reconstructed this session (see note under its Playtesting entry above) -- worth confirming in a live Godot window since it wasn't re-verified through the actual engine
 - The icon-glyph rendering (`HexBoard._draw_icon()` and the `icon` field wired onto the 4 block `.tres` files), the Level Select screen's wider/word-wrapped name buttons, the lose popup panel, the level-intro popup and win popup (centering/wrapping/that each actually blocks input as intended, and that the win popup's Next button correctly advances and shows the next level's own intro popup), the pre-start flow-preview arrows (that they render/fade/disappear-on-Start correctly and read clearly on an actual device screen), the sky/grass background on every screen, the town-flood light-blue color, the geyser's automatic feed-blocking, the new `"flat"` grid orientation (rendering, source markers, and Level 20's specific fire/pool placements), and the new "Dig the River" mechanic (the dirt color stages reading clearly as dig progress, the trench color reading as a carved channel, the tap-vs-drag threshold not eating dig taps on a scrolled board, and Level 21's overall feel -- especially whether 3 taps per hex is the right effort-per-cell on a real touchscreen) have not been visually confirmed in a live Godot window yet either -- all still headless/Python-simulation-verified or inspection-verified only (no script errors, correct node paths/signal wiring by inspection, matching simulation outcomes) -- worth a hands-on look together, the flat grid especially since its pixel/corner math has never actually been rendered
 - The `"flat"` grid's `"zigzag"` mode only ever uses the two true down-left/down-right diagonals for NATURAL fall (no straight-down fallback) -- a stream in that mode drifts off the grid's edge after roughly `2 * (grid_radius - starting_offset)` ticks if nothing catches it first, similar in spirit to the pointy grid's drift but confined to a fixed 2-column band instead of trending steadily sideways; worth knowing when authoring more `"flat"` levels (see Level 20's writeup above for the exact mechanism)
+
+## Headless checks
+
+`.claude/hooks/session-start.sh` installs Godot 4.6 in Claude Code on the web
+sessions. From the `game/` directory, run the in-level HUD smoke test with:
+
+```
+godot --headless res://tests/SmokeLevel.tscn
+```
+
+It loads level 1 into the real `Level.tscn`, drives Start / Pause / Resume /
+Delete / Retry through their button signals, and exits non-zero on failure.
