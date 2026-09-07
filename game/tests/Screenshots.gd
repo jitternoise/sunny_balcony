@@ -15,6 +15,10 @@ func _ready() -> void:
 		_dir = "user://shots"
 	DirAccess.make_dir_recursive_absolute(_dir)
 
+	# Winning a level saves progress, which needs an active slot -- without
+	# one _on_level_won() below pushes a "no active save slot" error that
+	# has nothing to do with what is being captured.
+	GameState.current_slot = 0
 	GameState.pending_level_path = "res://data/levels/level_001.tres"
 	var level: Node = load("res://scenes/Level.tscn").instantiate()
 	add_child(level)
@@ -54,6 +58,16 @@ func _ready() -> void:
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
 	await get_tree().create_timer(0.8).timeout
 	await _shot("05_resumed")
+
+	# The win and lose popups are driven straight off their handlers rather
+	# than by playing the level out, so both panels can be eyeballed.
+	level._on_level_lost()
+	await _settle()
+	await _shot("06_lost")
+	level.get_node("UI/LosePanel").visible = false
+	level._on_level_won()
+	await _settle()
+	await _shot("07_won")
 
 	print("screenshots written to ", _dir)
 	get_tree().quit()

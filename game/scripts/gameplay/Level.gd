@@ -108,6 +108,23 @@ var delete_mode: bool = false
 const DELETE_BUTTON_NAME := "delete_mode"
 const DELETE_ICON := preload("res://assets/icons/ui_trash.svg")
 
+## Win-popup button glyphs -- which one is shown depends on whether another
+## level follows this one (see _on_level_won()).
+const NEXT_ICON := preload("res://assets/icons/ui_next.svg")
+const EXIT_ICON := preload("res://assets/icons/ui_exit.svg")
+
+## Inventory-bar button sizing. The shared theme pads buttons for text
+## (28px each side), which leaves an icon-led button almost no room: with
+## expand_icon on, Godot reserves no minimum width for the icon, so the
+## tile art collapses to nothing inside that padding. These buttons
+## therefore get a fixed width and much tighter side padding, so the tile
+## image itself is the button and the count sits beside it.
+## The tile buttons are wider than the Delete toggle: their tile art is the
+## thing being chosen, while Delete is a mode switch with a fixed-size glyph.
+const INVENTORY_BUTTON_WIDTH := 100.0
+const DELETE_BUTTON_WIDTH := 72.0
+const INVENTORY_BUTTON_PADDING := 10.0
+
 ## The res://data/levels/*.tres path this scene was loaded with (captured
 ## from GameState.pending_level_path at the very start of _ready(), before
 ## anything else has a chance to overwrite that global). Used by the win
@@ -364,16 +381,38 @@ func _build_inventory_bar() -> void:
 	delete_button.button_pressed = delete_mode
 	delete_button.toggled.connect(_on_delete_button_toggled)
 	inventory_bar.add_child(delete_button)
+	_style_inventory_button(delete_button, DELETE_BUTTON_WIDTH)
 
 	var block_ids: Array = block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys()
 	for block_id in block_ids:
+		var block: BlockData = block_catalog[block_id]
 		var button := Button.new()
 		button.name = "block_%s" % block_id
+		button.icon = block.icon
+		button.expand_icon = true # the board SVGs are 100x100 -- let them shrink to fit
+		button.tooltip_text = block.display_name
 		button.pressed.connect(_on_block_button_pressed.bind(block_id))
 		inventory_bar.add_child(button)
+		_style_inventory_button(button)
 
 	budget_label.visible = board.use_block_budget
 	_refresh_inventory_labels()
+
+
+## Gives one inventory-bar button its fixed width and tightened padding --
+## see INVENTORY_BUTTON_WIDTH. Must run AFTER the button is in the tree,
+## since get_theme_stylebox() only resolves once the node can see the
+## project theme.
+func _style_inventory_button(button: Button, width: float = INVENTORY_BUTTON_WIDTH) -> void:
+	button.custom_minimum_size = Vector2(width, 0)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var box: StyleBox = button.get_theme_stylebox(state)
+		if box == null:
+			continue
+		var tightened: StyleBox = box.duplicate()
+		tightened.content_margin_left = INVENTORY_BUTTON_PADDING
+		tightened.content_margin_right = INVENTORY_BUTTON_PADDING
+		button.add_theme_stylebox_override(state, tightened)
 
 
 func _refresh_inventory_labels() -> void:
@@ -386,8 +425,9 @@ func _refresh_inventory_labels() -> void:
 		for block_id in block_catalog.keys():
 			var button := inventory_bar.get_node_or_null("block_%s" % block_id)
 			if button:
-				var block: BlockData = block_catalog[block_id]
-				button.text = block.display_name
+				# No per-type count in this mode, so the tile art stands
+				# alone and BudgetLabel carries the shared pool.
+				button.text = ""
 				button.disabled = out_of_blocks
 		budget_label.text = "Tiles left: %d" % board.block_budget_remaining
 		return
@@ -395,8 +435,9 @@ func _refresh_inventory_labels() -> void:
 	for block_id in board.inventory.keys():
 		var button := inventory_bar.get_node_or_null("block_%s" % block_id)
 		if button:
-			var block: BlockData = block_catalog[block_id]
-			button.text = "%s (%d)" % [block.display_name, board.inventory[block_id]]
+			# The tile's own art identifies the block (its name is on the
+			# tooltip), so the label is just how many are left.
+			button.text = "x%d" % board.inventory[block_id]
 			button.disabled = board.inventory[block_id] <= 0
 
 
@@ -738,7 +779,9 @@ func _on_level_won() -> void:
 	# there's another level after this one in LevelSelect.LEVEL_PATHS,
 	# "Level Select" when this was the last level and there's nowhere
 	# further to advance to.
-	win_next_button.text = "Next" if _next_level_path() != "" else "Level Select"
+	var has_next := _next_level_path() != ""
+	win_next_button.icon = NEXT_ICON if has_next else EXIT_ICON
+	win_next_button.tooltip_text = "Next level" if has_next else "Level Select"
 	win_panel.visible = true
 
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/Level.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/gameplay/HexBoard.gd" id="2"]
@@ -6,6 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://cwfw4rp1mc1up" path="res://assets/icons/ui_pause.svg" id="4"]
 [ext_resource type="Texture2D" uid="uid://3g5pox51ih3o" path="res://assets/icons/ui_retry.svg" id="5"]
 [ext_resource type="Texture2D" uid="uid://cqvescchdo1dq" path="res://assets/icons/ui_exit.svg" id="6"]
+[ext_resource type="Texture2D" uid="uid://dj7end5xwc6nw" path="res://assets/icons/ui_next.svg" id="7"]
+[ext_resource type="Texture2D" uid="uid://c1hbo3vei45v4" path="res://assets/icons/ui_check.svg" id="8"]
 
 [node name="Level" type="Node2D"]
 script = ExtResource("1")
@@ -75,11 +77,13 @@ icon_alignment = 1
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -100.0
+offset_left = -111.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 72.0
-text = "Back"
+tooltip_text = "Level Select"
+icon = ExtResource("6")
+icon_alignment = 1
 
 [node name="BudgetLabel" type="Label" parent="UI/HUD"]
 visible = false
@@ -98,7 +102,7 @@ anchor_top = 1.0
 anchor_bottom = 1.0
 anchor_right = 1.0
 offset_left = 16.0
-offset_top = -80.0
+offset_top = -96.0
 offset_right = -16.0
 offset_bottom = -16.0
 
@@ -142,13 +146,17 @@ theme_override_constants/separation = 12
 
 [node name="RetryButton" type="Button" parent="UI/LosePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(100, 40)
-text = "Retry"
+custom_minimum_size = Vector2(104, 56)
+tooltip_text = "Retry"
+icon = ExtResource("5")
+icon_alignment = 1
 
 [node name="LevelSelectButton" type="Button" parent="UI/LosePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(130, 40)
-text = "Level Select"
+custom_minimum_size = Vector2(104, 56)
+tooltip_text = "Level Select"
+icon = ExtResource("6")
+icon_alignment = 1
 
 [node name="IntroPanel" type="Control" parent="UI"]
 visible = false
@@ -192,8 +200,10 @@ autowrap_mode = 3
 
 [node name="GotItButton" type="Button" parent="UI/IntroPanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
-text = "Got it"
+custom_minimum_size = Vector2(0, 56)
+tooltip_text = "Got it"
+icon = ExtResource("8")
+icon_alignment = 1
 
 [node name="WinPanel" type="Control" parent="UI"]
 visible = false
@@ -231,8 +241,10 @@ theme_override_font_sizes/font_size = 24
 
 [node name="NextButton" type="Button" parent="UI/WinPanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 40)
-text = "Next"
+custom_minimum_size = Vector2(0, 56)
+tooltip_text = "Next level"
+icon = ExtResource("7")
+icon_alignment = 1
 
 [node name="PausePanel" type="Control" parent="UI"]
 visible = false

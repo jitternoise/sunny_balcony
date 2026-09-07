@@ -44,6 +44,33 @@ func _ready() -> void:
 	_check(delete_button.icon != null and delete_button.text == "", "Delete is icon-only")
 	_check(inventory_bar.get_child(0) == delete_button, "Delete is first button in bar")
 
+	# Every button in the level is icon-led now: the same action carries the
+	# same glyph in the HUD, the pause menu, the lose popup and the win
+	# popup. Only the inventory tiles keep text, and only as a count.
+	for path in ["UI/HUD/BackButton", "UI/IntroPanel/Center/Panel/VBox/GotItButton",
+			"UI/LosePanel/Center/Panel/VBox/ButtonRow/RetryButton",
+			"UI/LosePanel/Center/Panel/VBox/ButtonRow/LevelSelectButton",
+			"UI/WinPanel/Center/Panel/VBox/NextButton"]:
+		var b: Button = level.get_node(path)
+		_check(b.icon != null and b.text == "", "%s is icon-only" % path.get_file())
+		_check(b.tooltip_text != "", "%s keeps a tooltip" % path.get_file())
+	# Back and the pause menu's Level Select are the same action, so they
+	# must not drift onto different glyphs.
+	_check(level.get_node("UI/HUD/BackButton").icon
+			== level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/LevelSelectButton").icon,
+			"Back and Level Select share one glyph")
+	_check(level.get_node("UI/LosePanel/Center/Panel/VBox/ButtonRow/RetryButton").icon
+			== level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton").icon,
+			"both Retry buttons share one glyph")
+
+	# Tile buttons show the tile's own art; the name moves to the tooltip
+	# and the label carries only the remaining count.
+	for bid in board.inventory.keys():
+		var tile: Button = inventory_bar.get_node("block_%s" % bid)
+		_check(tile.icon == block_catalog_icon(level, bid), "%s button uses its tile art" % bid)
+		_check(tile.text == "x%d" % board.inventory[bid], "%s button shows its count" % bid)
+		_check(tile.tooltip_text != "", "%s button names the tile on its tooltip" % bid)
+
 	# The pause menu must be reachable before Start, since it now holds the
 	# only Retry.
 	pause_button.pressed.emit()
@@ -111,6 +138,11 @@ func _ready() -> void:
 	else:
 		printerr("SMOKE FAIL: %d failure(s)" % _failures)
 	get_tree().quit(1 if _failures > 0 else 0)
+
+
+func block_catalog_icon(level, block_id: String) -> Texture2D:
+	var block: BlockData = level.block_catalog[block_id]
+	return block.icon
 
 
 func _first_empty_cell(board) -> Vector2i:
