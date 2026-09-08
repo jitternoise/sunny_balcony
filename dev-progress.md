@@ -1,5 +1,134 @@
 # Flash Flood — Dev Progress
 
+## Status: gameplay + renderer session -- pause/delete, icon pass, hydro bonus, level map with side paths, animated water, tile table, platform merge (2026-09-08)
+
+Long single session, run with Godot 4.6 actually installed and driving every
+check (a first for this project -- prior entries were source/doc-level only).
+Everything below is on `main`; the two feature branches are merged and carry
+nothing extra.
+
+**In-level controls.** A Delete toggle at the front of the inventory bar
+(tap removes and refunds a block, including one still queued for the next
+PLACEMENT beat) and a Pause button that holds the tick timer rather than
+stopping it, so Resume continues on the same sub-tick. Pause is live before
+Start too, because the HUD Retry button was removed and the pause menu is
+now the only route to Retry.
+
+**Icon pass.** Every button in the level scene is icon-led, one glyph per
+action: play, pause, trash, retry (circular arrow), exit (doorway), next
+(skip-forward), check. Back leaves for Level Select, so it takes the same
+doorway glyph as the pause menu's Level Select -- a test asserts those two
+never drift apart. Inventory buttons show each block's own tile art with the
+name on the tooltip and the label reduced to a count; they need an explicit
+width and tighter padding, because the shared theme pads for text and
+`expand_icon` reserves no minimum width, so the art otherwise collapses to
+nothing.
+
+**Hydro Plant shipped.** Previously dead code used by zero levels (see the
+2026-09-04 open-items entry). Eight levels now carry one -- 7, 13, 18, 25,
+33, 52, 63, 82, one per campaign group -- as an optional bonus: never
+required, recorded in the save when the plant is running as the level is
+won, reported on the win popup. Sites were chosen by simulation, not by eye:
+a plant blocks water like a wall until activated, so `tests/HydroSiting.gd`
+searched every legal position in every level for ones where the documented
+solution still wins on the same measure, water reaches the plant, and some
+activation timing switches it on without costing the win. 22 levels
+qualified; 8 were taken for spread.
+
+**Level Select rebuilt as a map.** One node per level on a winding trail,
+level 1 at the bottom as before, with the reached stretch drawn bright and
+the rest dim. Chapter names became region markers in the gaps. Badges: a
+check when completed, a padlock when locked, and a turbine on the eight
+plant levels that turns amber once the bonus is earned. Also fixed two
+defects the old list had -- the debug toggle was clipped off the right edge,
+and the sky/grass split cut across the list so identical buttons rendered in
+two colours.
+
+**Side paths.** Every set of ten forks at its 8th level -- 8, 18, 28 ... 98.
+The gate is performance, not progress: each fork level gained
+`LevelData.par_measures` (the verified minimum from `level-min-times.md`
+plus 25% slack) and the spur opens only once the level is finished inside
+it. The bonus levels are not authored, so each spur ends in a placeholder
+that cannot be entered.
+
+**Water animation.** Water was a flat blue circle redrawn only on state
+change, so it sat still for a measure then teleported. It is now a six-frame
+full-tile sprite with no rim, so neighbouring cells merge into one stream,
+and the front of each stream gets its own aerated foaming tile (lead
+detection is branch-aware for free: a cell is the lead when nothing it would
+flow into is wet, so a Splitter's arms each get a front). Both grid
+orientations ship -- a pointy-top tile over a flat-top cell pokes its corners
+through the cell's edges, and nine levels use the flat grid.
+
+**Renderer refactor -- every tile on one path.** `_draw_cell()` had grown
+three parallel if/elif chains (fill, glyph, overlays) totalling 25 branches
+kept in the same order by hand. Replaced by `_resolve_tile_state()` (the
+single place terrain precedence lives) plus a `TILE_VISUALS` table. States
+are variants rather than types -- a full pool and a filling pool are separate
+entries -- which keeps the table static. A state with no sheet draws its icon
+exactly as before, so types convert to animation one at a time; fire is the
+first converted. Two things this enabled rather than merely tidied:
+
+- **One animation heartbeat.** A redraw repaints the whole board, so
+  per-type rates would interleave their frame changes and multiply repaints.
+  Every animated tile now derives its frame from a single 12 fps counter and
+  slower tiles repeat frames, capping the board at 12 redraws a second
+  however many types animate. This matters because the target is Android.
+- **Playable cells resolved once in `setup()`.** `_draw()` was testing every
+  coordinate in the grid's bounding square -- 10,201 tests to draw ~500 cells
+  on level 22 -- which was harmless at one repaint per measure and would not
+  have been on an animation tick.
+
+Consequence worth knowing: every level has fire, so the heartbeat now runs
+whenever a level is open, including while planning. Gating terrain animation
+to `started` is a one-line change if that proves too costly on a device.
+
+**Mobile behaviour.** The level pauses itself when the app leaves the
+foreground (three notifications: `APPLICATION_PAUSED`,
+`APPLICATION_FOCUS_OUT`, `WM_WINDOW_FOCUS_OUT`, since no single one covers
+every way a phone takes the foreground away). Android Back is routed on all
+four screens, resolved to the pause menu in a level per instruction.
+
+**Merged the parallel platform branch** (`claude/graphics-sounds-workflow-crhcmj`,
+session 01QUb7Dt). Git's auto-merge succeeded on four of six overlapping
+files but the result would not have compiled -- both sessions had added
+`_notification()` to four scripts and `quit_on_go_back` landed twice.
+Resolved by hand. Its emulated-input guard, catapult-aim cancel, named Back
+destinations and iOS Quit removal all landed; its Back-to-Level-Select
+routing was overridden.
+
+**Popup dim leak fixed** -- the finding logged in the 2026-09-05 entry and
+left out of scope there. The Lose, Intro and Win overlays had
+`mouse_filter = PASS` on both their root and their `Dim`, so a tap on the
+dimmed area placed a block behind the popup; worst on the briefing, which is
+up before the player has done anything. All four popups now match the Pause
+overlay's STOP.
+
+**Test infrastructure added.** `tests/SmokeLevel.tscn` (78 checks, the
+in-level HUD end to end), `tests/VerifyHydroBonus.tscn`,
+`tests/VerifyLevelMap.tscn`, and `tests/BoardSnapshots.tscn` +
+`tests/CompareSnapshots.gd` -- a pixel-diff net over ten levels covering
+every terrain type, captured with `Engine.time_scale` at zero so animated
+tiles render a fixed frame. That net is the only guard on drawing changes:
+the simulation suites never render. It proved the tile refactor
+byte-identical across all ten.
+
+**Two corrections to earlier claims made in this session.**
+
+- I built `tests/VerifySolutions.gd` without finding the existing
+  `tools/verify_solutions.gd`, and mine silently skipped the 24 dig-bearing
+  entries. It reported 9 broken solutions; the real figure from the
+  authoritative tool is **11** (levels 1, 6, 10, 11, 64, 66, 67, 68, 69, 92,
+  96 -- all wall placements). The duplicate is deleted. `tests/LevelSim.gd`
+  survives because VerifyHydroBonus needs it, no longer hardcodes an
+  absolute path, and its header names the authoritative verifier.
+- The "27 of 100" figure in `open-items.md` is from 2026-09-04 and is stale;
+  16 have been fixed since.
+
+**Standing caveat, unchanged:** every render this session was Linux/Xvfb
+with llvmpipe **software** rendering. Nothing has run on a GPU or a device.
+The pre-export checklist in `open-items.md` lists what that leaves unverified.
+
 ## Status: platform pass re-checked against Godot 4.6 source and docs -- two corrections (2026-09-05, later same day)
 
 Prompted by: "check again. look at relevent documentation"

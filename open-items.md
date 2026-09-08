@@ -158,7 +158,13 @@ allowlist when fixing** — a stale entry silently hides the thing it tracks.
 
 ## 🆕 New items the old list predates
 
-**The solution book: 27 of 100 solutions are confirmed broken.** The
+**The solution book: 27 of 100 solutions are confirmed broken.**
+> **Superseded — re-measured 2026-09-08: the figure is now 11.** 16 have been
+> fixed since this was written. See "Documented solutions: 11 still broken"
+> further down this file for the current list and method. The diagnosis below
+> (the 2-tile Wall is the sole cause) still holds.
+
+The
 2026-08-31 change making the Wall 2 tiles wide was predicted to invalidate the
 49 solutions that place one. Every solution has now been replayed against the
 real engine (`tools/verify_solutions.gd`), and the damage is narrower than
