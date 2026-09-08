@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Flash Flood — Godot Editor
+Comment=Get the latest version, then open the project in the Godot editor
+Exec=/home/laptop/sunny_balcony/play.sh --editor
+Path=/home/laptop/sunny_balcony
+Icon=/home/laptop/sunny_balcony/icons/icon_splitter.svg
+Terminal=false
+Categories=Game;
+StartupNotify=true

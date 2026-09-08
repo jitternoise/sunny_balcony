@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Flash Flood — Play
+Comment=Get the latest version, then run the game
+Exec=/home/laptop/sunny_balcony/play.sh
+Path=/home/laptop/sunny_balcony
+Icon=/home/laptop/sunny_balcony/icons/icon_source.svg
+Terminal=false
+Categories=Game;
+StartupNotify=true
