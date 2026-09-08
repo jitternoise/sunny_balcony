@@ -175,6 +175,14 @@ func _ready() -> void:
 	_build_map()
 
 
+## Android's back button/gesture -- same destination as this screen's own
+## Back button. The project turns off Godot's default (quitting the app),
+## so without this back would simply do nothing here. Never reached on iOS.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and is_node_ready():
+		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
 func _on_debug_unlock_toggled(pressed: bool) -> void:
 	GameState.debug_unlock_all = pressed
 	_build_map()

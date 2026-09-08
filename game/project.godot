@@ -8,6 +8,10 @@ config_version=5
 
 config/name="Flash Flood"
 run/main_scene="res://scenes/MainMenu.tscn"
+; Android's back button/gesture would otherwise quit the game outright from
+; wherever the player was. Every screen handles it instead -- see each UI
+; script's _notification(). No effect on iOS, which has no back button.
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [autoload]

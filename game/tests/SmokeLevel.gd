@@ -146,6 +146,15 @@ func _ready() -> void:
 	_check(level.paused, "losing focus alone also pauses")
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
 
+	print("Back button (Android)")
+	# The project turns off Godot's quit-on-back default, so back has to
+	# mean something on every screen. In a level it toggles the pause menu.
+	_check(not level.paused, "not paused before back")
+	level.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	_check(level.paused and pause_panel.visible, "back opens the pause menu")
+	level.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	_check(not level.paused and not pause_panel.visible, "back again closes it")
+
 	print("Retry clears pause")
 	pause_button.pressed.emit()
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton").pressed.emit()

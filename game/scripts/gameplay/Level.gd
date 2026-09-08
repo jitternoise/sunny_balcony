@@ -345,6 +345,27 @@ func _notification(what: int) -> void:
 		NOTIFICATION_APPLICATION_FOCUS_OUT, \
 		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 			_pause_for_background()
+		NOTIFICATION_WM_GO_BACK_REQUEST:
+			_on_go_back_request()
+
+
+## Android's back button/gesture. The project disables Godot's default
+## response to it (quitting outright -- see quit_on_go_back in
+## project.godot), so every screen has to give it a meaning; here that is
+## "the obvious way out of whatever is currently on screen". Never reached
+## on iOS, which has no back button: there the home gesture backgrounds the
+## app instead, which the notifications above already cover.
+func _on_go_back_request() -> void:
+	if not is_node_ready() or board == null:
+		return
+	if intro_panel != null and intro_panel.visible:
+		intro_panel.visible = false          # back dismisses the briefing
+	elif board.game_over:
+		get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn")
+	elif paused:
+		_on_resume_pressed()                 # back closes the menu it opened
+	else:
+		_on_pause_pressed()
 
 
 ## Opens the pause menu on losing the foreground. Deliberately does nothing

@@ -9,6 +9,13 @@ func _ready() -> void:
 	_build_slot_buttons()
 
 
+## Android's back button/gesture -- same destination as this screen's own
+## Back button. See LevelSelect._notification(). Never reached on iOS.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and is_node_ready():
+		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
 func _build_slot_buttons() -> void:
 	for slot in range(GameState.SAVE_SLOT_COUNT):
 		var button := Button.new()
