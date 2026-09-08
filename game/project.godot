@@ -30,7 +30,11 @@ GameState="*res://scripts/autoload/GameState.gd"
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
-window/handheld/orientation="portrait"
+; DisplayServer.SCREEN_PORTRAIT. This is an int enum in Godot 4
+; (Landscape=0, Portrait=1, ...), NOT the Godot 3 string: the exporters and
+; the Android startup path read it as an int, and "portrait".to_int() is 0,
+; which is Landscape -- the exact opposite of what was intended.
+window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
