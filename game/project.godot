@@ -30,6 +30,17 @@ GameState="*res://scripts/autoload/GameState.gd"
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
+; Desktop only, and ignored on handhelds. The game is portrait-locked, so
+; the window must not be reshaped into a landscape one -- with
+; stretch/aspect=expand a wide window really does reshape the viewport,
+; where letterboxing used to hide it.
+window/size/resizable=false
+; ...but a fixed 720x1280 window does not fit a typical laptop screen, so
+; the desktop window opens at 3/4 scale. This changes the WINDOW only: the
+; viewport stays 720x1280, and 540x960 is the same 9:16, so the game is
+; pixel-for-pixel the portrait layout, just smaller.
+window/size/window_width_override=540
+window/size/window_height_override=960
 ; DisplayServer.SCREEN_PORTRAIT. This is an int enum in Godot 4
 ; (Landscape=0, Portrait=1, ...), NOT the Godot 3 string: the exporters and
 ; the Android startup path read it as an int, and "portrait".to_int() is 0,
