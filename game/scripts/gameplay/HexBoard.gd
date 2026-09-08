@@ -273,13 +273,27 @@ const BLOCK_ARROW_ALPHA := 0.9
 
 ## Screen-layout rules (see _fit_hex_layout()): the hex grid always fills
 ## this fraction of the screen's width, leaving an equal margin on each
-## side, and its top edge always starts this fraction of the way down the
-## screen. Grid tile size is solved for per level so this holds regardless
+## side. Grid tile size is solved for per level so this holds regardless
 ## of grid_radius -- a small level and a big level both fill 90% of the
 ## width, just with different tile sizes.
 const GRID_WIDTH_FRACTION := 0.9
-const GRID_SIDE_MARGIN_FRACTION := 0.05
-const GRID_TOP_MARGIN_FRACTION := 0.10
+
+## The viewport width the game is designed against (display/window/size/
+## viewport_width in project.godot). Tile size is solved from viewport
+## WIDTH, so under stretch/aspect=expand a short-and-wide screen -- a 4:3
+## tablet -- would otherwise expand the viewport sideways and inflate every
+## hex, leaving a huge grid that needs far more scrolling. Sizing is
+## therefore capped at this width and the grid centred in whatever space is
+## actually there; extra width becomes margin, not bigger tiles.
+const DESIGN_WIDTH := 720.0
+
+## Where the grid's top edge sits. This clears the HUD's top button row,
+## which Level.tscn anchors to the top at a fixed 96px bottom edge, so it
+## is an absolute distance and NOT a fraction of viewport height: under
+## stretch/aspect=expand a taller device grows the viewport, and a
+## fraction would push the grid further from a button row that has not
+## moved. 96px button row + 32px breathing room.
+const GRID_TOP_MARGIN_PX := 128.0
 
 ## Level-design convention (not enforced here, but relied on by
 ## _fit_hex_layout()'s sizing so tiles stay reasonably large): a grid
@@ -675,6 +689,14 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 	_cache_playable_cells()
 	queue_redraw()
 
+	# Under stretch/aspect=expand the logical viewport is no longer a fixed
+	# 720x1280 -- it takes the device's aspect, and can change again on a
+	# desktop window resize. Re-fit when it does. Connected here rather
+	# than in _ready() because _fit_hex_layout() needs level_data.
+	var vp := get_viewport()
+	if vp and not vp.size_changed.is_connected(_on_viewport_resized):
+		vp.size_changed.connect(_on_viewport_resized)
+
 
 ## Resolves the playable cells once, so _draw() can iterate them directly
 ## instead of testing every coordinate in the grid's bounding square on
@@ -731,9 +753,19 @@ func _all_playable_coords() -> Array[Vector2i]:
 ## GRID_SIDE_MARGIN_FRACTION / GRID_TOP_MARGIN_FRACTION point. Also computes
 ## max_scroll_down so Level.gd knows how far the player can drag the grid
 ## up to see its bottom, for grids taller than one screen.
+## Re-solves the grid's size and resting position for the current viewport.
+## Resets vertical scroll to the top -- a reshaped viewport invalidates the
+## old scroll offset anyway, since max_scroll_down is recomputed here.
+func _on_viewport_resized() -> void:
+	if level_data == null:
+		return
+	_fit_hex_layout()
+	queue_redraw()
+
+
 func _fit_hex_layout() -> void:
 	var viewport_size := _viewport_size()
-	var target_width := viewport_size.x * GRID_WIDTH_FRACTION
+	var target_width := minf(viewport_size.x, DESIGN_WIDTH) * GRID_WIDTH_FRACTION
 
 	# Measure the grid's bounding box at Hex.SIZE = 1, then solve for the
 	# size that scales that box to exactly target_width wide. Hex.SIZE is
@@ -762,8 +794,10 @@ func _fit_hex_layout() -> void:
 	var grid_bottom := max_y * computed_size
 	var grid_height := grid_bottom - grid_top
 
-	var left_margin := viewport_size.x * GRID_SIDE_MARGIN_FRACTION
-	var top_margin := viewport_size.y * GRID_TOP_MARGIN_FRACTION
+	# Centred, so the side margin stays even however wide the viewport is.
+	# At the design width this is the old 5%-a-side layout exactly.
+	var left_margin := (viewport_size.x - target_width) / 2.0
+	var top_margin := GRID_TOP_MARGIN_PX
 
 	position.x = left_margin - grid_left
 	top_position_y = top_margin - grid_top
