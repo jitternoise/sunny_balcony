@@ -163,3 +163,15 @@ class_name LevelData
 ## number. starting_inventory is ignored entirely when this is > 0 (see
 ## HexBoard.use_block_budget / block_budget_remaining).
 @export var total_block_budget: int = 0
+
+## Measures the player must finish within to earn this level's par -- the
+## performance flag that opens the level's side path on the Level Select map
+## (see LevelSelect.BONUS_FORKS and GameState.has_par()). 0, the default,
+## means the level has no par and there is nothing to earn on it; only the
+## ten fork levels set one.
+##
+## The shipped values come from the verified minimum in
+## claude/level-min-times.md plus 25% slack, so a good solution clears par
+## and a slow or wasteful one does not. Par is checked on a win only, and
+## never affects whether the level is won.
+@export var par_measures: int = 0

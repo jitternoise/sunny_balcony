@@ -21,3 +21,4 @@ blocked_cells = Array[Vector2i]([])
 town_cells = Array[Vector2i]([])
 geyser_cells = Array[Vector2i]([Vector2i(1, -4)])
 total_block_budget = 0
+par_measures = 24

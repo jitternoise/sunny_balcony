@@ -34,6 +34,12 @@ enum BeatPhase { PLACEMENT = 1, WATER = 2, TERRAIN = 3, STATUS = 4 }
 var current_beat: int = BeatPhase.PLACEMENT
 var _subtick_count: int = 0
 
+## Measures completed since Start. Compared against LevelData.par_measures
+## on a win to decide whether this level's par was met -- see
+## _on_level_won(). Counted, not derived from the clock, so it cannot drift
+## with frame rate or a mid-level pause.
+var measures_elapsed: int = 0
+
 @onready var board: HexBoard = $Board
 @onready var status_label: Label = $UI/HUD/StatusLabel
 @onready var budget_label: Label = $UI/HUD/BudgetLabel
@@ -296,6 +302,7 @@ func _on_retry_pressed() -> void:
 	delete_mode = false
 	current_beat = BeatPhase.PLACEMENT
 	_subtick_count = 0
+	measures_elapsed = 0
 	start_button.disabled = false
 	board.selected_block_id = ""
 	board.setup(level_data, block_catalog)
@@ -815,6 +822,10 @@ func _advance_beat() -> void:
 		BeatPhase.TERRAIN:
 			board.resolve_terrain_phase()
 		BeatPhase.STATUS:
+			# The measure completes on this beat. Counted BEFORE resolving,
+			# because resolve_status_phase() is what fires the win, and
+			# _on_level_won() has to see a total that includes this measure.
+			measures_elapsed += 1
 			board.resolve_status_phase()
 	_update_status_label()
 	current_beat = (current_beat % BeatPhase.STATUS) + 1
@@ -836,18 +847,32 @@ func _on_level_won() -> void:
 	status_label.text = "Level complete!"
 	GameState.mark_level_complete(level_data.level_id)
 
-	# Optional Hydro Plant bonus: never required to finish the level, just
-	# recorded when the plant is running as the level ends. Levels without
-	# a plant show nothing at all here.
+	# Optional rewards. Neither is ever required to finish a level; both are
+	# recorded on a win and reported here. A level with neither shows
+	# nothing at all.
+	var notes: Array[String] = []
+
+	# Hydro Plant: was it running as the level ended?
 	if board.has_hydro_plants():
 		var earned := board.all_hydro_plants_running()
 		if earned:
 			GameState.mark_hydro_bonus(level_data.level_id)
-		win_bonus_label.visible = true
-		win_bonus_label.text = "Bonus: power plant running" if earned \
-			else "Bonus missed: the power plant never ran"
-	else:
-		win_bonus_label.visible = false
+			notes.append("Bonus: power plant running")
+		else:
+			notes.append("Bonus missed: the power plant never ran")
+
+	# Par: finishing inside the target opens this level's side path on the
+	# map (see LevelSelect.BONUS_FORKS). Only the ten fork levels set one.
+	if level_data.par_measures > 0:
+		if measures_elapsed <= level_data.par_measures:
+			GameState.mark_par(level_data.level_id)
+			notes.append("Par met in %d measures — side path open" % measures_elapsed)
+		else:
+			notes.append("Par missed: %d measures, par is %d"
+				% [measures_elapsed, level_data.par_measures])
+
+	win_bonus_label.visible = not notes.is_empty()
+	win_bonus_label.text = "\n".join(notes)
 
 	# Next's label reflects what it's actually about to do: "Next" when
 	# there's another level after this one in LevelSelect.LEVEL_PATHS,

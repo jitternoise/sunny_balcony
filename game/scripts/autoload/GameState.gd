@@ -19,6 +19,13 @@ var completed_levels: Dictionary = {} # level_id (int) -> true
 ## it later just adds it here without changing completion.
 var hydro_bonus_levels: Dictionary = {} # level_id (int) -> true
 
+## Levels whose par has been met (finished within LevelData.par_measures).
+## Only the ten side-path fork levels set a par, and meeting it is what
+## opens that level's spur on the Level Select map -- see
+## LevelSelect.BONUS_FORKS. Like the hydro bonus this is a record only: it
+## never unlocks a main-path level and never affects completion.
+var par_levels: Dictionary = {} # level_id (int) -> true
+
 ## Debug mode: when true, every level is treated as unlocked regardless of
 ## save progress (is_level_unlocked() always returns true). Does NOT touch
 ## highest_unlocked_level or completed_levels, and is never written to a
@@ -53,6 +60,7 @@ func load_slot(slot: int) -> void:
 	highest_unlocked_level = 1
 	completed_levels.clear()
 	hydro_bonus_levels.clear()
+	par_levels.clear()
 
 	if not slot_exists(slot):
 		return
@@ -81,6 +89,10 @@ func load_slot(slot: int) -> void:
 	hydro_bonus_levels.clear()
 	for level_id in bonuses:
 		hydro_bonus_levels[int(level_id)] = true
+	var pars = parsed.get("par_levels", [])
+	par_levels.clear()
+	for level_id in pars:
+		par_levels[int(level_id)] = true
 
 
 func save_current_slot() -> void:
@@ -92,6 +104,7 @@ func save_current_slot() -> void:
 		"highest_unlocked_level": highest_unlocked_level,
 		"completed_levels": completed_levels.keys(),
 		"hydro_bonus_levels": hydro_bonus_levels.keys(),
+		"par_levels": par_levels.keys(),
 	}
 
 	var file := FileAccess.open(_save_path(current_slot), FileAccess.WRITE)
@@ -127,6 +140,19 @@ func mark_hydro_bonus(level_id: int) -> void:
 
 func has_hydro_bonus(level_id: int) -> bool:
 	return hydro_bonus_levels.has(level_id)
+
+
+## Records that this level was finished inside its par. Opens that level's
+## side path on the map; changes nothing else.
+func mark_par(level_id: int) -> void:
+	if par_levels.has(level_id):
+		return
+	par_levels[level_id] = true
+	save_current_slot()
+
+
+func has_par(level_id: int) -> bool:
+	return par_levels.has(level_id)
 
 
 func is_level_unlocked(level_id: int) -> bool:

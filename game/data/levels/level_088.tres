@@ -26,3 +26,4 @@ town_cells = Array[Vector2i]([Vector2i(2, -1), Vector2i(3, -1), Vector2i(3, -2),
 geyser_cells = Array[Vector2i]([])
 dirt_cells = Array[Vector2i]([Vector2i(0, -4), Vector2i(1, -4), Vector2i(2, -4), Vector2i(3, -4), Vector2i(4, -4), Vector2i(0, -3), Vector2i(1, -3), Vector2i(2, -3), Vector2i(3, -3), Vector2i(4, -3)])
 total_block_budget = 0
+par_measures = 34

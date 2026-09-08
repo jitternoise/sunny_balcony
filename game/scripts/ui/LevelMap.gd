@@ -17,11 +17,21 @@ var points: PackedVector2Array = PackedVector2Array()
 ## levels is drawn bright. 1 means only level 1 has been reached.
 var reached_count: int = 1
 
+## Side-path spurs branching off the trail, as
+## {"from": Vector2, "to": Vector2, "open": bool}. Drawn in the same pass as
+## the trail so a spur reads as part of the route rather than decoration,
+## but thinner, and dim until its gate has been met.
+var spurs: Array[Dictionary] = []
+
 const TRAIL_WIDTH := 14.0
 const TRAIL_CASING_WIDTH := 22.0
 const CASING_COLOR := Color(0.16, 0.32, 0.14, 0.55)
 const TRAIL_REACHED := Color(0.93, 0.87, 0.66, 0.95) # a worn dirt path
 const TRAIL_AHEAD := Color(0.86, 0.86, 0.82, 0.28)
+const SPUR_WIDTH := 9.0
+const SPUR_CASING_WIDTH := 16.0
+const SPUR_OPEN := Color(0.97, 0.82, 0.42, 0.95)   # amber, matching the bonus node
+const SPUR_LOCKED := Color(0.86, 0.86, 0.82, 0.22)
 
 
 func _draw() -> void:
@@ -35,3 +45,11 @@ func _draw() -> void:
 	for i in range(points.size() - 1):
 		var reached := (i + 1) < reached_count
 		draw_line(points[i], points[i + 1], TRAIL_REACHED if reached else TRAIL_AHEAD, TRAIL_WIDTH, true)
+
+	# Spurs last, so an open one sits over the trail it leaves rather than
+	# being buried by it.
+	for spur in spurs:
+		draw_line(spur["from"], spur["to"], CASING_COLOR, SPUR_CASING_WIDTH, true)
+	for spur in spurs:
+		draw_line(spur["from"], spur["to"],
+			SPUR_OPEN if spur["open"] else SPUR_LOCKED, SPUR_WIDTH, true)

@@ -37,6 +37,21 @@ func _ready() -> void:
 	await _settle(4)
 	await _shot("12_mid_campaign_scrolled")
 
+	# Side path at level 8: shut, then opened by meeting that level's par.
+	GameState.highest_unlocked_level = 12
+	GameState.par_levels = {}
+	screen._build_map()
+	await _settle(8)
+	scroll.scroll_vertical = 1000000000
+	await _settle(4)
+	await _shot("13_spur_locked")
+	GameState.mark_par(8)
+	screen._build_map()
+	await _settle(8)
+	scroll.scroll_vertical = 1000000000
+	await _settle(4)
+	await _shot("14_spur_open")
+
 	print("screenshots written to ", _dir)
 	get_tree().quit()
 

@@ -142,6 +142,23 @@ const MAP_MARGIN_TOP := 120.0
 const MAP_MARGIN_BOTTOM := 110.0
 const HEADER_HEIGHT := 40.0 # height of a chapter-name marker
 
+## Side paths. Every set of ten levels forks at its 8th -- 8, 18, 28 ... 98
+## -- into a spur holding a bonus level. Those levels are not authored yet,
+## so each spur ends in a placeholder node that cannot be entered; what is
+## live today is the gate.
+##
+## The gate is performance, not progress: the fork opens only once the
+## player has finished the fork level inside its par (LevelData.par_measures,
+## recorded by GameState.mark_par()). Reaching level 8 is not enough --
+## playing it well is. A locked spur is still drawn, faintly, so the player
+## can see there is something there to earn.
+const BONUS_FORK_OFFSET := 8   # the 8th level of each set of ten
+const BONUS_FORK_STEP := 10
+const BONUS_SPUR_LENGTH := 152.0
+const BONUS_EDGE_MARGIN := 54.0 # keep a spur node clear of the screen edge
+const COLOR_BONUS_OPEN := Color(0.93, 0.66, 0.16)
+const COLOR_BONUS_LOCKED := Color(0.42, 0.46, 0.5, 0.85)
+
 ## Corner badges on a level node. Kept small enough to read as annotations
 ## on the number rather than competing with it.
 const BADGE_SIZE := 32.0
@@ -237,10 +254,51 @@ func _build_map() -> void:
 		else:
 			map_root.add_child(_build_placeholder_node(level_number, points[i]))
 
+	# Side paths off every 8th level of a set of ten.
+	var spurs: Array[Dictionary] = []
+	for gate in range(BONUS_FORK_OFFSET, TOTAL_LEVEL_SLOTS + 1, BONUS_FORK_STEP):
+		var anchor: Vector2 = points[gate - 1]
+		var spur_end := _spur_end(anchor)
+		var open: bool = GameState.has_par(gate) or GameState.debug_unlock_all
+		spurs.append({"from": anchor, "to": spur_end, "open": open})
+		map_root.add_child(_build_bonus_node(gate, spur_end, open))
+
 	map_root.points = points
+	map_root.spurs = spurs
 	map_root.reached_count = reached
 	map_root.queue_redraw()
 	_scroll_to_bottom()
+
+
+## Where a fork level's spur reaches to. Pushed toward whichever side of the
+## map has more room, so a spur never runs off the edge on the outward swing
+## of the trail's wave.
+func _spur_end(anchor: Vector2) -> Vector2:
+	var room_left: float = anchor.x - BONUS_EDGE_MARGIN
+	var room_right: float = MAP_WIDTH - BONUS_EDGE_MARGIN - anchor.x
+	var direction: float = 1.0 if room_right > room_left else -1.0
+	var reach: float = minf(BONUS_SPUR_LENGTH, maxf(room_left, room_right))
+	return Vector2(anchor.x + direction * reach, anchor.y)
+
+
+## The node at the end of a side path. Always disabled: these levels do not
+## exist yet, so the node advertises the side path rather than entering it.
+## Amber once its gate is met, grey and padlocked until then.
+func _build_bonus_node(gate_level: int, center: Vector2, open: bool) -> Button:
+	var button := Button.new()
+	button.name = "bonus_%d" % gate_level
+	button.text = "?"
+	button.disabled = true
+	button.tooltip_text = ("Bonus level — not built yet" if open
+		else "Bonus level — finish level %d inside par to open the way" % gate_level)
+	button.size = Vector2(NODE_SIZE, NODE_SIZE)
+	button.position = center - Vector2(NODE_SIZE, NODE_SIZE) * 0.5
+	_style_node(button, COLOR_BONUS_OPEN if open else COLOR_BONUS_LOCKED)
+	if not open:
+		_add_badge(button, ICON_LOCK,
+			Vector2(NODE_SIZE - BADGE_SIZE * 0.66, -BADGE_SIZE * 0.34),
+			BADGE_BG_LOCK, Color.WHITE)
+	return button
 
 
 ## The index into GROUPS of the chapter that starts at `level_number`, or
@@ -276,6 +334,7 @@ func _build_level_node(level_data: LevelData, path: String, center: Vector2) -> 
 	var completed: bool = GameState.completed_levels.has(level_data.level_id)
 
 	var button := Button.new()
+	button.name = "level_%d" % level_data.level_id
 	button.text = str(level_data.level_id)
 	button.tooltip_text = level_data.display_name
 	button.disabled = not unlocked
@@ -308,6 +367,7 @@ func _build_level_node(level_data: LevelData, path: String, center: Vector2) -> 
 ## with all 100 levels authored this is normally never built.
 func _build_placeholder_node(level_number: int, center: Vector2) -> Button:
 	var button := Button.new()
+	button.name = "level_%d" % level_number
 	button.text = str(level_number)
 	button.tooltip_text = "Coming soon"
 	button.disabled = true
