@@ -37,6 +37,35 @@ const ICON_TOWN := preload("res://assets/icons/icon_town.svg")
 const ICON_SOURCE := preload("res://assets/icons/icon_source.svg")
 const ICON_HYDRO := preload("res://assets/icons/icon_hydro.svg")
 
+## Animated water tiles. Each sheet is WATER_FRAMES frames of
+## WATER_FRAME_PX laid out in a row, and every frame fills a whole hex --
+## the art is drawn edge to edge with no rim, so adjacent water cells merge
+## into one continuous stream instead of reading as separate blobs.
+##
+## There are two pairs. "lead" is the aerated, foaming front of the flow
+## (see _is_lead_water()); "body" is the settled water behind it. Each
+## comes in both grid orientations, because a pointy-top tile laid over a
+## flat-top cell would poke its corners out through the cell's flat edges.
+const WATER_BODY_POINTY := preload("res://assets/water/water_body_pointy.png")
+const WATER_BODY_FLAT := preload("res://assets/water/water_body_flat.png")
+const WATER_LEAD_POINTY := preload("res://assets/water/water_lead_pointy.png")
+const WATER_LEAD_FLAT := preload("res://assets/water/water_lead_flat.png")
+const WATER_FRAMES := 6
+const WATER_FRAME_PX := 128.0
+
+## Flipbook rates, deliberately far below the display's refresh: the board
+## is only redrawn when a frame index actually changes, so this costs ~12
+## redraws a second rather than 60. That matters on the Android hardware
+## this ships to, where a per-frame redraw is the expensive part -- see
+## claude/open-items.md. The front churns faster than the water behind it.
+const WATER_FPS := 8.0
+const WATER_LEAD_FPS := 12.0
+
+## Half-texel inset on the region read out of a sheet. Frames are butted
+## edge to edge, so without this the filtering can pull a sliver of the
+## neighbouring frame in at non-integer scales.
+const WATER_REGION_INSET := 0.5
+
 ## Every pool needs exactly this many beats of water connection to finish,
 ## visualized as a 4-box status bar above the pool. Fixed for every pool on
 ## every level -- not configurable per level/pool (see LevelData.pool_targets
@@ -247,6 +276,14 @@ var dirt_stall: Dictionary = {}
 ## right after the advance loop. A coord present here means "a drop stayed
 ## put at this cell this beat, blocked by dirt in this direction."
 var _stalled_this_beat: Dictionary = {}
+
+## Water flipbook clock. Advanced in _process(), which only calls
+## queue_redraw() on the frames where an index actually changes -- and not
+## at all when there is no water on the board, so a level sits idle during
+## planning exactly as it did before this animation existed.
+var _water_anim_time: float = 0.0
+var _water_frame: int = 0
+var _water_lead_frame: int = 0
 
 ## Vector2i -> true. Cells opened by a mudslide rather than by the player's
 ## digging -- drawn in MUDSLIDE_COLOR by _draw_cell() so slide damage stays
@@ -1827,6 +1864,22 @@ func _predict_would_consume(coord: Vector2i) -> bool:
 	return terrain == CellState.TOWN or terrain == CellState.POOL or terrain == CellState.GEYSER
 
 
+## Drives the water flipbook. Deliberately does NOT redraw every frame:
+## it advances a clock and only requests a redraw when one of the two frame
+## indices changes, which caps the board at WATER_LEAD_FPS redraws a second
+## while water is moving and zero when the board is dry.
+func _process(delta: float) -> void:
+	if water_cells.is_empty():
+		return
+	_water_anim_time += delta
+	var body := int(_water_anim_time * WATER_FPS) % WATER_FRAMES
+	var lead := int(_water_anim_time * WATER_LEAD_FPS) % WATER_FRAMES
+	if body != _water_frame or lead != _water_lead_frame:
+		_water_frame = body
+		_water_lead_frame = lead
+		queue_redraw()
+
+
 func _draw() -> void:
 	if level_data == null:
 		return
@@ -1865,6 +1918,16 @@ func _draw() -> void:
 	for source in hydro_source_cells:
 		_draw_source_marker(source)
 
+	# Water is drawn BEFORE the source markers below, not last: a source
+	# spawns a drop every beat, so its cell is almost always wet, and a
+	# full-tile water sprite would otherwise permanently hide the marker
+	# ring that tells the player where the water comes from.
+	var wet := {}
+	for entry in water_cells:
+		wet[entry["coord"]] = true
+	for entry in water_cells:
+		_draw_water(entry["coord"], _is_lead_water(entry["coord"], wet))
+
 	# Pre-start flow preview (see show_flow_preview) -- drawn after the
 	# source markers so its amber arrows sit on top of them, and before the
 	# water circles below (there's never any real water yet while this is
@@ -1879,9 +1942,6 @@ func _draw() -> void:
 	# is already false, but layering it last keeps that assumption from
 	# ever silently hiding the aim if it changes).
 	_draw_catapult_aim()
-
-	for entry in water_cells:
-		_draw_water(entry["coord"])
 
 
 func _draw_cell(coord: Vector2i) -> void:
@@ -2326,6 +2386,49 @@ func _draw_catapult_aim() -> void:
 		draw_colored_polygon(points, Color(1.0, 0.4, 0.15, 0.35))
 
 
-func _draw_water(coord: Vector2i) -> void:
+## Draws one water cell as a full-tile animated sprite. The destination is
+## 2 x Hex.SIZE square, which is exactly the hex's own bounding box on both
+## orientations, so the art lines up with the cell at every level's tile
+## size (Hex.SIZE is solved per level -- see _fit_hex_size()).
+func _draw_water(coord: Vector2i, is_lead: bool) -> void:
 	var center := Hex.axial_to_pixel(coord)
-	draw_circle(center, Hex.SIZE * 0.4, Color(0.3, 0.6, 1.0))
+	var size := Hex.SIZE * 2.0
+	var rect := Rect2(center.x - size / 2.0, center.y - size / 2.0, size, size)
+
+	# Body cells take a per-cell frame offset derived from the coordinate,
+	# so a long stream churns instead of pulsing in lockstep. The lead is
+	# left unstaggered -- there is only ever one per branch, and it should
+	# read as the newest thing on the board.
+	var frame: int
+	var sheet: Texture2D
+	var flat := level_data.grid_style == "flat"
+	if is_lead:
+		frame = _water_lead_frame
+		sheet = WATER_LEAD_FLAT if flat else WATER_LEAD_POINTY
+	else:
+		var stagger: int = absi(coord.x * 7 + coord.y * 13) % WATER_FRAMES
+		frame = (_water_frame + stagger) % WATER_FRAMES
+		sheet = WATER_BODY_FLAT if flat else WATER_BODY_POINTY
+
+	draw_texture_rect_region(sheet, rect, Rect2(
+		frame * WATER_FRAME_PX + WATER_REGION_INSET, WATER_REGION_INSET,
+		WATER_FRAME_PX - WATER_REGION_INSET * 2.0, WATER_FRAME_PX - WATER_REGION_INSET * 2.0))
+
+	# A Diverter or Splitter under the water still has to be readable --
+	# water lands ON those blocks (see _advance_water()), and a full-tile
+	# sprite would otherwise bury the glyph that says what the block does.
+	if placed_blocks.has(coord):
+		var block: BlockData = block_catalog[placed_blocks[coord]]
+		_draw_icon(center, block.icon)
+
+
+## True if this water cell is the front of its stream -- nothing wet in any
+## of the cells it would flow into next. Branch-aware for free: a Splitter's
+## two arms each end in their own lead. Presentation only; the simulation
+## neither knows nor cares which cell this is.
+func _is_lead_water(coord: Vector2i, wet: Dictionary) -> bool:
+	if level_data.grid_style == "flat":
+		return not (wet.has(coord + Hex.FLAT_DOWN)
+			or wet.has(coord + Hex.FLAT_DOWN_LEFT)
+			or wet.has(coord + Hex.FLAT_DOWN_RIGHT))
+	return not (wet.has(coord + Hex.DOWN_LEFT) or wet.has(coord + Hex.DOWN_RIGHT))
