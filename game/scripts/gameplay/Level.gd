@@ -490,7 +490,12 @@ func _build_inventory_bar() -> void:
 		var button := Button.new()
 		button.name = "block_%s" % block_id
 		button.icon = block.icon
-		button.expand_icon = true # the board SVGs are 100x100 -- let them shrink to fit
+		button.expand_icon = true # the board SVGs are far larger -- let them shrink to fit
+		# The theme caps Button icons at 32px so the 3x-rasterised ui_*.svg
+		# glyphs still draw at their authored size (see oval_theme.tres).
+		# Tile art is the exception: it IS the button, and expand_icon
+		# already sizes it, so lift the cap here.
+		button.add_theme_constant_override("icon_max_width", 0)
 		button.tooltip_text = block.display_name
 		button.pressed.connect(_on_block_button_pressed.bind(block_id))
 		inventory_bar.add_child(button)
