@@ -2,11 +2,18 @@ extends Node
 class_name LevelSim
 
 ## Headless simulation of a level, driven straight off HexBoard's four beat
-## phases with no timers or scene involved. Used to prove that a level still
-## plays out the way level-solutions.md documents -- in particular that
-## adding a Hydro Plant to a level does not change its outcome.
+## phases with no timers or scene involved. Used by VerifyHydroBonus to prove
+## that adding a Hydro Plant to a level does not change how it plays.
+##
+## NOT the solution book's verifier -- that is tools/verify_solutions.gd,
+## which is authoritative: it handles the dig-based solutions this parser
+## skips, and covers 99 of the 100 entries against this one's 76.
 
-const SOLUTIONS_PATH := "/home/user/sunny_balcony/level-solutions.md"
+## level-solutions.md lives at the repository root, outside res://, so the
+## path is resolved from the project directory rather than hardcoded --
+## the same approach tools/verify_solutions.gd takes.
+static func solutions_path() -> String:
+	return ProjectSettings.globalize_path("res://").path_join("../level-solutions.md").simplify_path()
 
 ## The names level-solutions.md uses for each block, in all the spellings
 ## that file mixes ("Diverter-Right", "divert-right", "divert_right").
@@ -43,9 +50,10 @@ static func load_block_catalog() -> Dictionary:
 ## reported by the caller rather than silently treated as solved.
 static func parse_solutions() -> Dictionary:
 	var out := {}
-	if not FileAccess.file_exists(SOLUTIONS_PATH):
+	var path := solutions_path()
+	if not FileAccess.file_exists(path):
 		return out
-	var text := FileAccess.open(SOLUTIONS_PATH, FileAccess.READ).get_as_text()
+	var text := FileAccess.open(path, FileAccess.READ).get_as_text()
 	# The file names levels two ways: "**Level 7**" early on, "**23. Diverter
 	# Drills I**" from the group sections onward.
 	var line_re := RegEx.create_from_string("^- \\*\\*(?:Level )?(\\d+)[^*]*\\*\\*[^—]*— (.+)$")

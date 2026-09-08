@@ -246,26 +246,90 @@ direction arrows above. Note that popup routing now needs checking at level
 **100**, not 20, and that `level_018.tres` — reconstructed from a README
 description and never re-verified against the engine — is still unconfirmed.
 
-## Documented solutions that no longer reproduce (found 2026-09-07)
+## Documented solutions: 11 still broken (re-measured 2026-09-08)
 
-`game/tests/VerifySolutions.tscn` replays every solution in
-`level-solutions.md` through the real `HexBoard` beat phases. 67 of the 76
-parsable entries win on exactly their documented measure. Nine do not, all
-pre-dating the Hydro Plant bonus work that added the harness:
+Re-run of `tools/verify_solutions.gd` against the current tree:
 
-- **Levels 1, 6, 10, 11** — the documented `Wall (-1,-3)` never wins; water
-  stalls on the source forever. Each of these levels has its source at
-  `(0,-4)`, whose only two down-targets are `(-1,-3)` and `(0,-3)`. The Wall
-  is 2 tiles wide (`BlockData.footprint_offsets`), so placing it at
-  `(-1,-3)` covers both and seals the source in. These solutions were almost
-  certainly authored while the Wall was still a single tile. The levels may
-  still be winnable by another placement — that has not been checked.
-- **Levels 64, 66** — the documented solution stalls out (no win within 300
-  measures).
-- **Levels 67, 68, 69** — the documented solution loses to a bottom-edge
-  overflow several measures before its documented win. On level 68 one of
-  the documented placements is also rejected outright.
+| | |
+|---|---|
+| Win on the exact documented measure | **88** |
+| Win at a different measure | **0** |
+| No longer win | **11** — levels 1, 6, 10, 11, 64, 66, 67, 68, 69, 92, 96 |
+| Not machine-readable | **1** — level 22, prose ("dig the 108-cell channel+spurs") |
 
-None of these were introduced by the Hydro Plant change: the same nine fail
-identically with the plants removed. Worth deciding whether the levels or
-the solutions document is the thing that is wrong.
+**This supersedes the "27 of 100" figure earlier in this file**, which was
+measured on 2026-09-04; 16 have been fixed since. It also supersedes a
+"9 failures" figure briefly recorded here on 2026-09-07, which was produced
+by a second, redundant harness whose parser silently skipped the 24
+dig-bearing entries — that harness has been deleted in favour of
+`tools/verify_solutions.gd`, which is the one to trust.
+
+**All 11 place a wall, and no non-wall solution is broken** — consistent
+with the 2026-08-31 change making the Wall 2 tiles wide being the sole
+cause. Levels 1, 6, 10 and 11 share one shape: the source sits at `(0,-4)`,
+whose only two down-targets are `(-1,-3)` and `(0,-3)`, and a 2-wide wall
+placed at `(-1,-3)` covers both and seals the source in. Levels 67, 68 and
+69 lose to a bottom-edge overflow instead; on 68 a documented placement is
+rejected outright.
+
+Level 1 is the first thing a new player touches, so it is the one to fix
+first. Whether the levels or the solution book is the thing that is wrong
+has still not been decided.
+
+---
+
+## 🚚 Pre-export checklist (added 2026-09-08)
+
+Neither export has been configured — no `export_presets.cfg` is committed
+(it is gitignored), so nothing has been built for either platform. Nothing
+in the codebase is platform-specific: the only platform API in shipped code
+is `OS.is_debug_build()` in `GameState`, and the whole game is core Godot
+2D. What follows is what to settle before the first build.
+
+**Standing caveat: nothing has ever run on a GPU.** Every render produced
+so far — including all the animation work — was Linux under Xvfb with
+llvmpipe software rendering. That verifies drawing *logic*. It says nothing
+about how any of it behaves on a phone.
+
+**1. Confirm the Compatibility renderer on iOS.** `project.godot` sets
+`renderer/rendering_method.mobile="gl_compatibility"`. Apple deprecated
+OpenGL ES, so Godot reaches iOS's Compatibility renderer through ANGLE
+(translating GL ES to Metal), a newer and far less travelled path than
+Android's. Verify on a device against 4.6 before committing to it. If it is
+troublesome, the Mobile (Vulkan/Metal) renderer is the better-trodden iOS
+route — but that is a project-level change with its own consequences, not a
+flag flip.
+
+**2. Exclude `res://tests/` and `res://tools/` from both exports.** Roughly
+140 KB across 20 test files plus the verification tools. Nothing
+instantiates them so they are inert, but they are dead weight and they read
+`level-solutions.md`, which sits outside `res://` and ships in no build.
+
+**3. Decide texture compression deliberately.** Every texture imports at
+`compress/mode=0` (lossless). Mobile usually wants VRAM compression — ETC2
+on Android, ASTC on iOS — as a per-platform import override, cutting texture
+memory several-fold. Against that: the art is flat colour with hard edges,
+which is exactly where block-compression artifacts show worst, and current
+texture memory is small enough that this is a choice rather than a
+necessity.
+
+**4. Check two specific things on real hardware**, both invisible under
+software rendering:
+- `HexBoard.SHEET_REGION_INSET` (half a texel) exists to stop a sheet's
+  neighbouring frame bleeding in. Filtering differs by GPU and driver, so on
+  device you may still see a sliver of the wrong frame, or lose half a pixel
+  of art.
+- `Hex.SIZE` is solved per level and `canvas_items` stretch renders at the
+  device's native resolution, so tiles land at arbitrary fractional sizes.
+  If seams appear between adjacent full-tile water cells, that is where.
+
+**5. Measure the redraw cost.** The board repaints on a 12 Hz heartbeat
+whenever a level is open — including while the player is still planning,
+since every level has fire and fire is animated. 12 redraws a second is the
+budget the single-heartbeat design was built around, but it is a
+calculation, never measured on a device. If it proves expensive, gating
+terrain animation to `started` is a one-line change.
+
+**Not at risk:** the simulation runs off a `Timer`, not off frames, so
+thermal throttling, a slow device or a dropped frame cannot desync the beat
+cycle or change a level's outcome. Only the visuals would stutter.
