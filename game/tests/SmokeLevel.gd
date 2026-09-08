@@ -146,6 +146,27 @@ func _ready() -> void:
 	_check(level.paused, "losing focus alone also pauses")
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
 
+	print("Touch double-fire guard")
+	# On a phone Godot synthesises a mouse event from every touch AND
+	# dispatches that copy first, so without a guard one finger runs the
+	# press path twice. Emulated events must be dropped outright.
+	level._press_active = false
+	var fake := InputEventMouseButton.new()
+	fake.button_index = MOUSE_BUTTON_LEFT
+	fake.pressed = true
+	fake.position = Vector2(360, 640)
+	fake.device = InputEvent.DEVICE_ID_EMULATION
+	level._unhandled_input(fake)
+	_check(not level._press_active, "an emulated (touch-synthesised) press is ignored")
+	var real := InputEventMouseButton.new()
+	real.button_index = MOUSE_BUTTON_LEFT
+	real.pressed = true
+	real.position = Vector2(360, 640)
+	real.device = 0
+	level._unhandled_input(real)
+	_check(level._press_active, "a real mouse press still registers")
+	level._press_active = false
+
 	print("Back button (Android)")
 	# The project turns off Godot's quit-on-back default, so back has to
 	# mean something on every screen. In a level it toggles the pause menu.

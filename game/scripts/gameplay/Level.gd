@@ -224,19 +224,49 @@ func _ready() -> void:
 	# HexBoard.place_block()/remove_block() and only takes effect on the
 	# next PLACEMENT beat -- see the beat-cycle doc comment above.
 
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
+	back_button.pressed.connect(_go_to_level_select)
 	start_button.pressed.connect(_on_start_pressed)
 	pause_button.pressed.connect(_on_pause_pressed)
 	pause_resume_button.pressed.connect(_on_resume_pressed)
 	pause_retry_button.pressed.connect(_on_retry_pressed)
 	pause_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
 	lose_retry_button.pressed.connect(_on_retry_pressed)
-	lose_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
+	lose_level_select_button.pressed.connect(_go_to_level_select)
 	intro_got_it_button.pressed.connect(_on_intro_got_it_pressed)
 	win_next_button.pressed.connect(_on_win_next_pressed)
 
 	_build_inventory_bar()
 	_show_intro_popup_if_needed()
+
+
+## Where both the HUD Back button and the lose popup's "Level Select" button
+## go, pulled out of the old inline lambdas so the Android Back handler below
+## can reuse it -- all three must always agree.
+func _go_to_level_select() -> void:
+	get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn")
+
+
+## Android's hardware/gesture Back. See MainMenu.gd's _notification() for why
+## the engine's own quit_on_go_back handling is switched off project-wide.
+## Never fires on iOS.
+##
+## Back is treated as "undo the innermost thing on screen", so it unwinds in
+## the same order a player would expect to tap out of: dismiss the intro popup
+## first, then abandon an in-progress catapult aim, and only leave the level
+## once neither is up. The win/lose popups deliberately fall through to the
+## last case -- both already offer Level Select as a button, and Back agreeing
+## with that is less surprising than Back dismissing a popup that would leave
+## the player staring at a finished board with nothing to do.
+## Abandons a charging catapult shot WITHOUT firing it, restoring exactly the
+## state a press that never touched a catapult would have left behind. The
+## block is not spent -- fire_catapult() is the only thing that consumes one,
+## and it is deliberately not called here.
+func _cancel_catapult_aim() -> void:
+	_catapult_aiming = false
+	_catapult_press_active = false
+	_press_active = false
+	_drag_active = false
+	board.clear_catapult_aim()
 
 
 ## Shows the level-intro popup (see intro_panel doc comment above) if this
@@ -366,9 +396,12 @@ func _on_go_back_request() -> void:
 	if not is_node_ready() or board == null:
 		return
 	if intro_panel != null and intro_panel.visible:
-		intro_panel.visible = false          # back dismisses the briefing
+		_on_intro_got_it_pressed()           # back dismisses the briefing
+	elif _catapult_aiming:
+		_cancel_catapult_aim()               # back abandons a charging shot,
+		                                     # without spending the block
 	elif board.game_over:
-		get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn")
+		_go_to_level_select()
 	elif paused:
 		_on_resume_pressed()                 # back closes the menu it opened
 	else:
@@ -532,6 +565,27 @@ func _set_delete_mode(enabled: bool) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Drop the mouse events Godot synthesizes from touch. The project setting
+	# input_devices/pointing/emulate_mouse_from_touch is on by default and has
+	# to stay on: BaseButton only ever looks at InputEventMouseButton, never
+	# InputEventScreenTouch, so every Button in the HUD, the inventory bar and
+	# the popups is tapped purely through this emulation. The cost is that on a
+	# phone each touch ALSO arrives here as a synthetic mouse event -- and the
+	# engine dispatches that copy FIRST, before the real InputEventScreenTouch
+	# (Input::_parse_input_event_impl recurses into the emulated event before
+	# dispatching the original). Without this guard one finger ran the press
+	# and release paths twice: two _handle_tap() calls on the same coord inside
+	# DOUBLE_TAP_WINDOW_MSEC read as a deliberate double-tap and activated a
+	# Hydro Plant nobody double-tapped, and a place-then-pick-up pair cancelled
+	# itself out.
+	#
+	# Every emulated event, button and motion alike, carries
+	# InputEvent.DEVICE_ID_EMULATION (-1) as its device id -- the documented
+	# way to tell it from a physical mouse. A real desktop mouse keeps its
+	# non-negative device id, so the mouse and wheel paths below are unaffected.
+	if event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
+
 	# A paused game is frozen for input too. The pause popup's dimmed
 	# overlay already swallows taps/drags before they get here, but a
 	# scroll wheel or a stray release event can still arrive -- ignore
