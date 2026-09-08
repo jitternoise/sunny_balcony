@@ -287,9 +287,11 @@ const GRID_TOP_MARGIN_FRACTION := 0.10
 ## not exceed floor((MAX_GRID_WIDTH_HEXES - 1) / 2) = 4.
 const MAX_GRID_WIDTH_HEXES := 9
 
-## Reserved screen space below the grid's available area for the bottom
-## inventory bar, so scrolling can't hide the grid's bottom edge behind it.
-const BOTTOM_UI_RESERVED_PX := 110.0
+## Reserved screen space below the grid's available area for the bottom HUD,
+## so scrolling can't hide the grid's bottom edge behind it. Matches the
+## topmost bottom-anchored control in Level.tscn -- BudgetLabel's offset_top,
+## which sits just above InventoryBar -- so keep the two in step.
+const BOTTOM_UI_RESERVED_PX := 158.0
 
 ## position.y when the grid is scrolled all the way to the top (its natural
 ## resting position, set by _fit_hex_layout()). Level.gd clamps manual
