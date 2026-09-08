@@ -16,6 +16,11 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 ; other screen steps back one level). No effect on iOS, which never sends the
 ; notification, or on desktop.
 config/quit_on_go_back=false
+; Sky blue, matching every scene's Sky ColorRect. The engine paints this
+; behind the boot splash and anywhere a frame leaves pixels untouched, and
+; its default is a near-black grey -- with stretch/aspect=expand there are
+; no letterbox bars to hide it, so any gap would read as a black edge.
+boot_splash/bg_color=Color(0.53, 0.81, 0.92, 1)
 
 [autoload]
 
@@ -35,5 +40,7 @@ theme/custom="res://theme/oval_theme.tres"
 
 [rendering]
 
+; Same reasoning as boot_splash/bg_color above.
+environment/defaults/default_clear_color=Color(0.53, 0.81, 0.92, 1)
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
