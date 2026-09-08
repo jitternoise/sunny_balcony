@@ -137,7 +137,13 @@ const NODE_SPACING := 104.0 # vertical gap between consecutive levels
 const GROUP_GAP := 84.0 # extra room inserted where a new chapter begins
 const NODE_AMPLITUDE := 200.0 # how far the trail swings either side of centre
 const NODE_PHASE := PI / 3.0
-const MAP_WIDTH := 720.0 # the project's fixed portrait width
+## The design width the trail was laid out against. Under
+## stretch/aspect=expand the logical viewport is at least this wide and can
+## be wider (a 4:3 tablet, an unfolded foldable), so the live width is read
+## per build into _map_width and the trail spread across it -- pinning the
+## map at 720 would strand it against the left edge of a wider screen with
+## dead grass down the right.
+const MAP_DESIGN_WIDTH := 720.0
 const MAP_MARGIN_TOP := 120.0
 const MAP_MARGIN_BOTTOM := 110.0
 const HEADER_HEIGHT := 40.0 # height of a chapter-name marker
@@ -179,6 +185,11 @@ const COLOR_COMPLETED := Color(0.22, 0.62, 0.31)
 const COLOR_UNLOCKED := Color(0.2, 0.55, 0.85)
 const COLOR_LOCKED := Color(0.42, 0.46, 0.5, 0.85)
 
+## The width the current map was built for: the viewport's, never less than
+## MAP_DESIGN_WIDTH. Set by _build_map(); read by everything that places a
+## node, a spur or a chapter label.
+var _map_width: float = MAP_DESIGN_WIDTH
+
 @onready var scroll: ScrollContainer = $ScrollContainer
 @onready var map_root: LevelMap = $ScrollContainer/MapRoot
 @onready var back_button: Button = $BackButton
@@ -189,6 +200,13 @@ func _ready() -> void:
 	back_button.pressed.connect(_go_back)
 	debug_unlock_toggle.button_pressed = GameState.debug_unlock_all
 	debug_unlock_toggle.toggled.connect(_on_debug_unlock_toggled)
+	# The viewport is not a constant under stretch/aspect=expand -- it takes
+	# the device's aspect, and a desktop window resize can change it again.
+	# The trail is laid out in absolute coordinates, so it has to be rebuilt
+	# against the new width rather than stretched.
+	var vp := get_viewport()
+	if vp and not vp.size_changed.is_connected(_build_map):
+		vp.size_changed.connect(_build_map)
 	_build_map()
 
 
@@ -216,6 +234,7 @@ func _on_debug_unlock_toggled(pressed: bool) -> void:
 ## scratch whenever progress or the debug unlock changes, same as the old
 ## list was.
 func _build_map() -> void:
+	_map_width = maxf(MAP_DESIGN_WIDTH, get_viewport_rect().size.x)
 	for child in map_root.get_children():
 		map_root.remove_child(child)
 		child.queue_free()
@@ -237,12 +256,17 @@ func _build_map() -> void:
 		offsets.append(up)
 		up += NODE_SPACING
 	var content_height: float = up - NODE_SPACING + MAP_MARGIN_TOP
-	map_root.custom_minimum_size = Vector2(MAP_WIDTH, content_height)
+	map_root.custom_minimum_size = Vector2(_map_width, content_height)
 
+	# The wave widens with the screen, so a wider-than-design viewport gets a
+	# bigger swing rather than the same narrow trail with dead grass either
+	# side of it. At the design width the multiplier is 1 and the layout is
+	# unchanged.
+	var amplitude: float = NODE_AMPLITUDE * (_map_width / MAP_DESIGN_WIDTH)
 	var points := PackedVector2Array()
 	for i in range(TOTAL_LEVEL_SLOTS):
 		points.append(Vector2(
-			MAP_WIDTH * 0.5 + NODE_AMPLITUDE * sin(i * NODE_PHASE),
+			_map_width * 0.5 + amplitude * sin(i * NODE_PHASE),
 			content_height - offsets[i]))
 
 	for group_index in group_label_offsets.keys():
@@ -281,7 +305,7 @@ func _build_map() -> void:
 ## of the trail's wave.
 func _spur_end(anchor: Vector2) -> Vector2:
 	var room_left: float = anchor.x - BONUS_EDGE_MARGIN
-	var room_right: float = MAP_WIDTH - BONUS_EDGE_MARGIN - anchor.x
+	var room_right: float = _map_width - BONUS_EDGE_MARGIN - anchor.x
 	var direction: float = 1.0 if room_right > room_left else -1.0
 	var reach: float = minf(BONUS_SPUR_LENGTH, maxf(room_left, room_right))
 	return Vector2(anchor.x + direction * reach, anchor.y)
@@ -324,7 +348,7 @@ func _build_group_label(group_name: String, y: float) -> Label:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.position = Vector2(0, y - HEADER_HEIGHT * 0.5)
-	label.size = Vector2(MAP_WIDTH, HEADER_HEIGHT)
+	label.size = Vector2(_map_width, HEADER_HEIGHT)
 	label.add_theme_color_override("font_color", Color(1, 1, 1, 0.92))
 	label.add_theme_color_override("font_outline_color", Color(0.14, 0.3, 0.13, 0.9))
 	label.add_theme_constant_override("outline_size", 6)

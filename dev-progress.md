@@ -1,5 +1,40 @@
 # Flash Flood — Dev Progress
 
+## Status: board and map fill the screen at every aspect -- no side filler (2026-09-08)
+
+Follow-on to the `stretch/aspect=expand` spike. Expand removed the engine's
+letterbox bars, but two screens then left their own blank margins on any
+viewport wider than the 720px design width -- a 4:3 tablet, an unfolded
+foldable -- because both laid content out against 720 and centred it.
+
+**Board.** `HexBoard._fit_hex_layout()` solves tile size from the viewport's
+real width again; the `DESIGN_WIDTH` cap the spike added is gone. That cap
+existed to stop a wide screen inflating the grid, but the cost was ~150px of
+dead grass down each side of a board that stayed the same size. Under expand
+the viewport is never *narrower* than 720, so dropping the cap can only make
+a tile bigger, never smaller -- on a 960-wide viewport every hex grows 33%.
+Grids taller than the screen scroll further than they used to; they already
+scrolled.
+
+**Level Select.** `MAP_WIDTH` was a constant 720, so on a wider viewport the
+trail sat in the left 720px with grass down the right. It is now `_map_width`,
+read from the live viewport per build, and the wave's amplitude scales with
+it so the trail swings across the whole screen rather than staying a narrow
+ribbon down the middle. The map rebuilds on `size_changed`, as the board
+already did.
+
+Verified: `BoardSnapshots` and `LevelSelectShots` at 720x1280 are
+pixel-identical before and after (10 and 5 shots, 0 changed) -- the 9:16
+layout is untouched. At 960x1280 the board spans the full width and the trail
+is centred on the real centre. SmokeLevel, VerifyHydroBonus and
+VerifyLevelMap pass; the solution book is unchanged at 88 exact / 11 broken
+(the same wall-width entries) / 1 prose.
+
+Still open, unchanged by this: nothing reads `DisplayServer.get_display_safe_area()`,
+so with no letterbox bars the HUD's 40px inset is still guesswork against a
+notch or gesture bar. The vertical dead space below a small grid on a tall
+phone is also untouched -- the grid still hangs from a fixed 128px top margin.
+
 ## Status: gameplay + renderer session -- pause/delete, icon pass, hydro bonus, level map with side paths, animated water, tile table, platform merge (2026-09-08)
 
 Long single session, run with Godot 4.6 actually installed and driving every

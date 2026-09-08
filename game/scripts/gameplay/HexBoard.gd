@@ -278,15 +278,6 @@ const BLOCK_ARROW_ALPHA := 0.9
 ## width, just with different tile sizes.
 const GRID_WIDTH_FRACTION := 0.9
 
-## The viewport width the game is designed against (display/window/size/
-## viewport_width in project.godot). Tile size is solved from viewport
-## WIDTH, so under stretch/aspect=expand a short-and-wide screen -- a 4:3
-## tablet -- would otherwise expand the viewport sideways and inflate every
-## hex, leaving a huge grid that needs far more scrolling. Sizing is
-## therefore capped at this width and the grid centred in whatever space is
-## actually there; extra width becomes margin, not bigger tiles.
-const DESIGN_WIDTH := 720.0
-
 ## Where the grid's top edge sits. This clears the HUD's top button row,
 ## which Level.tscn anchors to the top at a fixed 96px bottom edge, so it
 ## is an absolute distance and NOT a fraction of viewport height: under
@@ -747,12 +738,6 @@ func _all_playable_coords() -> Array[Vector2i]:
 	return coords
 
 
-## Solves for the tile size (Hex.SIZE) that makes this level's grid exactly
-## GRID_WIDTH_FRACTION of the screen's width, then positions this node
-## (self.position) so the grid's top-left bounding corner lands at the
-## GRID_SIDE_MARGIN_FRACTION / GRID_TOP_MARGIN_FRACTION point. Also computes
-## max_scroll_down so Level.gd knows how far the player can drag the grid
-## up to see its bottom, for grids taller than one screen.
 ## Re-solves the grid's size and resting position for the current viewport.
 ## Resets vertical scroll to the top -- a reshaped viewport invalidates the
 ## old scroll offset anyway, since max_scroll_down is recomputed here.
@@ -763,9 +748,24 @@ func _on_viewport_resized() -> void:
 	queue_redraw()
 
 
+## Solves for the tile size (Hex.SIZE) that makes this level's grid exactly
+## GRID_WIDTH_FRACTION of the viewport's width, then positions this node
+## (self.position) so the grid's top-left bounding corner lands at the
+## centred side margin, GRID_TOP_MARGIN_PX down. Also computes
+## max_scroll_down so Level.gd knows how far the player can drag the grid
+## up to see its bottom, for grids taller than one screen.
 func _fit_hex_layout() -> void:
 	var viewport_size := _viewport_size()
-	var target_width := minf(viewport_size.x, DESIGN_WIDTH) * GRID_WIDTH_FRACTION
+	# Solved from the width that is actually there, NOT from the project's
+	# 720px design width. Under stretch/aspect=expand a wider-than-9:16
+	# screen -- a 4:3 tablet, an unfolded foldable -- grows the logical
+	# viewport sideways; capping the grid at the design width would spend
+	# that on empty margin either side of a board that stayed the same
+	# size. The board fills the screen at every aspect instead, and the
+	# tiles get bigger rather than the margins. Expand never makes the
+	# viewport NARROWER than the design width, so this can only ever grow
+	# a tile, never shrink one.
+	var target_width := viewport_size.x * GRID_WIDTH_FRACTION
 
 	# Measure the grid's bounding box at Hex.SIZE = 1, then solve for the
 	# size that scales that box to exactly target_width wide. Hex.SIZE is
@@ -794,8 +794,7 @@ func _fit_hex_layout() -> void:
 	var grid_bottom := max_y * computed_size
 	var grid_height := grid_bottom - grid_top
 
-	# Centred, so the side margin stays even however wide the viewport is.
-	# At the design width this is the old 5%-a-side layout exactly.
+	# Centred: the same 5%-a-side breathing room at every viewport width.
 	var left_margin := (viewport_size.x - target_width) / 2.0
 	var top_margin := GRID_TOP_MARGIN_PX
 
