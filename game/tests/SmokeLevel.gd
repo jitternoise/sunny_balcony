@@ -146,6 +146,18 @@ func _ready() -> void:
 	_check(level.paused, "losing focus alone also pauses")
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
 
+	print("Popups swallow taps")
+	# A modal has to stop input reaching the board, or a tap on the dimmed
+	# area beside the panel places a block behind the popup. Nothing about
+	# this is visible in a screenshot, so it is asserted rather than eyed.
+	for panel in ["LosePanel", "IntroPanel", "WinPanel", "PausePanel"]:
+		var root: Control = level.get_node("UI/%s" % panel)
+		var dim: Control = level.get_node("UI/%s/Dim" % panel)
+		_check(root.mouse_filter == Control.MOUSE_FILTER_STOP,
+			"%s stops input reaching the board" % panel)
+		_check(dim.mouse_filter == Control.MOUSE_FILTER_STOP,
+			"%s's dimmed area stops input too" % panel)
+
 	print("Touch double-fire guard")
 	# On a phone Godot synthesises a mouse event from every touch AND
 	# dispatches that copy first, so without a guard one finger runs the
