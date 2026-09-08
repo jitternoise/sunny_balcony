@@ -328,6 +328,41 @@ func _on_pause_pressed() -> void:
 	pause_panel.visible = true
 
 
+## Mobile: drop into the pause menu the moment the app leaves the
+## foreground, so a player who takes a call, pulls down the notification
+## shade or switches apps does not come back to water that kept flowing
+## without them.
+##
+## Three notifications, because no single one covers every way a phone takes
+## the foreground away. APPLICATION_PAUSED is the Android/iOS suspend;
+## APPLICATION_FOCUS_OUT fires for the things that steal focus without
+## suspending; WM_WINDOW_FOCUS_OUT is the desktop equivalent, which is what
+## makes this reachable in a test outside a device. They overlap on purpose
+## -- pausing an already-paused level is a no-op.
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED, \
+		NOTIFICATION_APPLICATION_FOCUS_OUT, \
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			_pause_for_background()
+
+
+## Opens the pause menu on losing the foreground. Deliberately does nothing
+## when another panel already owns the screen: a win or loss has already
+## ended the run (board.game_over), and stacking the pause panel on top of
+## the level intro would only cost the player an extra tap on the way back
+## in. Guarded against firing before _ready(), since these notifications are
+## delivered to every node regardless of how far through setup it is.
+func _pause_for_background() -> void:
+	if not is_node_ready() or paused:
+		return
+	if board == null or board.game_over:
+		return
+	if intro_panel != null and intro_panel.visible:
+		return
+	_on_pause_pressed()
+
+
 ## Unfreezes a paused game -- the tick timer resumes from exactly where it
 ## was held, so the beat cycle continues on the same sub-tick.
 func _on_resume_pressed() -> void:

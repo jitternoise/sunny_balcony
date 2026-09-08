@@ -125,6 +125,27 @@ func _ready() -> void:
 	await get_tree().create_timer(0.5).timeout
 	_check(level.current_beat != beat_before or level._subtick_count > 0, "beats advance again after Resume")
 
+	print("Leaving the foreground")
+	# Dismiss the level intro first. It is still up because this test drives
+	# buttons by signal rather than by tapping, which a real player cannot
+	# do while the intro blocks input -- and backgrounding deliberately does
+	# not stack the pause panel on top of another modal.
+	level.get_node("UI/IntroPanel/Center/Panel/VBox/GotItButton").pressed.emit()
+	_check(not level.get_node("UI/IntroPanel").visible, "intro dismissed")
+	# On a phone the level must pause itself rather than run on unattended.
+	_check(not level.paused, "running before the app leaves the foreground")
+	level.notification(NOTIFICATION_APPLICATION_PAUSED)
+	_check(level.paused and pause_panel.visible, "backgrounding opens the pause menu")
+	level.notification(NOTIFICATION_APPLICATION_PAUSED)
+	_check(level.paused, "backgrounding again while paused is a no-op")
+	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
+	_check(not level.paused, "Resume works after a background pause")
+	# Losing focus without a full suspend has to count too -- a notification
+	# shade or a call overlay never sends APPLICATION_PAUSED.
+	level.notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	_check(level.paused, "losing focus alone also pauses")
+	level.get_node("UI/PausePanel/Center/Panel/VBox/ResumeButton").pressed.emit()
+
 	print("Retry clears pause")
 	pause_button.pressed.emit()
 	level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton").pressed.emit()
