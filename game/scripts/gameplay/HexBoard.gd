@@ -308,6 +308,13 @@ var top_position_y: float = 0.0
 ## available vertical space. 0 if the whole grid already fits on screen.
 var max_scroll_down: float = 0.0
 
+## The grid's bounding box in this node's OWN coordinates, as solved by
+## _fit_hex_layout() -- add `position` for viewport coordinates. Kept so the
+## layout can be checked (tests/VerifySafeArea.gd) without re-deriving the
+## hex maths, and so anything that needs the board's extent has one answer
+## to read rather than its own copy of the corner walk.
+var grid_bounds := Rect2()
+
 var level_data: LevelData
 var block_catalog: Dictionary = {} # block id (String) -> BlockData
 
@@ -756,6 +763,15 @@ func _on_viewport_resized() -> void:
 ## up to see its bottom, for grids taller than one screen.
 func _fit_hex_layout() -> void:
 	var viewport_size := _viewport_size()
+
+	# Everything below is measured against the safe area rather than the
+	# raw viewport: with no letterbox bars left to hide them, a cutout eats
+	# into the top of the board and a gesture bar into the bottom. On a
+	# device with neither -- and on every desktop -- these are all zero and
+	# the layout is the plain viewport one.
+	var safe := SafeArea.insets(get_viewport())
+	var usable_width: float = viewport_size.x - safe.x - safe.z
+
 	# Solved from the width that is actually there, NOT from the project's
 	# 720px design width. Under stretch/aspect=expand a wider-than-9:16
 	# screen -- a 4:3 tablet, an unfolded foldable -- grows the logical
@@ -765,7 +781,7 @@ func _fit_hex_layout() -> void:
 	# tiles get bigger rather than the margins. Expand never makes the
 	# viewport NARROWER than the design width, so this can only ever grow
 	# a tile, never shrink one.
-	var target_width := viewport_size.x * GRID_WIDTH_FRACTION
+	var target_width := usable_width * GRID_WIDTH_FRACTION
 
 	# Measure the grid's bounding box at Hex.SIZE = 1, then solve for the
 	# size that scales that box to exactly target_width wide. Hex.SIZE is
@@ -793,16 +809,18 @@ func _fit_hex_layout() -> void:
 	var grid_top := min_y * computed_size
 	var grid_bottom := max_y * computed_size
 	var grid_height := grid_bottom - grid_top
+	grid_bounds = Rect2(grid_left, grid_top, (max_x - min_x) * computed_size, grid_height)
 
-	# Centred: the same 5%-a-side breathing room at every viewport width.
-	var left_margin := (viewport_size.x - target_width) / 2.0
-	var top_margin := GRID_TOP_MARGIN_PX
+	# Centred in the safe area: the same 5%-a-side breathing room at every
+	# viewport width, measured from the cutout rather than the screen edge.
+	var left_margin: float = safe.x + (usable_width - target_width) / 2.0
+	var top_margin: float = safe.y + GRID_TOP_MARGIN_PX
 
 	position.x = left_margin - grid_left
 	top_position_y = top_margin - grid_top
 	position.y = top_position_y
 
-	var available_height: float = viewport_size.y - top_margin - BOTTOM_UI_RESERVED_PX
+	var available_height: float = viewport_size.y - top_margin - BOTTOM_UI_RESERVED_PX - safe.w
 	max_scroll_down = maxf(0.0, grid_height - available_height)
 
 

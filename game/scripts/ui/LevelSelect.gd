@@ -185,15 +185,26 @@ const COLOR_COMPLETED := Color(0.22, 0.62, 0.31)
 const COLOR_UNLOCKED := Color(0.2, 0.55, 0.85)
 const COLOR_LOCKED := Color(0.42, 0.46, 0.5, 0.85)
 
-## The width the current map was built for: the viewport's, never less than
+## The width the current map was built for: the safe area's, never less than
 ## MAP_DESIGN_WIDTH. Set by _build_map(); read by everything that places a
 ## node, a spur or a chapter label.
 var _map_width: float = MAP_DESIGN_WIDTH
+
+## Where that width starts -- the left safe-area inset, 0 on a screen with
+## no cutout down its side. Node x coordinates are measured from here.
+var _map_left: float = 0.0
+
+## Each header control's offsets as authored in LevelSelect.tscn, captured
+## before any inset is applied so _apply_safe_area() can re-derive rather
+## than accumulate. Control -> Vector4(left, top, right, bottom).
+var _base_offsets: Dictionary = {}
 
 @onready var scroll: ScrollContainer = $ScrollContainer
 @onready var map_root: LevelMap = $ScrollContainer/MapRoot
 @onready var back_button: Button = $BackButton
 @onready var debug_unlock_toggle: CheckButton = $DebugUnlockToggle
+@onready var header_bar: ColorRect = $HeaderBar
+@onready var header_shadow: ColorRect = $HeaderShadow
 
 
 func _ready() -> void:
@@ -205,9 +216,43 @@ func _ready() -> void:
 	# The trail is laid out in absolute coordinates, so it has to be rebuilt
 	# against the new width rather than stretched.
 	var vp := get_viewport()
-	if vp and not vp.size_changed.is_connected(_build_map):
-		vp.size_changed.connect(_build_map)
+	if vp and not vp.size_changed.is_connected(_on_viewport_resized):
+		vp.size_changed.connect(_on_viewport_resized)
+	for control in [back_button, debug_unlock_toggle, header_bar, header_shadow]:
+		_base_offsets[control] = Vector4(
+			control.offset_left, control.offset_top,
+			control.offset_right, control.offset_bottom)
+	_apply_safe_area()
 	_build_map()
+
+
+func _on_viewport_resized() -> void:
+	_apply_safe_area()
+	_build_map()
+
+
+## Keeps the header row clear of a notch or a cutout. The header BAR itself
+## is not moved, only grown: it is the background behind those buttons, and
+## a status bar sitting on plain sky reads better than one sitting on a
+## dark band. The map's own margins are handled in _build_map().
+func _apply_safe_area() -> void:
+	var inset := SafeArea.insets(get_viewport())
+	_shift_control(back_button, inset.x, inset.y)
+	_shift_control(debug_unlock_toggle, -inset.z, inset.y)
+	var header_base: Vector4 = _base_offsets[header_bar]
+	header_bar.offset_bottom = header_base.w + inset.y
+	_shift_control(header_shadow, 0.0, inset.y)
+
+
+## Moves a control by (dx, dy) from its authored position, whichever edges
+## it is anchored to -- all four offsets shift together, so an
+## anchored-right control keeps its width.
+func _shift_control(control: Control, dx: float, dy: float) -> void:
+	var base: Vector4 = _base_offsets[control]
+	control.offset_left = base.x + dx
+	control.offset_top = base.y + dy
+	control.offset_right = base.z + dx
+	control.offset_bottom = base.w + dy
 
 
 ## The Back button's destination, pulled out of the old inline lambda so the
@@ -234,7 +279,12 @@ func _on_debug_unlock_toggled(pressed: bool) -> void:
 ## scratch whenever progress or the debug unlock changes, same as the old
 ## list was.
 func _build_map() -> void:
-	_map_width = maxf(MAP_DESIGN_WIDTH, get_viewport_rect().size.x)
+	# Laid out inside the safe area, so the trail is never partly under a
+	# cutout and level 1 never sits behind the gesture bar. Every inset is
+	# zero on a screen without one.
+	var inset := SafeArea.insets(get_viewport())
+	_map_left = inset.x
+	_map_width = maxf(MAP_DESIGN_WIDTH, get_viewport_rect().size.x - inset.x - inset.z)
 	for child in map_root.get_children():
 		map_root.remove_child(child)
 		child.queue_free()
@@ -244,7 +294,7 @@ func _build_map() -> void:
 	# -- the first pass is what makes the bottom-anchored y values possible.
 	var offsets: Array[float] = []
 	var group_label_offsets := {} # group index -> distance up from the bottom
-	var up := MAP_MARGIN_BOTTOM
+	var up: float = MAP_MARGIN_BOTTOM + inset.w
 	for i in range(TOTAL_LEVEL_SLOTS):
 		var level_number := i + 1
 		var group_index := _group_index_starting_at(level_number)
@@ -252,11 +302,11 @@ func _build_map() -> void:
 			up += GROUP_GAP
 			group_label_offsets[group_index] = up - GROUP_GAP * 0.5
 		elif group_index != -1:
-			group_label_offsets[group_index] = up - MAP_MARGIN_BOTTOM * 0.55
+			group_label_offsets[group_index] = up - (MAP_MARGIN_BOTTOM + inset.w) * 0.55
 		offsets.append(up)
 		up += NODE_SPACING
-	var content_height: float = up - NODE_SPACING + MAP_MARGIN_TOP
-	map_root.custom_minimum_size = Vector2(_map_width, content_height)
+	var content_height: float = up - NODE_SPACING + MAP_MARGIN_TOP + inset.y
+	map_root.custom_minimum_size = Vector2(_map_left + _map_width + inset.z, content_height)
 
 	# The wave widens with the screen, so a wider-than-design viewport gets a
 	# bigger swing rather than the same narrow trail with dead grass either
@@ -266,7 +316,7 @@ func _build_map() -> void:
 	var points := PackedVector2Array()
 	for i in range(TOTAL_LEVEL_SLOTS):
 		points.append(Vector2(
-			_map_width * 0.5 + amplitude * sin(i * NODE_PHASE),
+			_map_left + _map_width * 0.5 + amplitude * sin(i * NODE_PHASE),
 			content_height - offsets[i]))
 
 	for group_index in group_label_offsets.keys():
@@ -304,8 +354,8 @@ func _build_map() -> void:
 ## map has more room, so a spur never runs off the edge on the outward swing
 ## of the trail's wave.
 func _spur_end(anchor: Vector2) -> Vector2:
-	var room_left: float = anchor.x - BONUS_EDGE_MARGIN
-	var room_right: float = _map_width - BONUS_EDGE_MARGIN - anchor.x
+	var room_left: float = anchor.x - _map_left - BONUS_EDGE_MARGIN
+	var room_right: float = _map_left + _map_width - BONUS_EDGE_MARGIN - anchor.x
 	var direction: float = 1.0 if room_right > room_left else -1.0
 	var reach: float = minf(BONUS_SPUR_LENGTH, maxf(room_left, room_right))
 	return Vector2(anchor.x + direction * reach, anchor.y)
@@ -347,7 +397,7 @@ func _build_group_label(group_name: String, y: float) -> Label:
 	label.text = "- %s -" % group_name
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.position = Vector2(0, y - HEADER_HEIGHT * 0.5)
+	label.position = Vector2(_map_left, y - HEADER_HEIGHT * 0.5)
 	label.size = Vector2(_map_width, HEADER_HEIGHT)
 	label.add_theme_color_override("font_color", Color(1, 1, 1, 0.92))
 	label.add_theme_color_override("font_outline_color", Color(0.14, 0.3, 0.13, 0.9))

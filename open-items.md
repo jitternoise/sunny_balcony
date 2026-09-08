@@ -329,7 +329,21 @@ software rendering:
   device's native resolution, so tiles land at arbitrary fractional sizes.
   If seams appear between adjacent full-tile water cells, that is where.
 
-**5. Measure the redraw cost.** The board repaints on a 12 Hz heartbeat
+**5. Check the safe-area insets on a device with a cutout.** Implemented
+2026-09-08 (`game/scripts/ui/SafeArea.gd`), and every screen that anchors
+anything to an edge now insets it: the level HUD, Level Select's header row
+and trail margins, the save-slot Back button, and the board's own top and
+bottom margins. It cannot be verified here — desktop Linux reports its whole
+screen as safe, so `tests/VerifySafeArea.gd` drives it through the
+`FLASH_FLOOD_SAFE_INSETS` simulation hook instead. What a device would prove
+that the simulation cannot: that `DisplayServer.get_display_safe_area()`
+reports a sane rect on the handset in question, and that it is already
+correct when the first scene lays out rather than arriving a frame or two
+later. If it turns out to arrive late, the fix is a re-apply on
+`NOTIFICATION_APPLICATION_RESUMED` and on the first few frames; every screen
+already re-applies on viewport resize.
+
+**6. Measure the redraw cost.** The board repaints on a 12 Hz heartbeat
 whenever a level is open — including while the player is still planning,
 since every level has fire and fire is animated. 12 redraws a second is the
 budget the single-heartbeat design was built around, but it is a

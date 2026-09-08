@@ -41,6 +41,9 @@ var _subtick_count: int = 0
 var measures_elapsed: int = 0
 
 @onready var board: HexBoard = $Board
+
+## The Control every HUD element is anchored inside. Inset by _apply_safe_area().
+@onready var hud: Control = $UI/HUD
 @onready var status_label: Label = $UI/HUD/StatusLabel
 @onready var budget_label: Label = $UI/HUD/BudgetLabel
 @onready var inventory_bar: HBoxContainer = $UI/HUD/InventoryBar
@@ -224,6 +227,10 @@ func _ready() -> void:
 	# HexBoard.place_block()/remove_block() and only takes effect on the
 	# next PLACEMENT beat -- see the beat-cycle doc comment above.
 
+	var vp := get_viewport()
+	if vp and not vp.size_changed.is_connected(_apply_safe_area):
+		vp.size_changed.connect(_apply_safe_area)
+
 	back_button.pressed.connect(_go_to_level_select)
 	start_button.pressed.connect(_on_start_pressed)
 	pause_button.pressed.connect(_on_pause_pressed)
@@ -236,7 +243,22 @@ func _ready() -> void:
 	win_next_button.pressed.connect(_on_win_next_pressed)
 
 	_build_inventory_bar()
+	_apply_safe_area()
 	_show_intro_popup_if_needed()
+
+
+## Keeps the HUD clear of notches, cutouts and the gesture bar. The board
+## insets itself (HexBoard._fit_hex_layout()); this is the other half, and
+## it is one call because every HUD control is anchored inside $UI/HUD.
+## The backgrounds are NOT inset: Sky and Grass live on their own
+## CanvasLayer and stay full-bleed, so the inset shows up as the HUD
+## sitting further in, never as a dark band down the edge of the screen.
+##
+## Re-applied on viewport resize for the same reason the board re-fits: the
+## viewport is not a constant under stretch/aspect=expand, and a device
+## reports its safe area against the current one.
+func _apply_safe_area() -> void:
+	SafeArea.inset_full_rect(hud, SafeArea.insets(get_viewport()))
 
 
 ## Where both the HUD Back button and the lose popup's "Level Select" button

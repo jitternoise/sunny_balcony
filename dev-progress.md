@@ -1,5 +1,63 @@
 # Flash Flood — Dev Progress
 
+## Status: safe-area insets, so nothing sits under a notch or the gesture bar (2026-09-08)
+
+The last gap left by removing letterboxing. While `stretch/aspect` was
+"keep", the bars pushed every pixel clear of the screen edges; under
+"expand" the game is genuinely full-bleed and nothing in the project read
+`DisplayServer.get_display_safe_area()`, so the level HUD's 40px inset was
+doing that job by guesswork against a ~48dp Android gesture bar.
+
+**`scripts/ui/SafeArea.gd`** is the whole mechanism: a static namespace that
+returns (left, top, right, bottom) insets, converted from the screen pixels
+DisplayServer reports into the viewport units a Control's offsets are in --
+under a canvas_items stretch a 96px cutout on a 1440px-wide phone is 48
+units, not 96. Non-mobile platforms return zero without asking, because a
+desktop reports its whole screen as safe and a window straddling a screen
+edge would otherwise read as a genuine cutout. Absurd and negative readings
+are clamped rather than trusted (`MAX_INSET_FRACTION`, 25% per axis), so a
+bad answer from a platform degrades into a cramped screen, not an unusable
+one.
+
+**Applied per screen, never to a scene root.** The rule everywhere: the
+background stays full-bleed and only the content moves, so an inset never
+reads as a dark band down the edge -- which would just be letterboxing again
+under another name.
+- *Level* -- one call, on `$UI/HUD`: every HUD control is anchored inside
+  it, and Sky/Grass are on a separate CanvasLayer behind. The board insets
+  itself in `_fit_hex_layout()`: top margin and bottom reserve measure from
+  the safe area, and side insets shrink the grid rather than sliding it
+  under a cutout.
+- *Level Select* -- the header BAR is grown rather than moved (a status bar
+  on plain sky beats one on a dark band) while the Back and Unlock All
+  buttons inside it move down; the trail's margins and its left edge come
+  from the safe area, so level 1 is never behind the gesture bar.
+- *Save slots* -- the Back button. Everything else is centred.
+- *Main menu* -- untouched: it is one centred VBox with nothing at an edge.
+
+Every screen re-applies on viewport resize, as the board already did.
+
+**`tests/VerifySafeArea.gd`, 27 checks.** Desktop Linux cannot produce a
+notch, so `SafeArea` takes a simulation hook -- `FLASH_FLOOD_SAFE_INSETS=
+"l,t,r,b"` in screen pixels -- and everything downstream of the parse runs
+as it does on a phone. The suite checks each screen against a simulated
+96/72 phone, that side insets shrink and re-centre the board, that the
+pixels-to-units conversion halves a 96px cutout at half scale, that bad
+readings clamp -- and, first, that with no cutout reported every screen is
+exactly its authored self. `BoardSnapshots` at 720x1280 confirms the same
+in pixels: 10 shots, 0 changed against the pre-safe-area baseline. Rendered
+with a simulated 110/80 phone for eyeballing; the HUD and both header rows
+sit inside the insets and the backgrounds still reach the edges.
+
+SmokeLevel, VerifyHydroBonus and VerifyLevelMap pass; solution book
+unchanged at 88 exact / 11 broken / 1 prose.
+
+**Not verified, and can't be here:** that a real handset reports a sane rect,
+and that it does so before the first scene lays out rather than a frame or
+two later. If it arrives late, the fix is a re-apply on
+`NOTIFICATION_APPLICATION_RESUMED`; the hooks are already in place. Logged
+as item 5 of the pre-export checklist in `open-items.md`.
+
 ## Status: board and map fill the screen at every aspect -- no side filler (2026-09-08)
 
 Follow-on to the `stretch/aspect=expand` spike. Expand removed the engine's

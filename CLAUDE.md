@@ -28,6 +28,7 @@ cd game
 godot --headless res://tests/SmokeLevel.tscn        # 78 checks, in-level HUD end to end
 godot --headless res://tests/VerifyHydroBonus.tscn  # the optional plant bonus, 8 levels
 godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths
+godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
@@ -39,6 +40,24 @@ duplicate whose parser silently skipped the 24 dig-bearing entries, and
 reported 9 broken solutions when the real figure was 11. Current expected
 result: **88 exact / 11 broken / 1 prose (level 22)**. The 11 are all wall
 placements, broken by the 2026-08-31 change making the Wall 2 tiles wide.
+
+### Safe-area insets are simulated here, never real
+
+Desktop Linux reports its whole screen as safe, so nothing on this machine
+produces a notch. `scripts/ui/SafeArea.gd` reads
+`FLASH_FLOOD_SAFE_INSETS="left,top,right,bottom"` (screen pixels) and
+pretends; everything downstream of the parse behaves as it does on a phone.
+It works on the snapshot harnesses too:
+
+```bash
+FLASH_FLOOD_SAFE_INSETS="0,110,0,80" SHOT_DIR=/tmp/notch \
+  godot --resolution 720x1280 res://tests/BoardSnapshots.tscn
+```
+
+Insets are applied per screen, not project-wide: backgrounds stay full-bleed
+and only the content moves, so an inset never reads as a dark band down the
+edge. **Do not inset a scene root** that has a ColorRect background under
+it -- that is the letterboxing this project spent four commits removing.
 
 ### Drawing changes need the snapshot net
 
