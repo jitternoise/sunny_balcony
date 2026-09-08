@@ -276,3 +276,16 @@ Plant can be added without changing how a level plays.
 `tests/VerifyLevelMap.tscn` checks the Level Select map: one node per level
 along a connected trail, locks and checks following save progress, and the
 turbine bonus badge only on levels that ship a Hydro Plant.
+
+`tests/BoardSnapshots.tscn` renders ten levels — covering fire, pool, town,
+geyser, dirt, hydro, presets, both grid orientations, a corridor and a
+jamboree budget — in their pre-Start state, with `Engine.time_scale` at zero
+so animated tiles render a fixed frame and runs are comparable. Compare two
+captures with:
+
+```
+godot --headless --script res://tests/CompareSnapshots.gd -- BEFORE AFTER
+```
+
+This is the only net for drawing changes: the simulation suites never
+render, so they cannot see a visual regression.

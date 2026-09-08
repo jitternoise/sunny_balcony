@@ -61,10 +61,15 @@ const WATER_FRAME_PX := 128.0
 const WATER_FPS := 8.0
 const WATER_LEAD_FPS := 12.0
 
-## Half-texel inset on the region read out of a sheet. Frames are butted
-## edge to edge, so without this the filtering can pull a sliver of the
-## neighbouring frame in at non-integer scales.
-const WATER_REGION_INSET := 0.5
+## Half-texel inset on the region read out of any animation sheet. Frames
+## are butted edge to edge, so without this the filtering can pull a sliver
+## of the neighbouring frame in at non-integer scales.
+const SHEET_REGION_INSET := 0.5
+
+## Animated terrain glyphs. A GLYPH sheet needs only one version -- a
+## centred glyph never reaches the cell edge, so it does not care which way
+## the hex is turned.
+const FIRE_SHEET := preload("res://assets/tiles/fire_sheet.png")
 
 ## How a tile's art covers its cell.
 ##   GLYPH -- a flat-coloured hex with a small centred icon. The original
@@ -115,7 +120,11 @@ const TILE_TRENCH := &"trench"
 ## what lets tile types be converted to animation one at a time.
 const TILE_VISUALS := {
 	TILE_EMPTY: {"fill": Color(0.15, 0.15, 0.18), "icon": null},
-	TILE_FIRE: {"fill": Color(0.9, 0.3, 0.1), "icon": ICON_FIRE},
+	# The first terrain type converted to animation: the flame sways, and an
+	# ember lifts off across the middle frames. `icon` stays as the fallback
+	# for anything that cannot resolve the sheet.
+	TILE_FIRE: {"fill": Color(0.9, 0.3, 0.1), "icon": ICON_FIRE,
+		"sheet": FIRE_SHEET, "frames": 6, "fps": 8.0},
 	TILE_POOL: {"fill": Color(0.25, 0.35, 0.45), "icon": ICON_POOL},
 	TILE_POOL_FULL: {"fill": Color(0.2, 0.5, 0.9), "icon": ICON_POOL},
 	# Flooded (water actually reached this town cell -- see _try_enter()'s
@@ -2042,9 +2051,9 @@ func _draw_tile_art(texture: Texture2D, center: Vector2, size: float,
 		return
 	var frame_px := float(texture.get_width()) / float(frames)
 	draw_texture_rect_region(texture, rect, Rect2(
-		frame * frame_px + WATER_REGION_INSET, WATER_REGION_INSET,
-		frame_px - WATER_REGION_INSET * 2.0,
-		texture.get_height() - WATER_REGION_INSET * 2.0))
+		frame * frame_px + SHEET_REGION_INSET, SHEET_REGION_INSET,
+		frame_px - SHEET_REGION_INSET * 2.0,
+		texture.get_height() - SHEET_REGION_INSET * 2.0))
 
 
 ## Which state a cell is in. The ONLY place terrain precedence lives -- the

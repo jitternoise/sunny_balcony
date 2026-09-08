@@ -30,6 +30,12 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
 	GameState.current_slot = 0
 	GameState.debug_unlock_all = true
+	# Freeze time. Animated tiles derive their frame from a clock advanced
+	# by _process(delta); with the scale at zero that clock never moves, so
+	# every tile renders its tick-zero frame and two runs are comparable.
+	# Without this the snapshots drift with capture timing and the whole
+	# comparison is worthless.
+	Engine.time_scale = 0.0
 
 	for n in COVERED.keys():
 		GameState.pending_level_path = LevelSelect.LEVEL_PATHS[n - 1]
@@ -50,5 +56,6 @@ func _ready() -> void:
 		for i in range(3):
 			await get_tree().process_frame
 
+	Engine.time_scale = 1.0
 	print("snapshots written to ", dir)
 	get_tree().quit()
