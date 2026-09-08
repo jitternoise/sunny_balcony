@@ -66,6 +66,103 @@ const WATER_LEAD_FPS := 12.0
 ## neighbouring frame in at non-integer scales.
 const WATER_REGION_INSET := 0.5
 
+## How a tile's art covers its cell.
+##   GLYPH -- a flat-coloured hex with a small centred icon. The original
+##            look, and what every terrain type still uses.
+##   FILL  -- the art covers the whole hex edge to edge, the way flowing
+##            water does. FILL art must ship in both grid orientations,
+##            because a pointy-top tile laid over a flat-top cell pokes its
+##            corners through the cell's edges; a centred glyph never
+##            touches the edge, so GLYPH art needs only one version.
+enum TileMode { GLYPH, FILL }
+
+## Every state a cell can resolve to. _resolve_tile_state() is the single
+## place terrain precedence lives, and TILE_VISUALS below is the single
+## place each state's appearance lives -- between them they replace the
+## three parallel if/elif chains this function used to carry (one for the
+## fill colour, one for the glyph, one for the overlays), which had drifted
+## into 25 branches that all had to be kept in the same order by hand.
+##
+## States are variants, not types: a pool that is full and a pool that is
+## filling are two states, because they look different. That is what keeps
+## the table static and lets the dispatch be a dictionary lookup.
+const TILE_EMPTY := &"empty"
+const TILE_BLOCK := &"block"
+const TILE_FIRE := &"fire"
+const TILE_POOL := &"pool"
+const TILE_POOL_FULL := &"pool_full"
+const TILE_TOWN := &"town"
+const TILE_TOWN_FLOODED := &"town_flooded"
+const TILE_GEYSER := &"geyser"
+const TILE_HYDRO := &"hydro"
+const TILE_DIRT_0 := &"dirt_0"
+const TILE_DIRT_1 := &"dirt_1"
+const TILE_DIRT_2 := &"dirt_2"
+const TILE_MUDSLIDE := &"mudslide"
+const TILE_BLAST := &"blast"
+const TILE_TRENCH := &"trench"
+
+## What each state looks like. Keys per entry:
+##   fill   -- Color of the hex underneath (always drawn, even under FILL
+##             art, so a sheet with transparency still sits on the right
+##             ground)
+##   icon   -- static Texture2D, or null for states that draw no glyph
+##   sheet / sheet_flat -- optional animation strip, replacing `icon`. Two
+##             entries only where mode is FILL; a GLYPH sheet needs one.
+##   frames / fps -- animation shape. fps is quantised to ANIM_TICK_FPS.
+##   mode   -- TileMode
+## A state with no sheet simply draws its icon, exactly as before, which is
+## what lets tile types be converted to animation one at a time.
+const TILE_VISUALS := {
+	TILE_EMPTY: {"fill": Color(0.15, 0.15, 0.18), "icon": null},
+	TILE_FIRE: {"fill": Color(0.9, 0.3, 0.1), "icon": ICON_FIRE},
+	TILE_POOL: {"fill": Color(0.25, 0.35, 0.45), "icon": ICON_POOL},
+	TILE_POOL_FULL: {"fill": Color(0.2, 0.5, 0.9), "icon": ICON_POOL},
+	# Flooded (water actually reached this town cell -- see _try_enter()'s
+	# TOWN branch) shows light blue instead of the usual earthy brown, so
+	# the board visibly marks exactly which cell the flood hit.
+	TILE_TOWN: {"fill": Color(0.55, 0.45, 0.35), "icon": ICON_TOWN},
+	TILE_TOWN_FLOODED: {"fill": Color(0.65, 0.85, 0.95), "icon": ICON_TOWN},
+	# Dormant purple -- distinct from every other terrain colour. Geyser is
+	# the one state with no icon texture: it still draws its own procedural
+	# droplet, since no SVG has been made for it yet.
+	TILE_GEYSER: {"fill": Color(0.5, 0.3, 0.6), "icon": null},
+	# Steel-blue "structure" colour -- distinct from Pool's water-blue and
+	# from every block colour.
+	TILE_HYDRO: {"fill": Color(0.25, 0.55, 0.75), "icon": ICON_HYDRO},
+	# "Dig the River": colour stages are the ONLY dig-progress feedback (no
+	# status bar or counter, by design) -- packed dark earth at 0 taps,
+	# progressively lighter and looser at 1 and 2. Dirt deliberately has no
+	# glyph at all.
+	TILE_DIRT_0: {"fill": DIRT_COLORS[0], "icon": null},
+	TILE_DIRT_1: {"fill": DIRT_COLORS[1], "icon": null},
+	TILE_DIRT_2: {"fill": DIRT_COLORS[2], "icon": null},
+	# Opened by a mudslide rather than by the player -- wet-mud colour,
+	# darker than the dug trench, so slide damage stays visible.
+	TILE_MUDSLIDE: {"fill": MUDSLIDE_COLOR, "icon": null},
+	# Opened by a Bomb Catapult blast -- scorched reddish-brown, distinct
+	# from both a mudslide and a dug trench.
+	TILE_BLAST: {"fill": Color(0.35, 0.18, 0.12), "icon": null},
+	# A fully dug-open cell (terrain is EMPTY now, but its dig_progress
+	# entry stays at the cap -- see dig_progress) keeps a distinct trench
+	# colour so the carved channel stays readable as riverbed.
+	TILE_TRENCH: {"fill": DUG_TRENCH_COLOR, "icon": null},
+}
+
+## The board's single animation heartbeat. Every animated tile derives its
+## frame from this one counter rather than from its own clock: a redraw
+## repaints the WHOLE board, so independent rates would interleave their
+## frame changes and multiply the redraws. Ticking once here and letting
+## slower tiles repeat frames caps the board at ANIM_TICK_FPS redraws a
+## second no matter how many tile types animate -- which is the number that
+## matters on the Android hardware this ships to.
+const ANIM_TICK_FPS := 12.0
+
+## How much of a hex a centred GLYPH covers. Shared by _draw_icon() and the
+## animated-glyph path so a converted tile type lands at exactly the size
+## its static icon used to.
+const ICON_SCALE := 1.5
+
 ## Every pool needs exactly this many beats of water connection to finish,
 ## visualized as a 4-box status bar above the pool. Fixed for every pool on
 ## every level -- not configurable per level/pool (see LevelData.pool_targets
@@ -281,9 +378,20 @@ var _stalled_this_beat: Dictionary = {}
 ## queue_redraw() on the frames where an index actually changes -- and not
 ## at all when there is no water on the board, so a level sits idle during
 ## planning exactly as it did before this animation existed.
-var _water_anim_time: float = 0.0
-var _water_frame: int = 0
-var _water_lead_frame: int = 0
+var _anim_time: float = 0.0
+var _anim_tick: int = 0
+
+## True when this level has at least one animated tile state on the board,
+## so a level built entirely from static art never starts the heartbeat.
+## Recomputed in setup().
+var _has_animated_tiles: bool = false
+
+## Every playable cell on this level, resolved once in setup(). _draw()
+## used to walk the grid's bounding square and test each coordinate --
+## 101 x 101 = 10,201 tests to draw ~500 cells on level 22's corridor.
+## Harmless at one redraw per measure; not harmless now that the board
+## repaints on an animation tick.
+var _playable_cells: Array[Vector2i] = []
 
 ## Vector2i -> true. Cells opened by a mudslide rather than by the player's
 ## digging -- drawn in MUDSLIDE_COLOR by _draw_cell() so slide damage stays
@@ -485,6 +593,7 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 	_stalled_this_beat.clear()
 	mudslide_cells.clear()
 	active_geysers.clear()
+	_playable_cells.clear()
 	hydro_plants.clear()
 	hydro_cell_to_anchor.clear()
 	hydro_source_cells.clear()
@@ -552,7 +661,32 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 			block_anchors[cell] = coord
 
 	_fit_hex_layout()
+	_cache_playable_cells()
 	queue_redraw()
+
+
+## Resolves the playable cells once, so _draw() can iterate them directly
+## instead of testing every coordinate in the grid's bounding square on
+## every repaint. Also notes whether any of this level's states animate, so
+## a board built entirely from static art never starts the heartbeat.
+##
+## Safe to compute once: in_playable_area() reads only grid_radius,
+## blocked_cells and corridor_half_width, none of which change during play.
+func _cache_playable_cells() -> void:
+	_playable_cells.clear()
+	var radius: int = level_data.grid_radius
+	for q in range(-radius, radius + 1):
+		for r in range(-radius, radius + 1):
+			var coord := Vector2i(q, r)
+			if in_playable_area(coord):
+				_playable_cells.append(coord)
+
+	_has_animated_tiles = false
+	for coord in _playable_cells:
+		var visual := _tile_visual(coord, _resolve_tile_state(coord))
+		if _tile_sheet(visual) != null:
+			_has_animated_tiles = true
+			break
 
 
 ## Returns the viewport's visible size. Falls back to the project's
@@ -1869,15 +2003,88 @@ func _predict_would_consume(coord: Vector2i) -> bool:
 ## indices changes, which caps the board at WATER_LEAD_FPS redraws a second
 ## while water is moving and zero when the board is dry.
 func _process(delta: float) -> void:
-	if water_cells.is_empty():
+	if water_cells.is_empty() and not _has_animated_tiles:
 		return
-	_water_anim_time += delta
-	var body := int(_water_anim_time * WATER_FPS) % WATER_FRAMES
-	var lead := int(_water_anim_time * WATER_LEAD_FPS) % WATER_FRAMES
-	if body != _water_frame or lead != _water_lead_frame:
-		_water_frame = body
-		_water_lead_frame = lead
+	_anim_time += delta
+	var tick := int(_anim_time * ANIM_TICK_FPS)
+	if tick != _anim_tick:
+		_anim_tick = tick
 		queue_redraw()
+
+
+## The frame a given rate is showing on this heartbeat. `stagger` offsets a
+## cell from its neighbours so a run of the same tile type churns instead of
+## pulsing in lockstep; callers pass a coordinate hash for that.
+func _anim_frame(fps: float, frames: int, stagger: int = 0) -> int:
+	if frames <= 1:
+		return 0
+	return (int(_anim_tick * fps / ANIM_TICK_FPS) + stagger) % frames
+
+
+## A stable per-cell offset. Derived from the coordinate so it survives
+## every redraw without being stored anywhere.
+func _cell_stagger(coord: Vector2i, frames: int) -> int:
+	if frames <= 1:
+		return 0
+	return absi(coord.x * 7 + coord.y * 13) % frames
+
+
+## Draws one piece of tile art centred on a cell -- either a frame out of an
+## animation strip or a plain static texture, at `size` across. The one path
+## every animated tile goes through, water included.
+func _draw_tile_art(texture: Texture2D, center: Vector2, size: float,
+		frames: int = 1, frame: int = 0) -> void:
+	if texture == null:
+		return
+	var rect := Rect2(center.x - size / 2.0, center.y - size / 2.0, size, size)
+	if frames <= 1:
+		draw_texture_rect(texture, rect, false)
+		return
+	var frame_px := float(texture.get_width()) / float(frames)
+	draw_texture_rect_region(texture, rect, Rect2(
+		frame * frame_px + WATER_REGION_INSET, WATER_REGION_INSET,
+		frame_px - WATER_REGION_INSET * 2.0,
+		texture.get_height() - WATER_REGION_INSET * 2.0))
+
+
+## Which state a cell is in. The ONLY place terrain precedence lives -- the
+## order of these branches is the order the old three chains used, and
+## changing it changes what wins when two conditions overlap.
+func _resolve_tile_state(coord: Vector2i) -> StringName:
+	if placed_blocks.has(coord):
+		return TILE_BLOCK
+	var terrain: String = cell_terrain.get(coord, CellState.EMPTY)
+	if terrain == CellState.FIRE:
+		return TILE_FIRE
+	if terrain == CellState.POOL:
+		return TILE_POOL_FULL if (pool_fill.get(coord, 0) as int) >= POOL_BEATS_REQUIRED else TILE_POOL
+	if terrain == CellState.TOWN:
+		return TILE_TOWN_FLOODED if flooded_towns.has(coord) else TILE_TOWN
+	if terrain == CellState.GEYSER:
+		return TILE_GEYSER
+	if terrain == CellState.HYDRO:
+		return TILE_HYDRO
+	if terrain == CellState.DIRT:
+		var taps: int = mini(dig_progress.get(coord, 0) as int, DIRT_COLORS.size() - 1)
+		return [TILE_DIRT_0, TILE_DIRT_1, TILE_DIRT_2][taps]
+	if mudslide_cells.has(coord):
+		return TILE_MUDSLIDE
+	if catapult_blast_cells.has(coord):
+		return TILE_BLAST
+	if (dig_progress.get(coord, 0) as int) >= DIG_TAPS_REQUIRED:
+		return TILE_TRENCH
+	return TILE_EMPTY
+
+
+## The visual record for a resolved state. Everything static comes straight
+## out of TILE_VISUALS; a block is the one state whose look is per-instance,
+## since its colour and glyph live on its own BlockData resource (which is
+## what lets a new block type ship without touching this file).
+func _tile_visual(coord: Vector2i, state: StringName) -> Dictionary:
+	if state == TILE_BLOCK:
+		var block: BlockData = block_catalog[placed_blocks[coord]]
+		return {"fill": block.color, "icon": block.icon}
+	return TILE_VISUALS[state]
 
 
 func _draw() -> void:
@@ -1898,12 +2105,8 @@ func _draw() -> void:
 		for seg in _preview_arrows:
 			_preview_from_cells[seg["from"]] = true
 
-	var radius := level_data.grid_radius
-	for q in range(-radius, radius + 1):
-		for r in range(-radius, radius + 1):
-			var coord := Vector2i(q, r)
-			if in_playable_area(coord):
-				_draw_cell(coord)
+	for coord in _playable_cells:
+		_draw_cell(coord)
 
 	# Source markers: every original water_sources cell, plus any geyser
 	# that has activated into a new source (see active_geysers). Drawn
@@ -1944,74 +2147,49 @@ func _draw() -> void:
 	_draw_catapult_aim()
 
 
+## Draws one cell, in a fixed layer order: base, pending overlay, outline,
+## preset outline, glyph, then per-state overlays. The order matters -- each
+## layer is drawn over the one before it -- so it is written out here rather
+## than left implicit in the shape of a branch chain.
 func _draw_cell(coord: Vector2i) -> void:
 	var center := Hex.axial_to_pixel(coord)
 	var points := PackedVector2Array()
 	for i in range(6):
 		points.append(Hex.hex_corner(center, i))
 
-	var color := Color(0.15, 0.15, 0.18) # default empty cell
+	var state := _resolve_tile_state(coord)
+	var visual := _tile_visual(coord, state)
 	var terrain: String = cell_terrain.get(coord, CellState.EMPTY)
 
-	if placed_blocks.has(coord):
-		var block: BlockData = block_catalog[placed_blocks[coord]]
-		color = block.color
-	elif terrain == CellState.FIRE:
-		color = Color(0.9, 0.3, 0.1)
-	elif terrain == CellState.POOL:
-		var filled: bool = (pool_fill.get(coord, 0) as int) >= POOL_BEATS_REQUIRED
-		color = Color(0.2, 0.5, 0.9) if filled else Color(0.25, 0.35, 0.45)
-	elif terrain == CellState.TOWN:
-		# Flooded (water actually reached this town cell -- see
-		# _try_enter()'s TOWN branch) shows light blue instead of the usual
-		# earthy brown, so the board visibly marks exactly which cell the
-		# flood hit.
-		color = Color(0.65, 0.85, 0.95) if flooded_towns.has(coord) else Color(0.55, 0.45, 0.35)
-	elif terrain == CellState.GEYSER:
-		color = Color(0.5, 0.3, 0.6) # dormant purple -- distinct from every other terrain color
-	elif terrain == CellState.HYDRO:
-		color = Color(0.25, 0.55, 0.75) # steel-blue "structure" color -- distinct from Pool's water-blue and every block color
-	elif terrain == CellState.DIRT:
-		# "Dig the River": color stages are the ONLY dig-progress feedback
-		# (no status bar/counter, by design) -- packed dark earth at 0 taps,
-		# progressively lighter/looser at 1 and 2 (see DIRT_COLORS).
-		var taps: int = mini(dig_progress.get(coord, 0) as int, DIRT_COLORS.size() - 1)
-		color = DIRT_COLORS[taps]
-	elif mudslide_cells.has(coord):
-		# Opened by a mudslide, not by the player -- wet-mud color, darker
-		# than the dug trench, so slide damage stays visible on the board.
-		color = MUDSLIDE_COLOR
-	elif catapult_blast_cells.has(coord):
-		# Opened by a Bomb Catapult blast, not by tapping or a mudslide --
-		# scorched reddish-brown, distinct from both of those.
-		color = Color(0.35, 0.18, 0.12)
-	elif (dig_progress.get(coord, 0) as int) >= DIG_TAPS_REQUIRED:
-		# A fully dug-open cell (terrain is EMPTY now, but its dig_progress
-		# entry stays at the cap -- see dig_progress's doc comment) keeps a
-		# distinct trench color so the carved channel stays readable as
-		# "riverbed" against ordinary empty cells.
-		color = DUG_TRENCH_COLOR
+	# 1. base fill. Drawn even under FILL art, so a sheet with transparent
+	#    pixels still sits on the right ground rather than on the sky.
+	draw_colored_polygon(points, visual["fill"])
+	if visual.get("mode", TileMode.GLYPH) == TileMode.FILL:
+		var fill_sheet: Texture2D = _tile_sheet(visual)
+		if fill_sheet != null:
+			var frames: int = visual.get("frames", 1)
+			_draw_tile_art(fill_sheet, center, Hex.SIZE * 2.0, frames,
+				_anim_frame(visual.get("fps", ANIM_TICK_FPS), frames, _cell_stagger(coord, frames)))
 
-	draw_colored_polygon(points, color)
-
-	# Buffered placement/pickup that hasn't reached its PLACEMENT beat yet
-	# (post-Start only -- pre-Start both commit immediately, see
-	# HexBoard.started). Ghosting them is what makes a mid-measure tap
-	# visibly land: the board used to look completely unchanged for up to
-	# a full measure after the tap, which reads as a dropped input.
+	# 2. Buffered placement/pickup that hasn't reached its PLACEMENT beat
+	#    yet (post-Start only -- pre-Start both commit immediately, see
+	#    HexBoard.started). Ghosting them is what makes a mid-measure tap
+	#    visibly land: the board used to look completely unchanged for up to
+	#    a full measure after the tap, which reads as a dropped input.
 	if pending_placements.has(coord) and not placed_blocks.has(coord):
 		var ghost: BlockData = block_catalog[pending_placements[coord]]
 		draw_colored_polygon(points, Color(ghost.color.r, ghost.color.g, ghost.color.b, PENDING_PLACEMENT_ALPHA))
 	elif pending_removals.has(coord):
 		draw_colored_polygon(points, PENDING_REMOVAL_COLOR)
 
+	# 3. cell border
 	var outline := points.duplicate()
 	outline.append(points[0])
 	draw_polyline(outline, Color(0, 0, 0, 0.4), 1.0)
 
-	# Fixed level furniture gets a second, inset outline -- see
-	# PRESET_OUTLINE_COLOR and _is_preset_cell(). Both halves of a 2-wide
-	# preset get one, so the whole structure reads as bolted down.
+	# 4. Fixed level furniture gets a second, inset outline -- see
+	#    PRESET_OUTLINE_COLOR and _is_preset_cell(). Both halves of a 2-wide
+	#    preset get one, so the whole structure reads as bolted down.
 	if _is_preset_cell(coord):
 		var inner := PackedVector2Array()
 		for i in range(6):
@@ -2019,27 +2197,22 @@ func _draw_cell(coord: Vector2i) -> void:
 		inner.append(inner[0])
 		draw_polyline(inner, PRESET_OUTLINE_COLOR, 2.0)
 
-	# Icon glyph on top of the flat fill color. Placeable blocks use
-	# whatever texture is set on their own BlockData resource (data-driven --
-	# a new block type gets its icon just by filling in that field, no
-	# code change here). Terrain types use the preloaded ICON_* constants
-	# above where a glyph exists; Geyser still falls back to its own
-	# procedural droplet shape since no SVG has been made for it yet, and
-	# Dirt deliberately has no glyph at all (color stages only, see above).
-	if placed_blocks.has(coord):
-		var block: BlockData = block_catalog[placed_blocks[coord]]
-		_draw_icon(center, block.icon)
-	elif terrain == CellState.FIRE:
-		_draw_icon(center, ICON_FIRE)
-	elif terrain == CellState.POOL:
-		_draw_icon(center, ICON_POOL)
-	elif terrain == CellState.TOWN:
-		_draw_icon(center, ICON_TOWN)
-	elif terrain == CellState.GEYSER:
-		_draw_geyser_icon(center)
-	elif terrain == CellState.HYDRO:
-		_draw_icon(center, ICON_HYDRO)
+	# 5. glyph. A state with a sheet animates; one with only an icon draws
+	#    it statically, which is how a tile type gets converted to animation
+	#    without touching anything here. Geyser is the lone special case: it
+	#    has no SVG yet and still draws its own procedural droplet.
+	if visual.get("mode", TileMode.GLYPH) == TileMode.GLYPH:
+		var glyph_sheet: Texture2D = _tile_sheet(visual)
+		if glyph_sheet != null:
+			var frames: int = visual.get("frames", 1)
+			_draw_tile_art(glyph_sheet, center, Hex.SIZE * ICON_SCALE, frames,
+				_anim_frame(visual.get("fps", ANIM_TICK_FPS), frames, _cell_stagger(coord, frames)))
+		elif visual["icon"] != null:
+			_draw_icon(center, visual["icon"])
+		elif state == TILE_GEYSER:
+			_draw_geyser_icon(center)
 
+	# 6. per-state overlays
 	if terrain == CellState.POOL:
 		_draw_pool_status_bar(coord)
 
@@ -2073,6 +2246,14 @@ func _draw_cell(coord: Vector2i) -> void:
 		_draw_block_direction_arrows(coord, placed_blocks[coord])
 	elif pending_placements.has(coord):
 		_draw_block_direction_arrows(coord, pending_placements[coord])
+
+
+## The animation strip for a visual on this level's grid orientation, or
+## null when the state ships no sheet and should fall back to its icon.
+func _tile_sheet(visual: Dictionary) -> Texture2D:
+	if level_data != null and level_data.grid_style == "flat" and visual.has("sheet_flat"):
+		return visual["sheet_flat"]
+	return visual.get("sheet", null)
 
 
 ## True if `coord` is covered by a block the level shipped with and that's
@@ -2197,7 +2378,7 @@ func _draw_geyser_direction_arrow(coord: Vector2i) -> void:
 ## Hex.SIZE regardless of grid zoom level). No-op if `texture` is null, so
 ## callers can pass an unset BlockData.icon safely and just fall back to the
 ## flat fill color with no glyph.
-func _draw_icon(center: Vector2, texture: Texture2D, scale_factor: float = 1.5) -> void:
+func _draw_icon(center: Vector2, texture: Texture2D, scale_factor: float = ICON_SCALE) -> void:
 	if texture == null:
 		return
 	var size := Hex.SIZE * scale_factor
@@ -2392,27 +2573,21 @@ func _draw_catapult_aim() -> void:
 ## size (Hex.SIZE is solved per level -- see _fit_hex_size()).
 func _draw_water(coord: Vector2i, is_lead: bool) -> void:
 	var center := Hex.axial_to_pixel(coord)
-	var size := Hex.SIZE * 2.0
-	var rect := Rect2(center.x - size / 2.0, center.y - size / 2.0, size, size)
 
 	# Body cells take a per-cell frame offset derived from the coordinate,
 	# so a long stream churns instead of pulsing in lockstep. The lead is
 	# left unstaggered -- there is only ever one per branch, and it should
 	# read as the newest thing on the board.
-	var frame: int
-	var sheet: Texture2D
 	var flat := level_data.grid_style == "flat"
+	var sheet: Texture2D
+	var frame: int
 	if is_lead:
-		frame = _water_lead_frame
 		sheet = WATER_LEAD_FLAT if flat else WATER_LEAD_POINTY
+		frame = _anim_frame(WATER_LEAD_FPS, WATER_FRAMES)
 	else:
-		var stagger: int = absi(coord.x * 7 + coord.y * 13) % WATER_FRAMES
-		frame = (_water_frame + stagger) % WATER_FRAMES
 		sheet = WATER_BODY_FLAT if flat else WATER_BODY_POINTY
-
-	draw_texture_rect_region(sheet, rect, Rect2(
-		frame * WATER_FRAME_PX + WATER_REGION_INSET, WATER_REGION_INSET,
-		WATER_FRAME_PX - WATER_REGION_INSET * 2.0, WATER_FRAME_PX - WATER_REGION_INSET * 2.0))
+		frame = _anim_frame(WATER_FPS, WATER_FRAMES, _cell_stagger(coord, WATER_FRAMES))
+	_draw_tile_art(sheet, center, Hex.SIZE * 2.0, WATER_FRAMES, frame)
 
 	# A Diverter or Splitter under the water still has to be readable --
 	# water lands ON those blocks (see _advance_water()), and a full-tile
