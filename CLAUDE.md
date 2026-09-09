@@ -32,6 +32,7 @@ godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, 
 godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
 godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
+godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
@@ -113,7 +114,11 @@ not add a branch. A state with no sheet falls back to its static icon.
 
 **One animation heartbeat** (`ANIM_TICK_FPS`, 12). A redraw repaints the whole
 board, so independent per-type rates would multiply repaints. Derive every
-frame from that counter; let slower tiles repeat frames.
+frame from that counter; let slower tiles repeat frames. It runs only while
+the board is actually visible — `Level._update_board_animation()` calls
+`board.set_process()` from `Level._process()` every frame, so a new popup is
+covered automatically. Add a full-screen panel? Add it to that check, or it
+will repaint a board nobody can see and hold the screen awake.
 
 **`_draw()` culls to the screen.** `_visible_draw_rect()` gives the visible
 band in board coordinates and the cell and water loops skip anything outside

@@ -799,6 +799,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## finger/cursor hasn't moved at all -- see _update_catapult_aim()).
 ## A no-op every frame for any press that isn't on a catapult.
 func _process(_delta: float) -> void:
+	_update_board_animation()
 	if paused:
 		return
 	if _catapult_aiming:
@@ -818,6 +819,32 @@ func _process(_delta: float) -> void:
 	_catapult_last_drag_pos = _press_pos
 	_catapult_direction = Hex.DOWN_LEFT # default aim until the player drags away from the catapult
 	_update_catapult_aim()
+
+
+## Stops the board's animation heartbeat whenever the player cannot see the
+## board: paused, or with a full-screen panel over it.
+##
+## HexBoard._process() accumulates delta and calls queue_redraw() 12 times a
+## second whenever a level has water or an animated tile -- which is every
+## level, since every level has fire. Pausing never stopped it: `paused` only
+## freezes tick_timer, so the board went on repainting a picture nobody could
+## see, behind an opaque popup, while the platform wake lock held the display
+## at full brightness. A player who hits Pause and puts the phone down face-up
+## gets a bright screen redrawing until the battery notices.
+##
+## Driven from _process() rather than from each of the places that show or
+## hide a panel, so a new panel -- or a new route to an existing one -- cannot
+## silently leave the heartbeat running. The cost is four boolean reads a
+## frame. The failure mode of the alternative is a board that stops animating
+## and nobody notices, which is far worse than the thing being fixed.
+func _update_board_animation() -> void:
+	if board == null:
+		return
+	var covered := paused \
+		or (intro_panel != null and intro_panel.visible) \
+		or (win_panel != null and win_panel.visible) \
+		or (lose_panel != null and lose_panel.visible)
+	board.set_process(not covered)
 
 
 ## True if `coord` currently holds an unspent Bomb Catapult block -- the

@@ -1,5 +1,43 @@
 # Flash Flood — Dev Progress
 
+## Status: the board animates only when it can be seen (2026-09-09)
+
+Finding 15 of `handheld-audit.md`. `HexBoard._process()` had no pause,
+game-over or visibility gate: it accumulated delta and called `queue_redraw()`
+12 times a second whenever a level had water or an animated tile — which is
+every level, since every level has fire. `Level.paused` only freezes
+`tick_timer`, so the board went on repainting a picture nobody could see,
+behind an opaque popup, while the platform wake lock held the display at full
+brightness. Hit Pause, put the phone down face-up, and it redraws until the
+battery notices.
+
+`Level._update_board_animation()` now calls `board.set_process()` based on
+whether anything is covering the board — paused, or the intro, win or lose
+panel visible.
+
+**Driven from `Level._process()`, not from the places that show and hide
+panels.** Wiring it into each of those would be faster but leaves a trap: a
+new panel, or a new route to an existing one, silently leaves the heartbeat
+running, and nothing would ever notice. The cost of doing it per frame is four
+boolean reads; the failure mode of the alternative is invisible.
+
+**One correction to the audit.** Its verifier said the fire frames "derive
+from a wall-clock counter". They do not — `_anim_time += delta`, so the clock
+is frame-driven, which is also why `BoardSnapshots` can freeze it with
+`Engine.time_scale = 0`. The conclusion (the board keeps animating while
+paused) was right; the stated mechanism was not.
+
+**`tests/VerifyBoardHeartbeat.tscn`, 14 checks.** The risk in this fix is the
+opposite bug — a board that stops animating and never restarts, which no
+existing suite would catch — so every check is a pair: it stops when covered,
+AND it starts again when uncovered. It also asserts the clock is really
+advancing (`_anim_tick` moving), not merely that `_process` is enabled, since
+an enabled-but-idle heartbeat would pass a weaker test. Verified against the
+old code: **5 failures without the fix, 0 with it.**
+
+All seven suites pass, solution book unchanged at 88 / 11 / 1, BoardSnapshots
+0 of 10 changed.
+
 ## Status: the board is single-pointer, and says so (2026-09-09)
 
 Findings 9 and 10 of `handheld-audit.md`. `InputEventScreenTouch.index` and
