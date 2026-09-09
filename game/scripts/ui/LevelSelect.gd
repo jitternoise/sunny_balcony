@@ -209,6 +209,17 @@ var _base_offsets: Dictionary = {}
 
 func _ready() -> void:
 	back_button.pressed.connect(_go_back)
+	# Editor and debug exports only. In a release build this is the only
+	# control on the screen with words on it -- every other one is a bare
+	# icon -- so it reads as a feature and invites the tap. Its own doc
+	# comment on GameState.debug_unlock_all calls the flag session-only and
+	# therefore harmless, but that is only true of the FLAG: any level played
+	# while it is on writes real progress through mark_level_complete(), so
+	# one curious tap permanently skips the campaign it was meant not to
+	# touch. Hidden rather than deleted -- it stays available in the editor,
+	# where testing level 90 without playing 89 levels is the whole point.
+	# An invisible Control receives no input, so hiding it is the whole gate.
+	debug_unlock_toggle.visible = OS.is_debug_build()
 	debug_unlock_toggle.button_pressed = GameState.debug_unlock_all
 	debug_unlock_toggle.toggled.connect(_on_debug_unlock_toggled)
 	# The viewport is not a constant under stretch/aspect=expand -- it takes

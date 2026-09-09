@@ -79,6 +79,14 @@ clean tree yourself.
 Headless needs a display for anything that renders: `xvfb-run -a
 --server-args="-screen 0 720x1280x24" godot --resolution 720x1280 …`
 
+**`--headless` also ignores `--resolution`.** It reports a square 1280x1280
+viewport whatever you pass, so anything that depends on viewport SIZE — not
+just on rendering — measures the wrong thing and does so silently. Board
+layout is the big one: `HexBoard.max_scroll_down` is 0 on 62 of 100 levels at
+the real 720x1280, and non-zero on all 100 under headless. Use `xvfb-run` for
+any viewport-dependent measurement, and sanity-check by printing
+`get_viewport().get_visible_rect().size` before trusting a number.
+
 ---
 
 ## Architecture, in one pass

@@ -695,13 +695,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			_catapult_last_drag_pos = screen_pos
 			return
 		if not _drag_active and screen_pos.distance_to(_press_pos) > DRAG_THRESHOLD:
-			_drag_active = true
 			# This press is a board scroll, not a hold-to-aim. Drop its
 			# catapult candidacy so _process() can't later promote it into
 			# an aiming sequence mid-drag -- which is what used to make a
 			# scroll that merely STARTED on a catapult fire the shot on
 			# release, spending a one-use block the player never aimed.
+			# Unconditional: wandering off a catapult abandons the aim
+			# whether or not the board can scroll.
 			_catapult_press_active = false
+			# ...but only call it a scroll if there is something to scroll.
+			# On a grid that fits the screen max_scroll_down is 0, so the
+			# drag branch below moves nothing and the only thing promoting
+			# this press to a drag achieves is to suppress the tap at
+			# release. DRAG_THRESHOLD is 16 viewport units, which is ~24
+			# device px (~1.4 mm) on a 1080-wide phone -- well inside the
+			# roll of an ordinary thumb tap. So on the majority of levels,
+			# whose boards fit, a slightly shaky tap silently did nothing
+			# at all: no block, no scroll, no feedback, which reads as an
+			# unresponsive game rather than a missed input.
+			if board.max_scroll_down > 0.0:
+				_drag_active = true
 		if _drag_active:
 			_scroll_by(motion_delta.y)
 		return

@@ -1,5 +1,61 @@
 # Flash Flood — Dev Progress
 
+## Status: three one-line fixes from the handheld audit (2026-09-08)
+
+The cheapest three items on `handheld-audit.md`'s fix-first list. Nothing here
+is structural; each is a guard or a setting.
+
+**The "Unlock All" debug toggle no longer ships.**
+`debug_unlock_toggle.visible = OS.is_debug_build()`. In a release build it was
+the only control on Level Select with words on it — every other one is a bare
+icon — so it read as a feature and invited the tap. Its own doc comment called
+the flag session-only and therefore harmless; that is true of the flag but not
+of the consequences, since any level played while it is on writes real progress
+through `mark_level_complete()`. Hidden rather than deleted: it stays in the
+editor, where testing level 90 without playing 89 levels is the point.
+
+**A shaky tap is no longer swallowed on boards that cannot scroll.**
+`DRAG_THRESHOLD` is 16 viewport units — about 24 device px, ~1.4 mm on a
+1080-wide phone, well inside the roll of an ordinary thumb tap. Passing it set
+`_drag_active`, which suppresses the tap at release. On a board that fits the
+screen there is nothing to scroll, so the drag branch moved nothing and the
+only thing it achieved was to eat the tap: no block, no scroll, no feedback,
+which reads as an unresponsive game rather than a missed input. Now promoted
+to a drag only when `board.max_scroll_down > 0`. Dropping catapult candidacy
+stays unconditional — wandering off a catapult abandons the aim either way.
+
+Measured at the real 720x1280 viewport: **62 of 100 levels have
+`max_scroll_down == 0`**, rising to 67 of 100 at 720x1600, the shape of a real
+20:9 handset under `aspect=expand`. Before/after on a press + 24px drag +
+release, driven through `_unhandled_input`:
+
+```
+              BEFORE                    AFTER
+L1   range=0     SCROLL (nothing)  ->   TAP
+L3   range=0     SCROLL (nothing)  ->   TAP
+L34  range=0     SCROLL (nothing)  ->   TAP
+L13  range=627   SCROLL -24        ->   SCROLL -24     (unchanged)
+L22  range=8484  SCROLL -24        ->   SCROLL -24     (unchanged)
+```
+
+**`application/run/max_fps=60`.** Was 0, meaning unlimited, so vsync paced the
+engine at the panel's refresh: a 120 Hz phone re-submitting the whole board's
+draw list 120 times a second to show a picture that changes 12 times a second,
+most often while the player sits still deciding where to put a block. Note
+this only halves the waste — the real fix is culling `_draw()`, which is still
+open. (`vsync_mode` was already 1; the audit's claim that it was unconfigured
+was wrong.)
+
+**A verification trap worth knowing, now also in CLAUDE.md.** `--headless`
+ignores `--resolution` and reports a square 1280x1280 viewport whatever you
+pass. Anything depending on viewport size, not just on rendering, then measures
+the wrong thing silently — `max_scroll_down` is non-zero on all 100 levels
+under headless, which is enough to make this fix look like a no-op. Every
+number above came from `xvfb-run` at an explicit resolution.
+
+All four suites pass, solution book unchanged at 88 / 11 / 1, and
+`BoardSnapshots` reports 0 of 10 changed.
+
 ## Status: handheld audit, and the two defects that made the first build unplayable (2026-09-08)
 
 A platform audit against the Android/iOS target: 70 findings raised across 11

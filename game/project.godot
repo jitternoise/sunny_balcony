@@ -16,6 +16,16 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 ; other screen steps back one level). No effect on iOS, which never sends the
 ; notification, or on desktop.
 config/quit_on_go_back=false
+; Nothing in this game animates faster than the 12 Hz board heartbeat
+; (HexBoard.ANIM_TICK_FPS), and the simulation runs off a Timer rather than
+; off frames, so the frame rate cannot change a level's outcome -- it only
+; costs battery. The default is 0, meaning unlimited: vsync then paces the
+; engine at the panel's refresh, so a 120 Hz phone re-submits the whole
+; board's draw list 120 times a second to show a picture that changes 12
+; times a second, most often while the player is sitting still deciding
+; where to put a block. 60 keeps input latency and animation smoothness
+; while halving that on a high-refresh handset.
+run/max_fps=60
 ; Sky blue, matching every scene's Sky ColorRect. The engine paints this
 ; behind the boot splash and anywhere a frame leaves pixels untouched, and
 ; its default is a near-black grey -- with stretch/aspect=expand there are
