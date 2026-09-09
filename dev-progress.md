@@ -1,5 +1,57 @@
 # Flash Flood — Dev Progress
 
+## Status: a Wall on a Diverter's target actually blocks it (2026-09-09)
+
+Finding 30 of `handheld-audit.md`. Natural fall and forced block redirects
+disagreed about what counts as solid. Natural fall asks `_is_wall()`; the two
+redirect loops only checked undug dirt and an inactive Hydro Plant, and
+`_try_enter()` has no wall check of its own — so a Wall sitting on a
+Diverter's target was not solid to the diverted stream.
+
+**The audit's description of the symptom was wrong**, and the truth is worse.
+It said the water was "silently deleted". It is not: `_try_enter()` returns
+true for a wall cell, so the water is moved ONTO it, and the wall's own empty
+target list then holds it there forever. Traced one step at a time:
+
+```
+before:  diverter (0,0) -> water at (-1,1)   [the wall cell]
+         steps 2,3,4,5:   still (-1,1)       [never leaves]
+after:   diverter (0,0) -> water at (0,0)    [backs up, as wall.tres says]
+```
+
+So the player saw a puddle drawn *inside* a solid block that never moved
+again, while `wall.tres` documents a Wall as "fully blocks water; water backs
+up against it each tick" — and plugging a diverter's mouth with one is the
+obvious thing to try.
+
+**The fix is narrower than it first looked, and the suites are what found
+that.** The clean-looking change is to use `_is_wall()` in the redirect loops,
+so both paths share one definition. That passed the solution book at 88/11/1
+and then **failed `VerifyHydroBonus` on level 63**: `_is_wall()` also counts an
+activated geyser as solid, and level 63 sits its Hydro Plant at `(-1,0)`
+directly below its geyser at `(-2,-1)` and feeds the plant with a stream
+routed through that cell. The block half is now split out as
+`_is_solid_block()`, which the redirect loops use; `_is_wall()` still composes
+it for natural fall.
+
+**A false claim in `open-items.md`, now corrected.** It said the Hydro Plant
+was "used by **zero** of the 100 levels". Eight levels ship one — 7, 13, 18,
+25, 33, 52, 63, 82 — and `VerifyHydroBonus` exercises all eight. That claim had
+already been quoted back as evidence by a verifier during the handheld audit,
+and this fix was nearly scoped on the assumption that no level had a plant to
+break.
+
+**`tests/VerifyWaterBlocking.tscn`, 15 checks**, driving `_advance_water()` one
+step at a time on both grid orientations: a diverter with an open target still
+diverts, a walled target backs the water up, the backed-up water is not lost,
+a splitter with one of two targets walled uses the other, both walled backs
+up — and, pinned deliberately, an *activated geyser* is still enterable by a
+redirect. Verified against the old code: **6 failures without the fix, 0 with
+it.**
+
+All eight suites pass, solution book unchanged at 88 / 11 / 1, BoardSnapshots
+0 of 10 changed.
+
 ## Status: the board animates only when it can be seen (2026-09-09)
 
 Finding 15 of `handheld-audit.md`. `HexBoard._process()` had no pause,

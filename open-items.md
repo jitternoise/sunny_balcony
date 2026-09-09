@@ -215,12 +215,25 @@ solution-first templates with seeded rejection sampling. Worth recovering
 `gen100.py` for its templates if it turns up, but note it predates the 2-wide
 Wall and would generate levels validated against the wrong footprint.
 
-**The Hydro Electric Power Plant is dead code.** Fully implemented in
+**The Hydro Electric Power Plant is dead code.**
+> **❌ WRONG — corrected 2026-09-09. Eight levels ship a plant:** 7, 13, 18,
+> 25, 33, 52, 63 and 82 (`grep -l "hydro_plant_cells = Array" data/levels/`).
+> `tests/VerifyHydroBonus.tscn` exercises all eight and passes, checking for
+> each that water reaches the plant and that the level can be won with it
+> running. The mechanic is live, player-facing and covered by a suite.
+>
+> This claim did real damage before it was caught: a verifier in the handheld
+> audit quoted it back as evidence while assessing the save-write path, and
+> the 2026-09-09 water-blocking fix was very nearly scoped on the assumption
+> that no level had a plant to break. The thing that caught it was
+> `VerifyHydroBonus` failing on level 63. **Run the suites before trusting a
+> "never used" claim in this file.**
+
+Fully implemented in
 `LevelData.gd`, `HexBoard.gd` (`hydro_plants`, `hydro_ready_at()`,
-`try_activate_hydro()`, `_is_inactive_hydro()`) and documented at length — and
-used by **zero** of the 100 levels. It has never been exercised by real level
-data. Its doc comment also notes it is pointy-grid only and untested on a flat
-grid.
+`try_activate_hydro()`, `_is_inactive_hydro()`) and documented at length.
+Its doc comment notes it is pointy-grid only and untested on a flat
+grid — that part still stands: all eight levels above are pointy.
 
 **Placement failure is silent.** When neither footprint orientation of a 2-wide
 Wall fits, the tap does nothing, with no feedback to the player.

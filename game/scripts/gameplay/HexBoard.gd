@@ -1351,23 +1351,42 @@ func _advance_water(entry: Dictionary, next_water: Array[Dictionary]) -> void:
 		# target used to corrupt that stream's alternation timing by
 		# freezing it in place for a spurious extra tick.
 		#
-		# EXCEPTION -- undug dirt (the "Dig the River" mechanic) OR an
-		# inactive Hydro Plant cell: either behaves like a Wall sitting on
-		# the target, so it's skipped rather than entered (and, for
-		# hydro, the contact is recorded -- see _note_hydro_contact() --
-		# so the plant becomes double-tap-able). If EVERY target is
-		# blocked this way, the water has nowhere to go after all and
-		# backs up on the block, exactly as it would against a Wall,
-		# until the player digs/activates one of the targets open.
-		var all_targets_dirt := true
+		# EXCEPTION -- a target that is solid: an actual Wall or Bomb
+		# Catapult block, undug dirt (the "Dig the River" mechanic), an
+		# inactive Hydro Plant cell, or an erupting geyser. Each is skipped
+		# rather than entered (and, for hydro, the contact is recorded --
+		# see _note_hydro_contact() -- so the plant becomes double-tap-able).
+		# If EVERY target is blocked, the water has nowhere to go after all
+		# and backs up on the block, exactly as it would against a Wall,
+		# until the player digs/activates/removes one of them open.
+		#
+		# This loop used to check only undug dirt and inactive hydro, so a
+		# Wall sitting on a Diverter's target was not solid to the diverted
+		# stream: _try_enter() has no wall check either, so the water was
+		# moved ONTO the wall cell, where the wall's own empty target list
+		# then held it forever. The result was a puddle drawn inside a
+		# solid block that never moved again -- while wall.tres documents a
+		# Wall as "fully blocks water; water backs up against it each
+		# tick", and plugging a diverter's mouth with one is the obvious
+		# thing to try.
+		#
+		# _is_solid_block(), NOT the whole of _is_wall(). _is_wall() also
+		# counts an ACTIVATED GEYSER as solid, which is right for natural
+		# fall (a geyser is a source, water spawns from it) but wrong here:
+		# level 63 sits its Hydro Plant at (-1,0) directly below its geyser
+		# at (-2,-1) and feeds the plant with a redirected stream through
+		# that cell. Using the full _is_wall() here blocks that and the
+		# plant can never be reached -- caught by VerifyHydroBonus, which
+		# is why that suite is worth running on any water-routing change.
+		var all_targets_blocked := true
 		for target in targets:
-			if _is_undug_dirt(target) or _is_inactive_hydro(target):
+			if _is_undug_dirt(target) or _is_inactive_hydro(target) or _is_solid_block(target):
 				_note_hydro_contact(target)
 				continue
-			all_targets_dirt = false
+			all_targets_blocked = false
 			if _try_enter(target):
 				_add_water(next_water, target, opposite_dir)
-		if all_targets_dirt:
+		if all_targets_blocked:
 			var dirs: Array[Vector2i] = []
 			for target in targets:
 				dirs.append(target - coord)
@@ -1450,19 +1469,20 @@ func _advance_water_flat(entry: Dictionary, next_water: Array[Dictionary]) -> vo
 		if targets.is_empty():
 			_add_water(next_water, coord, opposite_dir, mode)
 			return
-		# Same undug-dirt-or-inactive-hydro exception as the pointy-grid
-		# branch above: either is skipped like a Wall, and if every target
-		# is blocked this way the water backs up on the block until one is
-		# dug/activated open.
-		var all_targets_dirt := true
+		# Same solid-target exception as the pointy-grid branch above, and
+		# the same test, for the same reason: a Wall on a Diverter's target
+		# used to be entered rather than blocked, and the water was then
+		# held on the wall cell forever. An activated geyser is deliberately
+		# NOT included here -- see the pointy-grid comment.
+		var all_targets_blocked := true
 		for target in targets:
-			if _is_undug_dirt(target) or _is_inactive_hydro(target):
+			if _is_undug_dirt(target) or _is_inactive_hydro(target) or _is_solid_block(target):
 				_note_hydro_contact(target)
 				continue
-			all_targets_dirt = false
+			all_targets_blocked = false
 			if _flat_try_enter(target):
 				_add_water(next_water, target, opposite_dir, mode)
-		if all_targets_dirt:
+		if all_targets_blocked:
 			var dirs: Array[Vector2i] = []
 			for target in targets:
 				dirs.append(target - coord)
@@ -1631,16 +1651,26 @@ func _is_wall(coord: Vector2i) -> bool:
 		return true
 	if _is_inactive_hydro(coord):
 		return true
+	return _is_solid_block(coord)
+
+
+## True if a PLACED BLOCK at `coord` is solid to water -- the block half of
+## _is_wall(), split out because the two block-redirect loops need exactly
+## this and not the rest of it (see their "EXCEPTION" comments: an activated
+## geyser is solid to natural fall but must stay enterable by a redirected
+## stream, which is how level 63 feeds its Hydro Plant).
+##
+## CATAPULT counts as solid here too. Without it, _is_wall() returned false
+## for a Bomb Catapult, so natural fall LANDED water on the catapult's own
+## cell -- where _resolve_block_targets()'s empty target list then held it
+## permanently, instead of the water bouncing onto the other diagonal the way
+## a real Wall makes it. That contradicted both this block's own documentation
+## and its design brief ("behaves exactly like a Wall for water simulation
+## purposes").
+func _is_solid_block(coord: Vector2i) -> bool:
 	if not placed_blocks.has(coord):
 		return false
 	var block: BlockData = block_catalog[placed_blocks[coord]]
-	# CATAPULT counts as solid here too. Without it, _is_wall() returned
-	# false for a Bomb Catapult, so natural fall LANDED water on the
-	# catapult's own cell -- where _resolve_block_targets()'s empty target
-	# list then held it permanently, instead of the water bouncing onto
-	# the other diagonal the way a real Wall makes it. That contradicted
-	# both this block's own documentation and its design brief ("behaves
-	# exactly like a Wall for water simulation purposes").
 	return block.behavior == BlockData.TickBehavior.WALL or block.behavior == BlockData.TickBehavior.CATAPULT
 
 

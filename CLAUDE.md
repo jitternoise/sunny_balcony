@@ -33,6 +33,7 @@ godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 
 godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
 godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
+godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
@@ -135,6 +136,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **The Wall is 2 tiles wide.** Placing one covers the tapped cell *and* a
   neighbour. This invalidated 11 documented solutions and is the single most
   common source of "why doesn't this level win any more".
+- **"Solid to water" is two different tests, on purpose.** `_is_wall()` is
+  what *natural fall* asks, and counts an activated geyser as solid.
+  `_is_solid_block()` is what the two *block-redirect* loops ask, and does
+  not — level 63 feeds its Hydro Plant with a stream routed through its
+  geyser's cell. Collapsing the two makes that plant unreachable. Run
+  `VerifyHydroBonus` on any water-routing change; it is the only thing that
+  catches this.
 - **Full-tile art needs both grid orientations.** 9 levels use
   `grid_style = "flat"`; a pointy-top tile pokes its corners through a
   flat-top cell. Centred glyphs need only one version.
