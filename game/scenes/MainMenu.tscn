@@ -43,12 +43,15 @@ horizontal_alignment = 1
 
 [node name="ContinueButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
 text = "Continue"
 
 [node name="NewGameButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
 text = "New Game"
 
 [node name="QuitButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
 text = "Quit"

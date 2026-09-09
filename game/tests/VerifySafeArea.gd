@@ -146,8 +146,13 @@ func _check_save_slot_insets() -> void:
 	_set_insets("0,96,0,72")
 	print("Save slots")
 	var slots := await _open_scene("res://scenes/SaveSlotSelect.tscn")
-	_about(slots.get_node("BackButton").offset_top, 16.0 + 96.0, "Back button drops below the cutout")
-	_about(slots.get_node("BackButton").offset_bottom, 48.0 + 96.0, "Back button keeps its height")
+	var back: Control = slots.get_node("BackButton")
+	_about(back.offset_top, 16.0 + 96.0, "Back button drops below the cutout")
+	# Height, not an absolute offset: the point of this check is that an
+	# inset MOVES the button rather than stretching it, and pinning
+	# offset_bottom to a literal made it fail for the wrong reason when the
+	# button was resized to a 48dp touch target.
+	_about(back.offset_bottom - back.offset_top, 96.0, "Back button keeps its height")
 	slots.free()
 
 

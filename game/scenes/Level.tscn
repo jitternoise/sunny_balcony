@@ -54,10 +54,10 @@ text = "Place your blocks, then press play"
 [node name="StartButton" type="Button" parent="UI/HUD"]
 layout_mode = 1
 anchor_left = 0.5
-offset_left = -105.0
+offset_left = -114.0
 offset_top = 40.0
 offset_right = -10.0
-offset_bottom = 96.0
+offset_bottom = 136.0
 tooltip_text = "Start"
 icon = ExtResource("3")
 icon_alignment = 1
@@ -67,8 +67,8 @@ layout_mode = 1
 anchor_left = 0.5
 offset_left = 10.0
 offset_top = 40.0
-offset_right = 105.0
-offset_bottom = 96.0
+offset_right = 114.0
+offset_bottom = 136.0
 tooltip_text = "Pause"
 icon = ExtResource("4")
 icon_alignment = 1
@@ -77,10 +77,10 @@ icon_alignment = 1
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -135.0
+offset_left = -144.0
 offset_top = 40.0
 offset_right = -40.0
-offset_bottom = 96.0
+offset_bottom = 136.0
 tooltip_text = "Level Select"
 icon = ExtResource("6")
 icon_alignment = 1
@@ -91,9 +91,9 @@ layout_mode = 1
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 40.0
-offset_top = -158.0
+offset_top = -174.0
 offset_right = 244.0
-offset_bottom = -132.0
+offset_bottom = -146.0
 text = "Tiles left: 0"
 
 [node name="InventoryBar" type="HBoxContainer" parent="UI/HUD"]
@@ -102,7 +102,7 @@ anchor_top = 1.0
 anchor_bottom = 1.0
 anchor_right = 1.0
 offset_left = 40.0
-offset_top = -120.0
+offset_top = -136.0
 offset_right = -40.0
 offset_bottom = -40.0
 
@@ -146,14 +146,14 @@ theme_override_constants/separation = 12
 
 [node name="RetryButton" type="Button" parent="UI/LosePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(104, 56)
+custom_minimum_size = Vector2(104, 96)
 tooltip_text = "Retry"
 icon = ExtResource("5")
 icon_alignment = 1
 
 [node name="LevelSelectButton" type="Button" parent="UI/LosePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(104, 56)
+custom_minimum_size = Vector2(104, 96)
 tooltip_text = "Level Select"
 icon = ExtResource("6")
 icon_alignment = 1
@@ -200,7 +200,7 @@ autowrap_mode = 3
 
 [node name="GotItButton" type="Button" parent="UI/IntroPanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 96)
 tooltip_text = "Got it"
 icon = ExtResource("8")
 icon_alignment = 1
@@ -248,7 +248,7 @@ autowrap_mode = 3
 
 [node name="NextButton" type="Button" parent="UI/WinPanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 96)
 tooltip_text = "Next level"
 icon = ExtResource("7")
 icon_alignment = 1
@@ -289,7 +289,7 @@ theme_override_font_sizes/font_size = 24
 
 [node name="ResumeButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 96)
 tooltip_text = "Resume"
 icon = ExtResource("3")
 icon_alignment = 1
@@ -301,14 +301,14 @@ theme_override_constants/separation = 12
 
 [node name="RetryButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(104, 56)
+custom_minimum_size = Vector2(104, 96)
 tooltip_text = "Retry"
 icon = ExtResource("5")
 icon_alignment = 1
 
 [node name="LevelSelectButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(104, 56)
+custom_minimum_size = Vector2(104, 96)
 tooltip_text = "Level Select"
 icon = ExtResource("6")
 icon_alignment = 1

@@ -1,5 +1,59 @@
 # Flash Flood — Dev Progress
 
+## Status: every control is a real touch target now (2026-09-09)
+
+Finding 11 of `handheld-audit.md`, the largest remaining item and the first
+one that changes how the game looks.
+
+Under `stretch/aspect=expand` the 720-unit viewport maps onto the device's
+full width, so a unit is 0.5dp on a 360dp phone. Everything was under both
+platforms' minimum (Android 48dp, Apple 44pt):
+
+| control | was | now |
+|---|---|---|
+| HUD Start / Pause / Back | 95x56 (28dp) | 104x96 (48dp) |
+| Main menu Continue / New Game / Quit | ~200x47 (24dp) | 200x96 (48dp) |
+| Save-slot buttons | ~240x47 (24dp) | 240x96 (48dp) |
+| Save-slot **Back** | 80x32 (**16dp**) | 104x96 (48dp) |
+| Popup buttons | 104x56 / 0x56 | 104x96 / 0x96 |
+| Inventory Delete toggle | 72 wide (36dp) | 96 wide (48dp) |
+
+The save-slot Back button at 16dp was a third of the minimum, on the screen
+that picks which save to load.
+
+`GRID_TOP_MARGIN_PX` 128 -> 152 and `BOTTOM_UI_RESERVED_PX` 158 -> 190 to
+clear the taller rows. **This does not shrink any tile**: `_fit_hex_layout()`
+solves tile size from the viewport's WIDTH alone, so the only effect is that
+the grid band is 938 units instead of 994 and some levels scroll slightly
+further. All 10 `BoardSnapshots` change, as intended; level 19 and the
+save-slot screen were rendered and eyeballed.
+
+**`tests/VerifyTouchTargets.tscn`, 30 checks.** It measures `size` on the
+laid-out control rather than reading the `.tscn`, so a theme change, a
+container squeezing a child, or a font swap is caught too — and it earned that
+immediately by catching the inventory Delete toggle at 72 units, which is
+sized by a constant in `Level.gd` and which I would not have thought to edit.
+It also checks the inventory row still fits (level 19's six buttons use 616 of
+640 units) since widening Delete eats a row that already holds every block
+type, and that the grid band stays above 60% of the screen.
+
+Needs a display, so it is the one suite that must run under `xvfb-run`.
+
+### ⚠️ The suites overwrite your saves, and a project copy is not sandboxed
+
+Found the hard way. `user://` is keyed on `config/name`, so the scratchpad
+*copy* of the project used for a throwaway UI probe wrote to the same
+`~/.local/share/godot/app_userdata/Flash Flood/` as the real one — the probe
+called `delete_slot(0/1/2)` and deliberately corrupted slot 1 to photograph
+the "(damaged)" label, and that landed on the real save directory. The corrupt
+files have been removed.
+
+The wider issue is not the probe: **ten test scenes set
+`GameState.current_slot = 0` and complete levels**, so simply running the
+documented verification commands overwrites your own "Slot 1". That predates
+this session. `VerifySaveIntegrity` already uses slot 99 to stay clear;
+anything new that touches saves should too. Now flagged in `CLAUDE.md`.
+
 ## Status: a Wall on a Diverter's target actually blocks it (2026-09-09)
 
 Finding 30 of `handheld-audit.md`. Natural fall and forced block redirects

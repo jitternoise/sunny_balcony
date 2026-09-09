@@ -283,8 +283,10 @@ const GRID_WIDTH_FRACTION := 0.9
 ## is an absolute distance and NOT a fraction of viewport height: under
 ## stretch/aspect=expand a taller device grows the viewport, and a
 ## fraction would push the grid further from a button row that has not
-## moved. 96px button row + 32px breathing room.
-const GRID_TOP_MARGIN_PX := 128.0
+## moved. The row ends at y=136 (40px inset + a 96px button, raised from 56
+## so the buttons clear the 48dp Android / 44pt iOS minimum touch target on
+## a 360dp-wide phone) + 16px breathing room.
+const GRID_TOP_MARGIN_PX := 152.0
 
 ## Level-design convention (not enforced here, but relied on by
 ## _fit_hex_layout()'s sizing so tiles stay reasonably large): a grid
@@ -295,8 +297,13 @@ const MAX_GRID_WIDTH_HEXES := 9
 ## Reserved screen space below the grid's available area for the bottom HUD,
 ## so scrolling can't hide the grid's bottom edge behind it. Matches the
 ## topmost bottom-anchored control in Level.tscn -- BudgetLabel's offset_top,
-## which sits just above InventoryBar -- so keep the two in step.
-const BOTTOM_UI_RESERVED_PX := 158.0
+## which sits just above InventoryBar -- so keep the two in step. 174 for the
+## label (itself pushed up by the inventory bar growing to a 96px touch
+## target) + 16px breathing room.
+##
+## Note this only changes how far a grid can SCROLL, never how big its tiles
+## are: _fit_hex_layout() solves tile size from the viewport's WIDTH alone.
+const BOTTOM_UI_RESERVED_PX := 190.0
 
 ## position.y when the grid is scrolled all the way to the top (its natural
 ## resting position, set by _fit_hex_layout()). Level.gd clamps manual

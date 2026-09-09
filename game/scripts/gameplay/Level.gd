@@ -136,7 +136,12 @@ const EXIT_ICON := preload("res://assets/icons/ui_exit.svg")
 ## The tile buttons are wider than the Delete toggle: their tile art is the
 ## thing being chosen, while Delete is a mode switch with a fixed-size glyph.
 const INVENTORY_BUTTON_WIDTH := 100.0
-const DELETE_BUTTON_WIDTH := 72.0
+## Was 72, which is 36dp on a 360dp phone -- three quarters of Android's 48dp
+## minimum, on the control that erases a placement. Narrower than a tile
+## button is still fine visually (its glyph is fixed-size), but not narrower
+## than a thumb. Level 19 is the binding case: five tile buttons plus this one
+## must fit the bar's 640 units, which VerifyTouchTargets checks.
+const DELETE_BUTTON_WIDTH := 96.0
 const INVENTORY_BUTTON_PADDING := 10.0
 
 ## The res://data/levels/*.tres path this scene was loaded with (captured

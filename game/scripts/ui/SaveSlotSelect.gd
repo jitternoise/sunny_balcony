@@ -58,6 +58,13 @@ func _build_slot_buttons() -> void:
 		child.queue_free()
 	for slot in range(GameState.SAVE_SLOT_COUNT):
 		var button := Button.new()
+		# 96 viewport units. Under stretch/aspect=expand the 720-unit-wide
+		# viewport maps onto the device's full width, so a unit is 0.5dp on a
+		# 360dp phone and 0.57dp on a 411dp one -- 96 is therefore >=48dp
+		# (Android's minimum touch target, and above Apple's 44pt) across the
+		# mainstream handset range. Intrinsic height here was ~47 units, i.e.
+		# ~24dp: half the minimum, on the screen that picks a save file.
+		button.custom_minimum_size = Vector2(0, 96)
 		button.text = _slot_label(slot)
 		button.pressed.connect(_on_slot_selected.bind(slot))
 		slot_container.add_child(button)

@@ -34,6 +34,20 @@ godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corrupti
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
 godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
 godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
+# needs a display (measures laid-out control sizes):
+xvfb-run -a --server-args="-screen 0 720x1280x24" \
+  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 30 checks
+```
+
+⚠️ **Most test scenes write to real save slot 0** (they set
+`GameState.current_slot = 0` and complete levels). Running the suites
+overwrites your own "Slot 1". `VerifySaveIntegrity` deliberately uses slot 99
+to stay clear of it; new tests that touch saves should do the same. Note also
+that `user://` is keyed on `config/name`, so a *copy* of the project writes to
+the same save directory as the original -- a throwaway harness run from a copy
+is not sandboxed.
+
+```bash
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
