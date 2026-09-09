@@ -114,6 +114,14 @@ not add a branch. A state with no sheet falls back to its static icon.
 board, so independent per-type rates would multiply repaints. Derive every
 frame from that counter; let slower tiles repeat frames.
 
+**`_draw()` culls to the screen.** `_visible_draw_rect()` gives the visible
+band in board coordinates and the cell and water loops skip anything outside
+it — level 22 draws 85 cells, not 505. If you add drawing that reaches
+further from a cell centre than the current margin (`Hex.SIZE * 2 + 48`,
+already ~2x the tight bound), widen the margin or the art will pop in at the
+screen edge. `BoardSnapshots` cannot catch that: it only captures unscrolled,
+pre-Start boards. Check a scrolled, mid-simulation board by hand.
+
 ---
 
 ## Conventions that have already bitten someone

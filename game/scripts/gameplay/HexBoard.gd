@@ -2167,7 +2167,11 @@ func _draw() -> void:
 		for seg in _preview_arrows:
 			_preview_from_cells[seg["from"]] = true
 
+	var visible := _visible_draw_rect()
+
 	for coord in _playable_cells:
+		if not visible.has_point(Hex.axial_to_pixel(coord)):
+			continue
 		_draw_cell(coord)
 
 	# Source markers: every original water_sources cell, plus any geyser
@@ -2187,10 +2191,15 @@ func _draw() -> void:
 	# spawns a drop every beat, so its cell is almost always wet, and a
 	# full-tile water sprite would otherwise permanently hide the marker
 	# ring that tells the player where the water comes from.
+	# `wet` is built from EVERY water cell, culled or not: _is_lead_water()
+	# asks about a cell's neighbours, and one of those can be off-screen
+	# while the cell itself is on it. Only the drawing is culled.
 	var wet := {}
 	for entry in water_cells:
 		wet[entry["coord"]] = true
 	for entry in water_cells:
+		if not visible.has_point(Hex.axial_to_pixel(entry["coord"])):
+			continue
 		_draw_water(entry["coord"], _is_lead_water(entry["coord"], wet))
 
 	# Pre-start flow preview (see show_flow_preview) -- drawn after the
@@ -2207,6 +2216,34 @@ func _draw() -> void:
 	# is already false, but layering it last keeps that assumption from
 	# ever silently hiding the aim if it changes).
 	_draw_catapult_aim()
+
+
+## The part of the board that can contribute a pixel this frame, in the
+## board's own coordinates. Cells whose centre falls outside it are skipped.
+##
+## The board is one CanvasItem drawing the whole grid, and it drew every
+## playable cell every repaint no matter where the grid was scrolled. On the
+## tall corridor levels that is most of the work thrown away: level 22 is a
+## radius-50 board of 505 cells, of which roughly 75 are on screen at once.
+## Culling turns "a draw call per cell in the level" into "a draw call per
+## cell on the screen", which is what the cost should have been proportional
+## to all along.
+##
+## Derived from the canvas transform rather than from position.y, so it stays
+## correct regardless of what the board's parent does to it -- scroll,
+## offset, or a future scale.
+##
+## The margin is deliberately generous. A cell draws past its own centre by
+## up to Hex.SIZE (a FILL sheet is 2*Hex.SIZE across and the hex corners sit
+## at Hex.SIZE), and a pool/geyser status bar hangs a further ~26px above the
+## tile -- a FIXED offset that does not scale with Hex.SIZE, so it is the
+## term that matters on a small-celled board like level 22's. Overshooting
+## costs a few extra cells; undershooting pops art in and out at the screen
+## edge, which is exactly the bug this must not introduce.
+func _visible_draw_rect() -> Rect2:
+	var to_local := get_global_transform_with_canvas().affine_inverse()
+	var rect: Rect2 = to_local * get_viewport_rect()
+	return rect.grow(Hex.SIZE * 2.0 + 48.0)
 
 
 ## Draws one cell, in a fixed layer order: base, pending overlay, outline,

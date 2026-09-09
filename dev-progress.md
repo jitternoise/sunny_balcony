@@ -1,5 +1,57 @@
 # Flash Flood — Dev Progress
 
+## Status: the board only draws the cells that are on screen (2026-09-09)
+
+Finding 13 of `handheld-audit.md`, and the largest performance item on it.
+`HexBoard._draw()` painted every playable cell on every repaint, wherever the
+grid happened to be scrolled — so cost scaled with the size of the LEVEL
+rather than the size of the SCREEN. `_visible_draw_rect()` now derives the
+visible band from the canvas transform, and the cell loop and the water loop
+skip anything outside it.
+
+Measured cells drawn per repaint, at the real 720x1280 viewport, taking the
+worse of scrolled-to-top and scrolled-to-middle:
+
+| level | cells | drawn | |
+|---|---|---|---|
+| 22 (radius-50 corridor) | 505 | 85 | **5.9x fewer** |
+| 97 | 205 | 85 | 2.4x fewer |
+| 16 | 63 | 39 | 1.6x fewer |
+| 13, 74, 21, 1, 20 | 61–85 | all | unchanged — they fit on screen |
+
+The win lands exactly where the cost was, and levels whose board already fits
+the screen are untouched, which is the right shape.
+
+**The margin is deliberately about twice what it needs to be.** A cell draws
+past its centre by up to `Hex.SIZE` (a FILL sheet is `2 * Hex.SIZE` across and
+the hex corners sit at `Hex.SIZE`), plus a fixed ~26px for a pool/geyser
+status bar, which hangs above the tile and does NOT scale with `Hex.SIZE` — on
+a small-celled board that fixed term is the one that matters. The tight bound
+is roughly `Hex.SIZE + 32`; `Hex.SIZE * 2 + 48` is used instead. Tightening it
+would cull more on levels 13 and 16, at the cost of art popping in at the
+screen edge if any of those extents is ever wrong. Not worth it: level 22 is
+where the cost lives and it is already 5.9x.
+
+**Correctness is the whole risk here, so it was checked properly.** The
+committed `BoardSnapshots` net only captures unscrolled, pre-Start boards —
+the easiest possible case for a cull. A throwaway harness rendered 7 levels at
+5 scroll positions each, mid-simulation (26 beats in, so water, status bars
+and direction arrows are all on the board): **35 renders, 0 pixels changed.**
+`BoardSnapshots` itself is also 0 of 10.
+
+One thing culling must NOT touch: `wet` is still built from every water cell,
+culled or not, because `_is_lead_water()` asks about neighbours and one of
+those can be off-screen while the cell itself is on it. Only the drawing is
+skipped.
+
+**Not measured: wall-clock on a GPU.** Every attempt to time frames here runs
+through llvmpipe, where the software rasteriser dominates and the numbers say
+nothing about a handset. Cells drawn is the honest metric, and draw calls
+scale with it. The audit predicted 1070 -> ~170 draw calls on level 22; the
+5.9x cell reduction agrees closely.
+
+All five suites pass, solution book unchanged at 88 / 11 / 1.
+
 ## Status: saves survive a kill, and a damaged one is never laundered (2026-09-09)
 
 Findings 6 and 7 of `handheld-audit.md` — the only data-loss items on the
