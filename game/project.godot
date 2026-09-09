@@ -53,6 +53,20 @@ window/stretch/aspect="expand"
 
 theme/custom="res://theme/oval_theme.tres"
 
+[internationalization]
+
+; Control.LAYOUT_DIRECTION_LTR. Godot derives the root layout direction from
+; OS.get_locale() alone -- no translation files needed -- and mirrors every
+; Container-placed Control when that locale is right-to-left. The game has no
+; translations at all (zero tr() call sites), so there is nothing to mirror
+; INTO, but the mirroring happens anyway: on an Arabic, Hebrew, Persian or
+; Urdu handset every Level Select node moved right by exactly one viewport
+; width (level 1 from x=322 to x=1042 on a 720-wide viewport), putting all 100
+; of them off-screen and rendering the campaign map blank. Pinning the root to
+; LTR opts out. Revisit if the game is ever localised into an RTL language --
+; then the layout wants fixing rather than pinning.
+rendering/root_node_layout_direction=1
+
 [rendering]
 
 ; Same reasoning as boot_splash/bg_color above.

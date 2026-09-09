@@ -459,18 +459,26 @@ func _on_resume_pressed() -> void:
 
 ## Loads every BlockData .tres under res://data/blocks/ so adding a new
 ## block type is just "add a .tres file", no script edits.
+##
+## ResourceLoader.list_directory(), NOT DirAccess. The two disagree the moment
+## the game is exported, and only one of them is right. Godot's exporter
+## converts text resources to binary by default, which does not leave a .tres
+## behind: each one becomes a .tres.remap pointing at a .res inside .godot/.
+## A DirAccess scan therefore sees five "wall.tres.remap" entries, an
+## ends_with(".tres") test matches none of them, and the catalog comes back
+## EMPTY -- every level loads with nothing in the inventory bar and no way to
+## place a block. ResourceLoader.list_directory() resolves remaps and returns
+## the original .tres names on both sides of an export.
+##
+## Nothing in tests/ or tools/ can catch a regression here, because they all
+## run against the source tree, where the .tres files really are on disk and
+## a DirAccess scan works fine. It only shows up in a built PCK.
 func _load_block_catalog() -> Dictionary:
 	var catalog := {}
-	var dir := DirAccess.open("res://data/blocks/")
-	if dir:
-		dir.list_dir_begin()
-		var file_name := dir.get_next()
-		while file_name != "":
-			if file_name.ends_with(".tres"):
-				var block: BlockData = load("res://data/blocks/" + file_name)
-				catalog[block.id] = block
-			file_name = dir.get_next()
-		dir.list_dir_end()
+	for file_name in ResourceLoader.list_directory("res://data/blocks/"):
+		if file_name.ends_with(".tres"):
+			var block: BlockData = load("res://data/blocks/" + file_name)
+			catalog[block.id] = block
 	return catalog
 
 

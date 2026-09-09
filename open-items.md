@@ -284,6 +284,27 @@ has still not been decided.
 
 ---
 
+## 🔍 Superseded in part by the handheld audit (2026-09-08)
+
+A full Android/iOS platform audit now lives in **`handheld-audit.md`** — 47
+verified findings with a prioritised fix-first list. It supersedes nothing in
+this file but goes considerably wider, and several items below appear there with
+sharper measurements or corrected severities.
+
+Two defects it found were proven by execution and are **already fixed**:
+
+- **The exported build had an empty block catalog.** A `DirAccess` scan filtered
+  on `.tres`, which becomes `.tres.remap` inside a PCK. All 100 levels would have
+  shipped with nothing placeable. Now `ResourceLoader.list_directory()`.
+- **An RTL system locale blanked the campaign map**, moving all 100 Level Select
+  nodes exactly one viewport width off-screen. Now pinned to LTR via
+  `internationalization/rendering/root_node_layout_direction=1`.
+
+The first of those is worth remembering as a category, not just a bug: **no test
+in this project can see an export-only defect**, because every test scene and
+both verification tools run against the source tree. The audit's remaining
+export-readiness items are all still open.
+
 ## 🚚 Pre-export checklist (added 2026-09-08)
 
 Neither export has been configured — no `export_presets.cfg` is committed

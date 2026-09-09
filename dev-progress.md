@@ -1,5 +1,54 @@
 # Flash Flood — Dev Progress
 
+## Status: handheld audit, and the two defects that made the first build unplayable (2026-09-08)
+
+A platform audit against the Android/iOS target: 70 findings raised across 11
+dimensions, each put to an independent verifier told to refute it, 47 surviving.
+The full report is `handheld-audit.md`. Two findings were proven by execution
+rather than argument, and both are fixed here. Everything else is written up but
+untouched.
+
+**The exported game had no blocks at all.** `Level._load_block_catalog()`
+scanned `res://data/blocks/` with `DirAccess` and filtered on `ends_with(".tres")`.
+Godot's exporter converts text resources to binary by default, which leaves a
+`wall.tres.remap` rather than a `wall.tres`, so the filter matched nothing and
+the catalog came back empty — all 100 levels loading with an empty inventory bar
+and no way to place a block. Now uses `ResourceLoader.list_directory()`, which
+resolves remaps and returns the original `.tres` names on both sides of an
+export. Verified by building a real PCK with the binary-conversion option on:
+catalog size 0 before, 5 after.
+
+Note what could not have caught this: every test scene and both verification
+tools run against the source tree, where the `.tres` files really are on disk
+and a `DirAccess` scan works perfectly. It appears only in a built PCK. This is
+the first defect found in this project that is invisible to the entire existing
+test suite.
+
+**An RTL system language rendered the campaign map blank.** Godot derives the
+root layout direction from `OS.get_locale()` alone — no translation files needed
+— and mirrors Container-placed Controls when it is right-to-left. On an Arabic,
+Hebrew, Persian or Urdu handset every Level Select node moved right by exactly
+one viewport width (level 1 from x=322 to x=1042 at 720 wide), putting all 100
+off-screen. The game has no translations at all, so there is nothing to mirror
+into; `internationalization/rendering/root_node_layout_direction=1` pins the root
+to LTR and opts out. Verified across `ar`, `he`, `fa` and `ur`: 100 nodes
+off-screen before, 0 after, positions identical to English.
+
+**One deliberate visual change.** The catalog's iteration order was previously
+raw filesystem order (`divert_left, bomb_catapult, splitter, divert_right, wall`
+on this machine) and is now sorted. On the 12 shared-budget levels the inventory
+bar is built from `block_catalog.keys()`, so its buttons reorder —
+`BoardSnapshots` shows level_082 changing in a 40px strip at y 1180-1220, the
+bar itself, with the board pixel-identical. This is a fix rather than a
+regression: the old order was filesystem-dependent, so it varied by machine and
+again inside a PCK. Re-baseline `level_082.png`.
+
+SmokeLevel, VerifyHydroBonus, VerifyLevelMap and VerifySafeArea all pass;
+solution book unchanged at 88 exact / 11 broken / 1 prose.
+
+**Still true, and the audit does not change it:** nothing has run on a GPU or a
+handset. The report marks which of its 47 findings only a device can settle.
+
 ## Status: safe-area insets, so nothing sits under a notch or the gesture bar (2026-09-08)
 
 The last gap left by removing letterboxing. While `stretch/aspect` was

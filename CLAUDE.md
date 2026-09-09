@@ -14,6 +14,7 @@ The Godot project is `game/`. Design docs live at the repo root.
 |---|---|
 | `dev-progress.md` | Session log, **newest first**. Prepend a `## Status: … (date)` entry when you finish work. |
 | `open-items.md` | What is genuinely outstanding, plus the **pre-export checklist**. |
+| `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. |
 | `story-bible.md` | The wordless story design. Nothing in the engine implements it yet. |
 | `level-solutions.md` | One verified solution per level. |
 | `level-min-times.md` | Verified minimum measures per level — the source of `par_measures`. |
