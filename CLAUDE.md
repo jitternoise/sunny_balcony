@@ -30,6 +30,7 @@ godot --headless res://tests/SmokeLevel.tscn        # 78 checks, in-level HUD en
 godot --headless res://tests/VerifyHydroBonus.tscn  # the optional plant bonus, 8 levels
 godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths
 godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
+godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
@@ -130,6 +131,13 @@ frame from that counter; let slower tiles repeat frames.
   `InputEvent.DEVICE_ID_EMULATION`; without it one finger fires twice.
 - **Check `git branch -r` before choosing a base.** Two sessions once
   branched from the same commit and built the same feature independently.
+- **Never write a save file in place.** `GameState.save_current_slot()` builds
+  a temp, verifies it parses back, copies the outgoing save to `.bak`, then
+  renames the temp over the primary. Godot exposes no fsync, so an in-place
+  truncate-then-write could leave a zero-byte file for tens of seconds of
+  writeback; that file then read as a new game and the next win made it
+  permanent. Keep the rename, and keep `load_failed` refusing to overwrite a
+  save that could not be read.
 
 ---
 

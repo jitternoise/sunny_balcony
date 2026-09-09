@@ -1,5 +1,59 @@
 # Flash Flood — Dev Progress
 
+## Status: saves survive a kill, and a damaged one is never laundered (2026-09-09)
+
+Findings 6 and 7 of `handheld-audit.md` — the only data-loss items on the
+list, and the only ones where the failure was silent in both directions.
+
+**The old writer opened the live save WRITE**, which truncates it to zero
+before a byte is written, then stored and closed without checking either
+call. Godot exposes no fsync, so after `close()` the bytes sit in the page
+cache for the writeback interval — tens of seconds on ext4/f2fs — while the
+inode on disk is already truncated. A power loss anywhere in that window left
+a zero-byte file. A nearly-full phone reached the same end with no power
+event at all: an ENOSPC short write returned normally, because
+`store_string`'s error was never read.
+
+Now: build a temp file, read it back to check it parses, copy the outgoing
+save to `.bak`, then `rename()` the temp over the primary. Rename is atomic,
+so the primary is at every instant either entirely the old save or entirely
+the new one. Without fsync the ordering of temp-write and rename is still not
+guaranteed against a power cut, but the worst case degrades from "all
+progress destroyed" to "the newest save is missing, fall back to the backup"
+— one level, not a hundred.
+
+**And a damaged save no longer looks like a new game.** `load_slot()` left
+every progress field at its new-game default on a parse failure and returned;
+the menu still said "(continue)", the campaign showed level 1, and the
+player's next win wrote that reset over the top and made it permanent. The
+distinction it collapsed was "file absent" versus "file present but
+unreadable". Now it tries the backup, and if that fails too sets
+`load_failed`, which makes `save_current_slot()` refuse to write at all. The
+save-slot menu labels it "(damaged)" rather than "(continue)", and resetting
+it takes two taps — the first only relabels the button.
+
+`_read_save()` also moved from `JSON.parse_string()` to `JSON.new().parse()`.
+The static helper pushes an engine error with a backtrace on every malformed
+file; a corrupt save is an expected, handled condition here, and the callers
+already report it in terms a reader can act on.
+
+**`tests/VerifySaveIntegrity.tscn`, 34 checks** — new, and the first coverage
+`GameState` has ever had. It corrupts saves the way a device would (zero-byte,
+half-written, garbage, valid JSON of the wrong shape, both copies gone) and
+checks the recovery, rather than only that a good save round-trips. It runs on
+slot 99, deliberately outside the 0..2 the game uses, so it cannot touch a
+real save. Notable cases: the backup holds the *previous* save not the current
+one; a slot with only a backup still reads as OK rather than EMPTY, so it is
+never offered as a new game; and `mark_level_complete()` on a damaged slot
+leaves the file byte-for-byte as it was.
+
+Verified end to end that the menu shows `["Slot 1 (continue)", "Slot 2
+(damaged)", "Slot 3 (new game)"]`, that a first tap on the damaged slot only
+arms it, and that tapping another slot disarms it.
+
+All five suites pass, solution book unchanged at 88 / 11 / 1, BoardSnapshots
+0 of 10 changed.
+
 ## Status: three one-line fixes from the handheld audit (2026-09-08)
 
 The cheapest three items on `handheld-audit.md`'s fix-first list. Nothing here

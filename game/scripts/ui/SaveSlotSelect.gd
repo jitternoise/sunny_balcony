@@ -45,18 +45,61 @@ func _notification(what: int) -> void:
 		_go_back()
 
 
+## The slot whose reset has been armed by a first tap, or -1. A damaged slot
+## is the one control here that destroys something, so it takes two taps:
+## the first only relabels the button, the second goes through. Tapping any
+## other slot disarms it again.
+var _armed_reset_slot: int = -1
+
+
 func _build_slot_buttons() -> void:
+	for child in slot_container.get_children():
+		slot_container.remove_child(child)
+		child.queue_free()
 	for slot in range(GameState.SAVE_SLOT_COUNT):
 		var button := Button.new()
-		if GameState.slot_exists(slot):
-			button.text = "Slot %d (continue)" % (slot + 1)
-		else:
-			button.text = "Slot %d (new game)" % (slot + 1)
+		button.text = _slot_label(slot)
 		button.pressed.connect(_on_slot_selected.bind(slot))
 		slot_container.add_child(button)
 
 
+## A damaged slot must not read as "new game". That was the failure the save
+## work fixed underneath: a save that could not be parsed left every progress
+## field at its new-game default, the button said "(continue)" anyway, and
+## the player's next win wrote the reset over the top. Naming it is the only
+## way they can tell a corrupt save from a forgotten one.
+func _slot_label(slot: int) -> String:
+	if slot == _armed_reset_slot:
+		return "Slot %d — tap again to reset" % (slot + 1)
+	match GameState.slot_status(slot):
+		GameState.SlotStatus.OK:
+			return "Slot %d (continue)" % (slot + 1)
+		GameState.SlotStatus.DAMAGED:
+			return "Slot %d (damaged)" % (slot + 1)
+		_:
+			return "Slot %d (new game)" % (slot + 1)
+
+
+func _refresh_slot_labels() -> void:
+	for slot in range(GameState.SAVE_SLOT_COUNT):
+		var button := slot_container.get_child(slot) as Button
+		if button:
+			button.text = _slot_label(slot)
+
+
 func _on_slot_selected(slot: int) -> void:
+	if GameState.slot_status(slot) == GameState.SlotStatus.DAMAGED:
+		if _armed_reset_slot != slot:
+			_armed_reset_slot = slot   # first tap: arm, and say so
+			_refresh_slot_labels()
+			return
+		# Second tap on the same damaged slot: throw it away and start over.
+		_armed_reset_slot = -1
+		GameState.discard_damaged_slot(slot)
+	elif _armed_reset_slot != -1:
+		_armed_reset_slot = -1         # a different slot: disarm
+		_refresh_slot_labels()
+
 	var is_new := not GameState.slot_exists(slot)
 	GameState.load_slot(slot)
 	if is_new:
