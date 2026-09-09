@@ -1,5 +1,50 @@
 # Flash Flood — Dev Progress
 
+## Status: the board is single-pointer, and says so (2026-09-09)
+
+Findings 9 and 10 of `handheld-audit.md`. `InputEventScreenTouch.index` and
+`InputEventScreenDrag.index` were never read anywhere in the project: the
+press state (`_press_pos`, `_drag_active`, the whole catapult sequence) only
+ever described ONE press, and nothing enforced that. A second contact is not
+an exotic case on a phone — it is the thumb of the holding hand brushing the
+glass while the index finger scrolls one of the 38 levels taller than the
+screen.
+
+One pointer now owns a press (`_press_index`, `MOUSE_POINTER` for a mouse) and
+only its drags and its release act on the board.
+
+The worst of it was not the stolen press but **the release branch, which never
+checked `_press_active` at all** — so any unmatched touch-up ran the full tap
+path and placed or deleted a block wherever that finger happened to lift. A
+thumb resting on the glass and lifting was enough to mutate the board. The
+audit's finders framed this as a scroll-hijack bug; the verifier correctly
+broadened it, and the broadened version is the one that mattered.
+
+Also fixed: a stray contact during the ~700 ms motionless hold that charges a
+Bomb Catapult used to cancel the shot AND leave the aim overlay drawn on the
+board with nothing aiming it. The pointer guard prevents the case; the press
+branch now also clears the overlay if it ever finds an aim live, so dropping
+the flag can never orphan the drawing.
+
+**`tests/VerifyMultiTouch.tscn`, 13 checks** — written as finger scripts
+(`index`, position, down/up), because that is the only way these reproduce.
+Verified to actually catch the bugs: **7 failures without the fix, 0 with it.**
+
+Two checks pass on the old code too, and both are worth keeping as guards:
+a release arriving while the level is paused was already safe (`if paused:
+return` short-circuits first — the code comment says so rather than implying
+credit it does not deserve), and a mid-scroll release was already suppressed
+by `was_drag`.
+
+An early draft of the suite asserted on `_press_index` directly and so could
+not even run against the old code — it hung instead of failing. Rewritten to
+assert on observable behaviour (block counts, scroll position, and
+`_last_tap_coord`, which only `_handle_tap()` writes), which is both a better
+test and the only way to demonstrate the before/after.
+
+All six suites pass, solution book unchanged at 88 / 11 / 1, BoardSnapshots
+0 of 10 changed.
+
 ## Status: the board only draws the cells that are on screen (2026-09-09)
 
 Finding 13 of `handheld-audit.md`, and the largest performance item on it.

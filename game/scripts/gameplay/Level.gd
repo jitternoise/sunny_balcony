@@ -156,6 +156,32 @@ var _press_pos: Vector2 = Vector2.ZERO
 var _press_active: bool = false
 var _drag_active: bool = false # true once the current press has moved past DRAG_THRESHOLD
 
+## Pointer id for a mouse, which has no finger index of its own. Negative so
+## it can never collide with a real InputEventScreenTouch.index (0, 1, 2...).
+const MOUSE_POINTER := -1
+
+## Which pointer owns the press in progress -- a finger index on a
+## touchscreen, MOUSE_POINTER on desktop. Only this pointer's drags and its
+## release act on the board; every other one is ignored until it lets go.
+##
+## The board is a single-pointer surface and the state above (_press_pos,
+## _drag_active, the whole catapult sequence) only ever described ONE press,
+## but nothing enforced that. Phones are multi-touch and a second contact is
+## not exotic -- it is the thumb of the hand holding the phone brushing the
+## glass, on the 38 levels whose board is taller than the screen and has to
+## be scrolled one-handed. Without an owner:
+##
+##   - a second finger's touch-down overwrote _press_pos mid-gesture, so the
+##     scrolling finger's own release then measured its drag from the wrong
+##     origin and read as a tap;
+##   - worse, the release branch never checked _press_active at all, so ANY
+##     unmatched touch-up ran the full tap path and placed or deleted a
+##     block at wherever that finger happened to lift;
+##   - and a stray contact during the ~700ms motionless hold that charges a
+##     Bomb Catapult cancelled the shot, placed a block, and left the aim
+##     overlay drawn on the board with nothing aiming it.
+var _press_index: int = MOUSE_POINTER
+
 ## Bomb Catapult aiming (see HexBoard.fire_catapult()/set_catapult_aim()):
 ## how long a press has to hold on a live catapult cell before the
 ## aim/charge sequence begins -- below this, releasing is treated as an
@@ -644,6 +670,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var is_drag_motion := false
 	var screen_pos := Vector2.ZERO
 	var motion_delta := Vector2.ZERO
+	var pointer := MOUSE_POINTER
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		screen_pos = event.position
@@ -656,17 +683,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		screen_pos = event.position
 		motion_delta = event.relative
 	elif event is InputEventScreenTouch:
+		pointer = event.index
 		screen_pos = event.position
 		if event.pressed:
 			is_press = true
 		else:
 			is_release = true
 	elif event is InputEventScreenDrag:
+		pointer = event.index
 		is_drag_motion = true
 		screen_pos = event.position
 		motion_delta = event.relative
 
 	if is_press:
+		# First finger down owns the board until it lifts. A second one is
+		# dropped here rather than allowed to overwrite the press in
+		# progress -- see _press_index.
+		if _press_active and pointer != _press_index:
+			return
+		_press_index = pointer
 		_press_pos = screen_pos
 		_press_active = true
 		_drag_active = false
@@ -681,11 +716,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		var coord := board.screen_to_hex(local_pos)
 		_catapult_press_coord = coord
 		_catapult_press_active = _is_live_catapult(coord)
+		# Belt and braces: a new press can only begin once the last one
+		# released, which already ends any aim, so this should never find
+		# one live. If it ever does, clear the board's overlay with it --
+		# dropping the flag alone would leave an aim drawn on the board
+		# that nothing is aiming.
+		if _catapult_aiming:
+			board.clear_catapult_aim()
 		_catapult_aiming = false
 		_catapult_press_started_msec = Time.get_ticks_msec()
 		return
 
 	if is_drag_motion and _press_active:
+		if pointer != _press_index:
+			return # a second finger sliding on the glass never scrolls or aims
 		if _catapult_aiming:
 			# Aiming a catapult shot suppresses ordinary board-scroll
 			# dragging for this press entirely -- every drag instead just
@@ -720,6 +764,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if is_release:
+		# Only the owning pointer's lift ends the press. This guard is the
+		# important half of the multi-touch fix: the branch below runs
+		# _handle_tap(), which places or deletes a block, and it used to run
+		# for ANY touch-up -- including one from a finger that never pressed
+		# the board at all. A thumb resting on the glass and lifting was
+		# enough to mutate the board.
+		#
+		# (A release arriving while the level is paused was already safe:
+		# the `if paused: return` above short-circuits first. This is about
+		# the unpaused case.)
+		if not _press_active or pointer != _press_index:
+			return
 		var was_drag := _drag_active
 		var was_aiming := _catapult_aiming
 		_press_active = false

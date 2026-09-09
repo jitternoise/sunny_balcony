@@ -31,6 +31,7 @@ godot --headless res://tests/VerifyHydroBonus.tscn  # the optional plant bonus, 
 godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths
 godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
 godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
+godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
 
 # the solution book — THIS is the authoritative one, from the repo root:
 godot --headless --path game --script res://tools/verify_solutions.gd -- ../level-solutions.md
@@ -137,6 +138,11 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **Drop emulated input.** Godot synthesises a mouse event from every touch
   and dispatches that copy *first*. `Level.gd` discards
   `InputEvent.DEVICE_ID_EMULATION`; without it one finger fires twice.
+- **The board is single-pointer.** One pointer owns a press (`_press_index`,
+  `MOUSE_POINTER` for a mouse) and only its drags and its release act on the
+  board. Every press/drag/release path must keep that check: without it a
+  second finger overwrites the press origin, and an unmatched touch-up runs
+  the full tap path and places a block wherever it lifted.
 - **Check `git branch -r` before choosing a base.** Two sessions once
   branched from the same commit and built the same feature independently.
 - **Never write a save file in place.** `GameState.save_current_slot()` builds
