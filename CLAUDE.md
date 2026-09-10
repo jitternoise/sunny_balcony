@@ -102,6 +102,13 @@ clean tree yourself.
 Headless needs a display for anything that renders: `xvfb-run -a
 --server-args="-screen 0 720x1280x24" godot --resolution 720x1280 …`
 
+**A new `class_name` needs `--import` before it exists.** Adding a script
+with a `class_name` and then running a scene that uses it hangs Godot with
+**no output at all** -- no banner, no error, just a process that never
+returns. It is the global script class cache being stale, not a deadlock in
+your code. `godot --headless --import --path game` fixes it. Same rule as the
+asset note above, but the symptom is silence rather than a missing texture.
+
 **`--headless` also ignores `--resolution`.** It reports a square 1280x1280
 viewport whatever you pass, so anything that depends on viewport SIZE — not
 just on rendering — measures the wrong thing and does so silently. Board

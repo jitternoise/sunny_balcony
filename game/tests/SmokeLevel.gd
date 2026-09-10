@@ -63,11 +63,25 @@ func _ready() -> void:
 			== level.get_node("UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton").icon,
 			"both Retry buttons share one glyph")
 
-	# Tile buttons show the tile's own art; the name moves to the tooltip
-	# and the label carries only the remaining count.
+	# Tile buttons draw the block as the hexagon it becomes on the board
+	# (HexTileIcon), not as a bare glyph in Button.icon; the name moves to
+	# the tooltip and the label carries only the remaining count.
 	for bid in board.inventory.keys():
 		var tile: Button = inventory_bar.get_node("block_%s" % bid)
-		_check(tile.icon == block_catalog_icon(level, bid), "%s button uses its tile art" % bid)
+		var symbol: HexTileIcon = tile.get_node_or_null(level.TILE_SYMBOL_NAME)
+		_check(symbol != null, "%s button has a tile symbol" % bid)
+		if symbol == null:
+			continue
+		_check(symbol.block != null and symbol.block.id == bid,
+			"%s button's symbol is that block" % bid)
+		_check(symbol.block.icon == block_catalog_icon(level, bid),
+			"%s symbol carries the tile's own art" % bid)
+		# The symbol covers part of the button, so a press landing on it
+		# must still reach the button underneath -- otherwise the left half
+		# of every tile button is dead.
+		_check(symbol.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+			"%s symbol does not eat the button's taps" % bid)
+		_check(tile.icon == null, "%s button no longer uses the bare glyph" % bid)
 		_check(tile.text == "x%d" % board.inventory[bid], "%s button shows its count" % bid)
 		_check(tile.tooltip_text != "", "%s button names the tile on its tooltip" % bid)
 

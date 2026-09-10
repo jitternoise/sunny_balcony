@@ -144,6 +144,13 @@ const INVENTORY_BUTTON_WIDTH := 100.0
 const DELETE_BUTTON_WIDTH := 96.0
 const INVENTORY_BUTTON_PADDING := 10.0
 
+## The tile symbol drawn on each inventory button (see HexTileIcon and
+## _add_tile_symbol()). Narrower than the button so the remaining-count
+## text has the right-hand side to itself.
+const TILE_SYMBOL_NAME := "tile_symbol"
+const TILE_SYMBOL_WIDTH := 64.0
+const TILE_SYMBOL_MARGIN := 8.0
+
 ## The res://data/levels/*.tres path this scene was loaded with (captured
 ## from GameState.pending_level_path at the very start of _ready(), before
 ## anything else has a chance to overwrite that global). Used by the win
@@ -572,17 +579,19 @@ func _build_inventory_bar() -> void:
 		var block: BlockData = block_catalog[block_id]
 		var button := Button.new()
 		button.name = "block_%s" % block_id
-		button.icon = block.icon
-		button.expand_icon = true # the board SVGs are far larger -- let them shrink to fit
-		# The theme caps Button icons at 32px so the 3x-rasterised ui_*.svg
-		# glyphs still draw at their authored size (see oval_theme.tres).
-		# Tile art is the exception: it IS the button, and expand_icon
-		# already sizes it, so lift the cap here.
-		button.add_theme_constant_override("icon_max_width", 0)
+		# The tile symbol is drawn, not iconned: HexTileIcon paints the block
+		# as the hexagon it becomes on the board -- same fill, same border,
+		# same glyph, and for a Wall both hexes of its footprint. Button.icon
+		# can only show the bare glyph, which looked nothing like the thing
+		# the tap actually places.
 		button.tooltip_text = block.display_name
 		button.pressed.connect(_on_block_button_pressed.bind(block_id))
+		# The count sits on the right, the tile on the left -- the same
+		# arrangement the icon-plus-text button had.
+		button.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		inventory_bar.add_child(button)
 		_style_inventory_button(button)
+		_add_tile_symbol(button, block)
 
 	budget_label.visible = board.use_block_budget
 	_refresh_inventory_labels()
@@ -602,6 +611,24 @@ func _style_inventory_button(button: Button, width: float = INVENTORY_BUTTON_WID
 		tightened.content_margin_left = INVENTORY_BUTTON_PADDING
 		tightened.content_margin_right = INVENTORY_BUTTON_PADDING
 		button.add_theme_stylebox_override(state, tightened)
+
+
+## Puts the block's hexagon on an inventory button. Anchored down the left
+## of the button so the remaining-count text keeps the right, and
+## mouse-transparent so the whole button is still one tap target -- the
+## symbol must never eat a press meant for the button under it.
+func _add_tile_symbol(button: Button, block: BlockData) -> void:
+	var symbol := HexTileIcon.new()
+	symbol.name = TILE_SYMBOL_NAME
+	symbol.block = block
+	symbol.flat = level_data.grid_style == "flat"
+	symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	symbol.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	symbol.offset_left = INVENTORY_BUTTON_PADDING
+	symbol.offset_right = INVENTORY_BUTTON_PADDING + TILE_SYMBOL_WIDTH
+	symbol.offset_top = TILE_SYMBOL_MARGIN
+	symbol.offset_bottom = -TILE_SYMBOL_MARGIN
+	button.add_child(symbol)
 
 
 func _refresh_inventory_labels() -> void:

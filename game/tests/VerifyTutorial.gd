@@ -24,6 +24,7 @@ func _ready() -> void:
 	_check_unlocking()
 	_check_ordering()
 	_check_boards()
+	await _check_tile_symbols()
 	_report()
 
 
@@ -154,6 +155,42 @@ func _check_boards() -> void:
 		[{"coord": Vector2i(-2, -1), "block": "wall"}])
 	_check(not naive["won"], "tutorial 5: walling the obvious hex does not win")
 	_check(not naive["rejected"], "tutorial 5: the naive wall is still placeable")
+
+
+## The inventory bar's tile symbols (HexTileIcon). Two things have to track
+## the level rather than the block: the hex ORIENTATION, which is per-level
+## (9 levels are flat-top), and the FOOTPRINT, which is what makes a Wall
+## two hexes wide. Tutorial 5 exists to teach that footprint, so a symbol
+## that drew one hex would undercut the level it ships beside.
+func _check_tile_symbols() -> void:
+	for case in [
+		{"path": "res://data/levels/tutorial_5.tres", "block": "wall",
+			"flat": false, "cells": 2},
+		{"path": "res://data/levels/tutorial_3.tres", "block": "divert_right",
+			"flat": false, "cells": 1},
+		{"path": "res://data/levels/level_055.tres", "block": "divert_left",
+			"flat": true, "cells": 1},
+	]:
+		GameState.pending_level_path = case["path"]
+		var level: Node = load("res://scenes/Level.tscn").instantiate()
+		add_child(level)
+		for i in range(4):
+			await get_tree().process_frame
+		var name: String = (case["path"] as String).get_file()
+		var button: Button = level.get_node_or_null(
+			"UI/HUD/InventoryBar/block_%s" % case["block"])
+		_check(button != null, "%s offers a %s button" % [name, case["block"]])
+		if button != null:
+			var symbol: HexTileIcon = button.get_node_or_null(level.TILE_SYMBOL_NAME)
+			_check(symbol != null, "%s's %s button has a tile symbol" % [name, case["block"]])
+			if symbol != null:
+				_check(symbol.flat == case["flat"],
+					"%s's symbol uses the level's own hex orientation" % name)
+				_check(symbol.block.footprint_offsets.size() + 1 == case["cells"],
+					"%s's %s symbol covers %d hex(es)" % [name, case["block"], case["cells"]])
+		level.queue_free()
+		remove_child(level)
+		await get_tree().process_frame
 
 
 func _run(path: String, placements: Array) -> Dictionary:

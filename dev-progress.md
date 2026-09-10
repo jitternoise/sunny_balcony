@@ -1,5 +1,51 @@
 # Flash Flood — Dev Progress
 
+## Status: inventory buttons show the tile as a hexagon (2026-09-10)
+
+The tray drew each block's bare SVG glyph on a round blue button, which looked
+nothing like the thing the tap actually places. Each button now draws the
+block as the hexagon it becomes on the board -- same fill colour, same thin
+dark border, same centred glyph at the same relative size.
+
+`scripts/ui/HexTileIcon.gd` is a small Control that paints it, added as a
+mouse-transparent child of the button so the whole button stays one tap
+target. The count keeps the right-hand side, as it did with the old
+icon-plus-text layout.
+
+**It follows the level, not just the block.** A flat-grid level's tray draws
+flat-top hexes, because that is what its board draws; 9 levels are flat.
+
+**And it draws the footprint.** A Wall is two hexes on the board, with its
+glyph on both -- `place_block()` writes `placed_blocks` for every covered cell
+and `_draw_cell()` icons each one -- so the tray shows two hexes with two
+glyphs. This is the single most-misunderstood thing in the game and the tray
+is where the player decides what to place, so it is worth the pixels. It ships
+next to Tutorial 5, which teaches the same fact.
+
+Two variants were tried and rejected by looking at them: one glyph centred
+across the pair reads as a smudged blob straddling the seam, and at the
+original 54-unit symbol width the two hexes came out a third smaller than
+every single-hex tile. Widened to 64 and the glyph drawn per cell.
+
+**Geometry is computed locally rather than through `Hex.axial_to_pixel()` /
+`Hex.hex_corner()`.** Those read the shared statics `Hex.SIZE` and
+`Hex.orientation`, which `HexBoard` rewrites per level -- the comment on
+`Hex.SIZE` calls that safe *precisely because* only one HexBoard is ever on
+screen. A second consumer borrowing and restoring them would retire that
+argument, for six lines of trigonometry.
+
+⚠️ **A new `class_name` needs `--import` before it exists.** Adding
+`HexTileIcon` and running a scene that used it hung Godot with **no output at
+all** -- no banner, no error, just a process that never returned. It is the
+global script class cache being stale. `godot --headless --import --path game`
+fixes it. Now in CLAUDE.md, because the symptom gives no clue what is wrong.
+
+`SmokeLevel`'s tile assertion checked `Button.icon`, which is now null by
+design; it checks the symbol child instead, and additionally that the symbol
+is `MOUSE_FILTER_IGNORE` -- without that the left half of every tile button
+would be dead. `VerifyTutorial` gained orientation and footprint checks
+(130 checks). All 12 suites pass.
+
 ## Status: a five-level tutorial now runs ahead of level 1 (2026-09-10)
 
 Level 1 handed a new player **four blocks of three types** and never said what
