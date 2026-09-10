@@ -28,6 +28,17 @@ enum TickBehavior {
 @export var id: String = ""
 @export var display_name: String = ""
 @export var icon: Texture2D
+
+## The same glyph redrawn for a "flat" grid, or null when one orientation's
+## art serves both. Only blocks whose glyph states a DIRECTION need it: a
+## Diverter's exit bearing is 30 degrees off vertical on a pointy grid and
+## 30 degrees off HORIZONTAL on a flat one (see Hex.axial_to_pixel() and
+## HexBoard._block_target_offsets()), so one arrow cannot be right on both.
+## A centred, direction-free glyph -- the Wall's boulder, the Catapult --
+## leaves this unset and is drawn from `icon` on every level.
+##
+## Read through glyph() rather than directly, so an unset one falls back.
+@export var icon_flat: Texture2D
 @export var behavior: TickBehavior = TickBehavior.WALL
 @export var color: Color = Color.WHITE # placeholder visual until real art exists
 
@@ -53,3 +64,12 @@ enum TickBehavior {
 ## SPLIT block a footprint would make each half redirect water separately,
 ## which is almost certainly not what you want.
 @export var footprint_offsets: Array[Vector2i] = []
+
+
+## This block's glyph for the grid it is being drawn on. Every draw site
+## goes through here: HexBoard's placed, ghosted and preset blocks, and the
+## inventory bar's HexTileIcon.
+func glyph(flat: bool) -> Texture2D:
+	if flat and icon_flat != null:
+		return icon_flat
+	return icon

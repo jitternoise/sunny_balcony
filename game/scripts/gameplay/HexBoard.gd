@@ -2182,7 +2182,7 @@ func _resolve_tile_state(coord: Vector2i) -> StringName:
 func _tile_visual(coord: Vector2i, state: StringName) -> Dictionary:
 	if state == TILE_BLOCK:
 		var block: BlockData = block_catalog[placed_blocks[coord]]
-		return {"fill": block.color, "icon": block.icon}
+		return {"fill": block.color, "icon": block.glyph(_is_flat_grid())}
 	return TILE_VISUALS[state]
 
 
@@ -2369,7 +2369,7 @@ func _draw_cell(coord: Vector2i) -> void:
 	# WHICH block they queued, so fading it as well would defeat the point.
 	if pending_placements.has(coord) and not placed_blocks.has(coord):
 		var ghost_block: BlockData = block_catalog[pending_placements[coord]]
-		_draw_icon(center, ghost_block.icon)
+		_draw_icon(center, ghost_block.glyph(_is_flat_grid()))
 
 	# Where this block will send its water next -- the Diverter/Splitter
 	# equivalent of the arrow a dormant geyser already gets. Drawn last so
@@ -2382,6 +2382,14 @@ func _draw_cell(coord: Vector2i) -> void:
 		_draw_block_direction_arrows(coord, placed_blocks[coord])
 	elif pending_placements.has(coord):
 		_draw_block_direction_arrows(coord, pending_placements[coord])
+
+
+## True on a level using grid_style "flat". The block glyphs that state a
+## direction ship a second drawing for this orientation, because a
+## Diverter's exit bearing is 30 degrees off vertical on a pointy grid and
+## 30 degrees off HORIZONTAL here -- see BlockData.icon_flat.
+func _is_flat_grid() -> bool:
+	return level_data != null and level_data.grid_style == "flat"
 
 
 ## The animation strip for a visual on this level's grid orientation, or
@@ -2730,7 +2738,7 @@ func _draw_water(coord: Vector2i, is_lead: bool) -> void:
 	# sprite would otherwise bury the glyph that says what the block does.
 	if placed_blocks.has(coord):
 		var block: BlockData = block_catalog[placed_blocks[coord]]
-		_draw_icon(center, block.icon)
+		_draw_icon(center, block.glyph(_is_flat_grid()))
 
 
 ## True if this water cell is the front of its stream -- nothing wet in any

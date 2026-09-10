@@ -1,12 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Splitter: single stem forking into two diagonal arrows -->
+  <!-- Splitter, POINTY grid: forks to both down-diagonals, 60 and 120 degrees -->
   <g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M43 18 L57 18 L57 40 L43 40 Z" fill="#a78bfa"/>
-    <path d="M50 40
-             L28 60 L28 50 L18 50 L34 66 L50 50 Z"
+    <path d="M43.0 16.0 L57.0 16.0 L57.0 46.0 L43.0 46.0 Z" fill="#a78bfa"/>
+    <path d="M55.2 47.0
+             L48.2 59.1
+             L56.0 63.6
+             L33.0 73.4
+             L30.0 48.6
+             L37.8 53.1
+             L44.8 41.0
+             Z"
           fill="#a78bfa"/>
-    <path d="M50 40
-             L72 60 L72 50 L82 50 L66 66 L50 50 Z"
+    <path d="M55.2 41.0
+             L62.2 53.1
+             L70.0 48.6
+             L67.0 73.4
+             L44.0 63.6
+             L51.8 59.1
+             L44.8 47.0
+             Z"
           fill="#a78bfa"/>
   </g>
 </svg>

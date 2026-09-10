@@ -27,12 +27,21 @@ any hex fill.
 - **Wall** — boulder/rock glyph, stone gray-brown with a highlight facet and shadow
   facet plus crack lines for volume. Only block that stops natural fall, so it reads as
   the physically "solid" one.
-- **Diverter-Right / Diverter-Left** — mirrored orange arrows, straight along the
-  diagonal, that physically point the exit direction. No legend needed; the icon *is*
-  the rule. They were bent chevrons until 2026-09-10; the kink read as a fold in the
-  path rather than as a direction, and a Diverter's exit is a single straight push.
+- **Diverter-Right / Diverter-Left** — mirrored orange arrows, straight, pointing along
+  the block's **actual exit bearing**. No legend needed; the icon *is* the rule. They
+  were bent chevrons until 2026-09-10; the kink read as a fold in the path rather than
+  as a direction, and a Diverter's exit is a single straight push.
+- **Direction glyphs ship twice, once per grid orientation.** Taken from
+  `Hex.axial_to_pixel()`: on a pointy grid the exits are at **60°/120°** (30° off
+  vertical), on a flat grid at **30°/150°** (30° off *horizontal*). One arrow cannot be
+  right on both, so `BlockData.icon_flat` carries the second drawing and every draw site
+  goes through `BlockData.glyph(flat)`. Affects the two Diverters and the Splitter.
+  A centred, direction-free glyph — the Wall's boulder, the Catapult — leaves
+  `icon_flat` unset and is drawn from `icon` everywhere.
 - **Splitter** — one stem forking into two arrows, explaining "sends water both ways" on
-  sight.
+  sight. Its fork follows the same per-orientation rule as the Diverters: a narrow V
+  down both diagonals on a pointy grid, a much wider, nearly sideways fork on a flat
+  one.
 - **Fire** — warm gradient flame on a dark ember tile, the hottest-looking cell on the
   board on purpose.
 - **Pool** — basin + 4 corner tabs that echo the in-HUD 4-box status bar, so the cell

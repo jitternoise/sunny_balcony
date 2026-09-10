@@ -25,6 +25,7 @@ func _ready() -> void:
 	_check_ordering()
 	_check_boards()
 	await _check_tile_symbols()
+	_check_orientation_art()
 	_report()
 
 
@@ -188,9 +189,45 @@ func _check_tile_symbols() -> void:
 					"%s's symbol uses the level's own hex orientation" % name)
 				_check(symbol.block.footprint_offsets.size() + 1 == case["cells"],
 					"%s's %s symbol covers %d hex(es)" % [name, case["block"], case["cells"]])
+				# And it resolves to that orientation's actual drawing, not
+				# just carries the right flag.
+				var want: Texture2D = (symbol.block.icon_flat if case["flat"]
+					and symbol.block.icon_flat != null else symbol.block.icon)
+				_check(symbol.block.glyph(symbol.flat) == want,
+					"%s's %s symbol draws the %s artwork"
+						% [name, case["block"], "flat" if case["flat"] else "pointy"])
 		level.queue_free()
 		remove_child(level)
 		await get_tree().process_frame
+
+
+## A block whose glyph states a DIRECTION needs one drawing per grid
+## orientation, because the two disagree: measured off Hex.axial_to_pixel(),
+## a Diverter exits at 60/120 degrees on a pointy grid and at 30/150 on a
+## flat one. A centred, direction-free glyph needs only one and must fall
+## back to it rather than drawing nothing.
+func _check_orientation_art() -> void:
+	for block_id in ["divert_left", "divert_right", "splitter"]:
+		var block: BlockData = _catalog.get(block_id, null)
+		_check(block != null, "%s is in the catalog" % block_id)
+		if block == null:
+			continue
+		_check(block.icon != null, "%s has pointy art" % block_id)
+		_check(block.icon_flat != null, "%s has flat art" % block_id)
+		_check(block.icon != block.icon_flat,
+			"%s's two orientations are different drawings" % block_id)
+		_check(block.glyph(false) == block.icon, "%s resolves pointy art" % block_id)
+		_check(block.glyph(true) == block.icon_flat, "%s resolves flat art" % block_id)
+
+	# The Wall's boulder and the Catapult are centred and say nothing about
+	# direction, so they ship one drawing and both orientations must use it.
+	for block_id in ["wall", "bomb_catapult"]:
+		var block: BlockData = _catalog.get(block_id, null)
+		if block == null:
+			continue
+		_check(block.icon_flat == null, "%s ships one orientation-free glyph" % block_id)
+		_check(block.glyph(true) == block.icon,
+			"%s falls back to its only glyph on a flat grid" % block_id)
 
 
 func _run(path: String, placements: Array) -> Dictionary:

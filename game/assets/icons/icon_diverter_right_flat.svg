@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Diverter-Right, FLAT grid: exits at 30 degrees (Hex.FLAT_DOWN_RIGHT) -->
+  <g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M25.8 27.9
+             L58.7 46.9
+             L64.7 36.5
+             L77.7 66.0
+             L45.7 69.5
+             L51.7 59.1
+             L18.8 40.1
+             Z"
+          fill="#f7931e"/>
+  </g>
+</svg>

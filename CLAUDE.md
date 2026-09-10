@@ -202,6 +202,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **Full-tile art needs both grid orientations.** 9 levels use
   `grid_style = "flat"`; a pointy-top tile pokes its corners through a
   flat-top cell. Centred glyphs need only one version.
+- **So does any glyph that points somewhere.** A Diverter exits at 60°/120°
+  on a pointy grid and at 30°/150° on a flat one (`Hex.axial_to_pixel()`), so
+  one arrow cannot be right on both. `BlockData.icon_flat` holds the second
+  drawing and **every draw site must call `BlockData.glyph(flat)`, never
+  `.icon`** -- there are four: `_tile_visual()`, the ghost placement, the
+  under-water redraw, and `HexTileIcon`. Blocks with a centred glyph leave
+  `icon_flat` unset and `glyph()` falls back.
 - **Popups must be `mouse_filter = STOP`** on both the root and the `Dim`
   rect, or taps fall through and place blocks behind the popup.
 - **Drop emulated input.** Godot synthesises a mouse event from every touch

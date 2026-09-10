@@ -1,15 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Diverter-Right: a plain straight arrow pointing down-right. The bent chevron it
-       replaces read as a fold in the path rather than a direction; the exit
-       is a single straight push, so the glyph is one straight arrow. -->
+  <!-- Diverter-Right, POINTY grid: exits down-right at 60 degrees (Hex.DOWN_RIGHT) -->
   <g stroke="#1e2530" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M32.9 23.1
-             L62.6 52.7
-             L71.1 44.2
-             L76.0 76.0
-             L44.2 71.1
-             L52.7 62.6
-             L23.1 32.9
+    <path d="M40.1 18.8
+             L59.1 51.7
+             L69.5 45.7
+             L66.0 77.7
+             L36.5 64.7
+             L46.9 58.7
+             L27.9 25.8
              Z"
           fill="#f7931e"/>
   </g>

@@ -134,11 +134,14 @@ func _draw() -> void:
 	# carries its glyph twice on the grid, and the tray should agree.
 	# (Centring one glyph across the pair instead was tried and reads as a
 	# single smudged blob straddling the seam.)
-	if block.icon != null:
+	# glyph(), not icon: a Diverter's arrow points at a different bearing on
+	# a flat grid, and the tray has to agree with the board it feeds.
+	var art := block.glyph(flat)
+	if art != null:
 		var glyph := radius * ICON_SCALE
 		var tint := Color(1, 1, 1, fade)
 		for coord in cells:
 			var center := origin + _unit_center(coord) * radius
-			draw_texture_rect(block.icon,
+			draw_texture_rect(art,
 				Rect2(center - Vector2(glyph, glyph) * 0.5, Vector2(glyph, glyph)),
 				false, tint)

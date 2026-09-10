@@ -1,5 +1,50 @@
 # Flash Flood — Dev Progress
 
+## Status: direction glyphs point at their real exit bearing (2026-09-10)
+
+The 45-degree compromise in the entry below is gone. The Diverters and the
+Splitter now ship **two drawings each**, one per grid orientation, pointing
+where the water actually goes.
+
+Bearings taken from the engine rather than worked out by hand -- a throwaway
+script printed `Hex.axial_to_pixel()` for each exit offset at `Hex.SIZE = 1`:
+
+```
+pointy   DOWN_LEFT       (-0.866, +1.500)   120.0 deg
+pointy   DOWN_RIGHT      (+0.866, +1.500)    60.0 deg
+flat     FLAT_DOWN_LEFT  (-1.500, +0.866)   150.0 deg
+flat     FLAT_DOWN_RIGHT (+1.500, +0.866)    30.0 deg
+```
+
+So a pointy Diverter exits 30 degrees off *vertical* and a flat one 30 degrees
+off *horizontal* -- a 60 degree difference, which is why one arrow could never
+be right on both. The SVGs are generated from those same four angles.
+
+`BlockData.icon_flat` carries the second drawing and `BlockData.glyph(flat)`
+resolves it. **Four draw sites had to move off `.icon`**: `_tile_visual()`,
+the ghosted pending placement, the under-water redraw that keeps a submerged
+Diverter readable, and `HexTileIcon` in the tray. Missing any one would have
+left that path drawing a pointy arrow on a flat board. Blocks whose glyph is
+centred and says nothing about direction -- the Wall's boulder, the Catapult
+-- leave `icon_flat` unset and `glyph()` falls back to `icon`.
+
+**The Splitter was included** even though the ask named the Diverters: its
+fork is two exit arrows with the same problem, and leaving it pointing down
+both diagonals on a flat level -- where the real exits are nearly sideways --
+would have been the one remaining lie on the board.
+
+⚠️ **Do not measure a glyph's angle off a screenshot here.** The board draws
+its own thin direction arrows in `block.color` lerped toward white, and for
+the gold Diverter-Left those pixels sit in the same orange range as the glyph
+fill -- a principal-axis fit over "orange pixels" reported 103 degrees for an
+arrow that is exactly 120. The engine print above is the honest check.
+
+`VerifyTutorial` gained the wiring checks: each directional block has a
+distinct `icon_flat`, `glyph()` resolves the right one either way, the two
+orientation-free blocks fall back, and a flat level's tray symbol draws the
+flat artwork (155 checks). All 12 suites pass and `BoardSnapshots` renders
+clean.
+
 ## Status: the Diverters are plain diagonal arrows (2026-09-10)
 
 Both Diverter glyphs were bent chevrons -- a shaft that stepped sideways
