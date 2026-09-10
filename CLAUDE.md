@@ -173,6 +173,14 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 
 ## Conventions that have already bitten someone
 
+- **The inventory bar has one fixed tile order, `Level.BLOCK_ORDER`.** A
+  level's `starting_inventory` is a Dictionary, so it iterates in whatever
+  order the author typed it -- level 1 lists `divert_right` before
+  `divert_left` -- and a Jamboree level shows the whole catalog
+  alphabetically. Ordering the bar by either put the same block in a
+  different place from level to level. Buttons are spread by expanding
+  spacers (`_make_bar_spacer()`), so the bar's children alternate
+  spacer/button: **`get_child(0)` is not the first button.**
 - **The Wall is 2 tiles wide.** Placing one covers the tapped cell *and* a
   neighbour. This invalidated 11 documented solutions and is the single most
   common source of "why doesn't this level win any more". Tutorial 5 exists

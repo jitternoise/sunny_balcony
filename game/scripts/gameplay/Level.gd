@@ -147,6 +147,25 @@ const INVENTORY_BUTTON_PADDING := 10.0
 ## The tile symbol drawn on each inventory button (see HexTileIcon and
 ## _add_tile_symbol()). Narrower than the button so the remaining-count
 ## text has the right-hand side to itself.
+## The order tile buttons appear in, on every level. Without this the bar
+## followed whatever order a level's starting_inventory dictionary happened
+## to be written in -- level 1 lists divert_right before divert_left, while a
+## Jamboree level shows the whole catalog alphabetically -- so the same block
+## sat in a different place from one level to the next and no muscle memory
+## could form.
+##
+## Roughly simplest to most complex, which is also close to the order the
+## campaign introduces them, and it keeps the two Diverters adjacent. Any id
+## not listed here sorts after these, alphabetically, so adding a block to
+## the catalog cannot silently scramble the bar.
+const BLOCK_ORDER: Array[String] = [
+	"wall", "divert_left", "divert_right", "splitter", "bomb_catapult",
+]
+
+## Name given to the flexible gaps that spread the bar's buttons evenly
+## across its width -- see _build_inventory_bar().
+const BAR_SPACER_NAME := "bar_spacer"
+
 const TILE_SYMBOL_NAME := "tile_symbol"
 const TILE_SYMBOL_WIDTH := 64.0
 const TILE_SYMBOL_MARGIN := 8.0
@@ -558,9 +577,15 @@ func _build_inventory_bar() -> void:
 	# the first two tutorials are watch-only -- and then the whole bar is
 	# skipped, delete button included: an eraser with nothing to erase is
 	# clutter on the first screen a new player ever sees.
-	var block_ids: Array = block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys()
+	var block_ids: Array = _ordered_block_ids(
+		block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys())
 	if block_ids.is_empty():
 		return
+
+	# Separation is handled entirely by the expanding spacers below, so the
+	# theme's fixed gap would only bias the result.
+	inventory_bar.add_theme_constant_override("separation", 0)
+	inventory_bar.add_child(_make_bar_spacer())
 
 	# Delete (eraser) mode toggle -- the first button in the bar on every
 	# level that has something to place, since those all let the player pick
@@ -579,6 +604,7 @@ func _build_inventory_bar() -> void:
 	delete_button.toggled.connect(_on_delete_button_toggled)
 	inventory_bar.add_child(delete_button)
 	_style_inventory_button(delete_button, DELETE_BUTTON_WIDTH)
+	inventory_bar.add_child(_make_bar_spacer())
 
 	for block_id in block_ids:
 		var block: BlockData = block_catalog[block_id]
@@ -598,6 +624,7 @@ func _build_inventory_bar() -> void:
 		_style_inventory_button(button)
 		_strip_button_background(button)
 		_add_tile_symbol(button, block)
+		inventory_bar.add_child(_make_bar_spacer())
 
 	budget_label.visible = board.use_block_budget
 	_refresh_inventory_labels()
@@ -617,6 +644,34 @@ func _style_inventory_button(button: Button, width: float = INVENTORY_BUTTON_WID
 		tightened.content_margin_left = INVENTORY_BUTTON_PADDING
 		tightened.content_margin_right = INVENTORY_BUTTON_PADDING
 		button.add_theme_stylebox_override(state, tightened)
+
+
+## `ids` in BLOCK_ORDER order, with anything unlisted appended alphabetically.
+func _ordered_block_ids(ids: Array) -> Array:
+	var known: Array = []
+	for block_id in BLOCK_ORDER:
+		if ids.has(block_id):
+			known.append(block_id)
+	var unknown: Array = []
+	for block_id in ids:
+		if not BLOCK_ORDER.has(block_id):
+			unknown.append(block_id)
+	unknown.sort()
+	return known + unknown
+
+
+## A flexible gap. The bar puts one between every pair of buttons and one at
+## each end; they all expand equally, so the buttons end up evenly spread
+## across the full width whether the level offers one block or five. The
+## buttons keep their own fixed widths, so this changes where they sit, not
+## how big they are -- the tap targets VerifyTouchTargets measures are
+## untouched.
+func _make_bar_spacer() -> Control:
+	var spacer := Control.new()
+	spacer.name = BAR_SPACER_NAME
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return spacer
 
 
 ## Puts the block's hexagon on an inventory button. Anchored down the left

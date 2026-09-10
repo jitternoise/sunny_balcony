@@ -1,5 +1,35 @@
 # Flash Flood — Dev Progress
 
+## Status: the tile bar has one order and even spacing (2026-09-10)
+
+Two separate faults in the inventory bar.
+
+**The order changed between levels.** `starting_inventory` is a Dictionary,
+so it iterated in whatever order the level author typed -- level 1 lists
+`divert_right` before `divert_left` -- while a Jamboree level showed the whole
+catalog alphabetically, putting the Bomb Catapult first. The same block
+therefore sat in a different place from one level to the next, and no muscle
+memory could form. `Level.BLOCK_ORDER` now fixes it at wall, divert_left,
+divert_right, splitter, bomb_catapult: roughly simplest to most complex, close
+to the order the campaign introduces them, and it keeps the two Diverters
+adjacent. Anything not in that list sorts after it alphabetically, so adding a
+block to the catalog cannot silently scramble the bar.
+
+**The buttons bunched at the left.** They now sit between expanding spacers --
+one at each end and one between every pair -- so the row spreads evenly across
+the full width whether the level offers one block or five. The buttons keep
+their own fixed widths, so this moves them without resizing them and the tap
+targets `VerifyTouchTargets` measures are untouched.
+
+⚠️ The bar's children now alternate spacer/button, so **`get_child(0)` is no
+longer the first button** -- `SmokeLevel` asserted exactly that and failed.
+It now filters for Buttons, and additionally checks that the tiles follow
+`BLOCK_ORDER`, that every gap between consecutive buttons is equal, and that
+the row is centred (measured: 161.0 px gaps, 160.0 left vs 161.0 right on
+level 1). Noted in CLAUDE.md.
+
+All 12 suites pass.
+
 ## Status: the Delete button's glyph is centred (2026-09-10)
 
 Its trash icon sat about a third of the way across its disc. Measured off a

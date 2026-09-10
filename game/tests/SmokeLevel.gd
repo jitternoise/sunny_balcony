@@ -42,7 +42,47 @@ func _ready() -> void:
 	var delete_button: Button = inventory_bar.get_node_or_null("delete_mode")
 	_check(delete_button != null and delete_button.toggle_mode, "Delete toggle present in inventory bar")
 	_check(delete_button.icon != null and delete_button.text == "", "Delete is icon-only")
-	_check(inventory_bar.get_child(0) == delete_button, "Delete is first button in bar")
+	# First BUTTON, not first child: the bar is padded with expanding spacers
+	# that spread the row evenly across the screen, and one of those leads.
+	var bar_buttons: Array = []
+	for child in inventory_bar.get_children():
+		if child is Button:
+			bar_buttons.append(child)
+	_check(bar_buttons.size() > 0 and bar_buttons[0] == delete_button,
+		"Delete is the first button in the bar")
+
+	# Tiles sit in one fixed order on every level. A level's
+	# starting_inventory dictionary is written in whatever order the author
+	# typed it -- level 1 lists divert_right before divert_left -- so without
+	# this the same block moves position from level to level.
+	var seen_order: Array = []
+	for b in bar_buttons:
+		var n := String(b.name)
+		if n.begins_with("block_"):
+			seen_order.append(n.trim_prefix("block_"))
+	var expected_order: Array = []
+	for block_id in level.BLOCK_ORDER:
+		if seen_order.has(block_id):
+			expected_order.append(block_id)
+	_check(seen_order == expected_order,
+		"tiles follow BLOCK_ORDER (got %s, want %s)" % [seen_order, expected_order])
+
+	# Evenly spread: every gap between consecutive buttons is the same, and
+	# the row reaches both ends of the bar.
+	if bar_buttons.size() >= 2:
+		var gaps: Array = []
+		for i in range(bar_buttons.size() - 1):
+			var a: Button = bar_buttons[i]
+			var b2: Button = bar_buttons[i + 1]
+			gaps.append(b2.position.x - (a.position.x + a.size.x))
+		var widest: float = gaps.max()
+		var narrowest: float = gaps.min()
+		_check(absf(widest - narrowest) <= 1.0,
+			"the gaps between tiles are equal (%.1f..%.1f)" % [narrowest, widest])
+		var lead: float = bar_buttons[0].position.x
+		var tail: float = inventory_bar.size.x - (bar_buttons[-1].position.x + bar_buttons[-1].size.x)
+		_check(absf(lead - tail) <= 1.0,
+			"the row is centred in the bar (%.1f left, %.1f right)" % [lead, tail])
 
 	# Every button in the level is icon-led now: the same action carries the
 	# same glyph in the HUD, the pause menu, the lose popup and the win
