@@ -568,6 +568,11 @@ func _build_inventory_bar() -> void:
 	var delete_button := Button.new()
 	delete_button.name = DELETE_BUTTON_NAME
 	delete_button.icon = DELETE_ICON
+	# Godot defaults icon_alignment to LEFT, and this button carries no text
+	# to balance it -- so the glyph sat a third of the way across its disc.
+	# Every button authored in Level.tscn sets this; one built in code has
+	# to say so too.
+	delete_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	delete_button.tooltip_text = "Delete blocks"
 	delete_button.toggle_mode = true
 	delete_button.button_pressed = delete_mode

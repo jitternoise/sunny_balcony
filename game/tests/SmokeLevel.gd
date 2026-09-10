@@ -93,6 +93,16 @@ func _ready() -> void:
 		_check(tile.text == "x%d" % board.inventory[bid], "%s button shows its count" % bid)
 		_check(tile.tooltip_text != "", "%s button names the tile on its tooltip" % bid)
 
+	# The Delete button is built in code, not authored in Level.tscn, so it
+	# does not inherit the icon_alignment every button in that scene sets --
+	# and with no text to balance it, the default LEFT put its glyph a third
+	# of the way across its disc.
+	var del: Button = inventory_bar.get_node(level.DELETE_BUTTON_NAME)
+	_check(del.icon_alignment == HORIZONTAL_ALIGNMENT_CENTER,
+		"delete button's glyph is horizontally centred")
+	_check(del.vertical_icon_alignment == VERTICAL_ALIGNMENT_CENTER,
+		"delete button's glyph is vertically centred")
+
 	# Selecting a tile marks that one and only that one.
 	var ids: Array = board.inventory.keys()
 	if ids.size() >= 2:

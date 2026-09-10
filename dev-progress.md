@@ -1,5 +1,23 @@
 # Flash Flood — Dev Progress
 
+## Status: the Delete button's glyph is centred (2026-09-10)
+
+Its trash icon sat about a third of the way across its disc. Measured off a
+screenshot rather than judged by eye: the disc spans x 40..135 (centre 87.5)
+and the glyph's centre was at 128 -- **8.5 px left**, in a 96 px button.
+Vertically it was already centred.
+
+Godot defaults `Button.icon_alignment` to LEFT, and this button carries no
+text to balance the icon against. Every button authored in `Level.tscn` sets
+`icon_alignment = 1` explicitly; the Delete button is built in code and
+never did. One line. Re-measured after: **0.0 px** horizontal offset.
+
+Worth knowing generally -- a code-built Button does not inherit the
+alignment its scene-authored siblings set, and with an icon and no text the
+default is visibly wrong. `SmokeLevel` now asserts both alignments on it.
+
+All 12 suites pass.
+
 ## Status: the tile buttons lost their blue disc (2026-09-10)
 
 The hexagons sat inside the theme's round blue button, which read as a
