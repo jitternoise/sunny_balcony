@@ -1,5 +1,16 @@
 # Flash Flood — Dev Progress
 
+## Status: store release checklist written (2026-09-10)
+
+`release-checklist.md` at the repo root: the step-by-step path to shipping on
+Google Play and the App Store, including the non-code work (accounts, D-U-N-S,
+privacy policy URL, EU DSA trader status, IARC and Apple age ratings, the
+12-tester/14-day Play closed test, listing assets at the required sizes).
+Requirements were checked online on 2026-09-10 and dated in the file: Play
+target API 36 from 2026-08-31, Xcode 26 / iOS 26 SDK since 2026-04-28. It
+folds in the existing pre-export items from `open-items.md` and flags level
+68 (audit finding 33) as a release blocker. No code changed.
+
 ## Status: direction glyphs point at their real exit bearing (2026-09-10)
 
 The 45-degree compromise in the entry below is gone. The Diverters and the
