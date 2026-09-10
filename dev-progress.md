@@ -1,5 +1,43 @@
 # Flash Flood — Dev Progress
 
+## Status: the tile buttons lost their blue disc (2026-09-10)
+
+The hexagons sat inside the theme's round blue button, which read as a
+sticker on a token rather than as the thing about to be placed. The tile
+buttons now carry `StyleBoxEmpty` on every state -- normal, hover, pressed,
+disabled and focus -- so only the hex shows. Sizes are untouched: the button
+keeps its full 100x96 rect, so the tap target is exactly what it was.
+
+**The disc was carrying two things that had to move onto the tile:**
+
+- **Out of stock.** The theme greyed the disc; nothing else said so. The tile
+  now fades to 30% (`HexTileIcon.UNAVAILABLE_ALPHA`), fill, border and glyph
+  together.
+- **Which block is selected.** This one never worked *before* the change
+  either -- the tile buttons are plain `Button`s, not toggles, so selecting a
+  block changed nothing on screen at all. The selected tile now takes a white
+  border in place of its dark one. Removing the disc is what made the gap
+  worth closing: with no backing left, there was nothing on screen that could
+  have answered "which one did I pick?".
+
+The Delete button keeps its blue disc deliberately. It is a mode toggle, not
+a tile, and the disc is what shows the mode is on; a bare trash glyph would
+have nothing to say it was active.
+
+⚠️ **A GDScript parse error hangs a headless run rather than failing it**, and
+with stdout block-buffered through a pipe, killing it prints *nothing* -- no
+banner, no error. Both stalls this session were that. `stdbuf -o0` and a
+redirect to a file is how to see the real message; CLAUDE.md now says so.
+The earlier entry below blamed the class-name cache alone, which was only
+half right: a missing `class_name` causes the parse error, and the parse
+error causes the hang. Stale Godot processes pile up from the timeouts and
+look like the cause; they are not.
+
+`SmokeLevel` gained checks that the buttons have no backing on either the
+normal or the disabled state, that selecting one tile selects exactly one,
+that delete mode clears the selection, and that a type run down to zero draws
+as unavailable and recovers when restocked. All 12 suites pass.
+
 ## Status: inventory buttons show the tile as a hexagon (2026-09-10)
 
 The tray drew each block's bare SVG glyph on a round blue button, which looked

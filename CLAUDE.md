@@ -102,12 +102,26 @@ clean tree yourself.
 Headless needs a display for anything that renders: `xvfb-run -a
 --server-args="-screen 0 720x1280x24" godot --resolution 720x1280 …`
 
-**A new `class_name` needs `--import` before it exists.** Adding a script
-with a `class_name` and then running a scene that uses it hangs Godot with
-**no output at all** -- no banner, no error, just a process that never
-returns. It is the global script class cache being stale, not a deadlock in
-your code. `godot --headless --import --path game` fixes it. Same rule as the
-asset note above, but the symptom is silence rather than a missing texture.
+**A GDScript parse error HANGS a headless run instead of failing it.** The
+process never returns, and because stdout is block-buffered through a pipe,
+killing it shows **no output at all** -- no banner, no error, nothing. It
+looks like a deadlock in your own code and is not.
+
+Two ways to see what actually happened:
+
+```bash
+timeout 60 stdbuf -o0 godot --headless --path game res://tests/Foo.tscn > /tmp/o 2>&1; tail /tmp/o
+```
+
+`stdbuf -o0` is the important half -- without it a hung run tells you nothing.
+
+The commonest cause of that parse error is a **`class_name` that is not
+registered yet**: add a script with one, run a scene that uses it, and every
+reference is an undeclared identifier. `godot --headless --import --path game`
+registers it. Same rule as the asset note above, but the symptom is a hang
+rather than a missing texture, so it is easy to blame the wrong thing --
+including stale Godot processes, which do pile up from the timeouts and are a
+red herring.
 
 **`--headless` also ignores `--resolution`.** It reports a square 1280x1280
 viewport whatever you pass, so anything that depends on viewport SIZE — not

@@ -82,8 +82,47 @@ func _ready() -> void:
 		_check(symbol.mouse_filter == Control.MOUSE_FILTER_IGNORE,
 			"%s symbol does not eat the button's taps" % bid)
 		_check(tile.icon == null, "%s button no longer uses the bare glyph" % bid)
+		# No round backing: the tile IS the button. The theme's disc used to
+		# be the only thing showing out-of-stock, and it never showed which
+		# block was selected at all, so both of those now live on the symbol
+		# -- checked just below.
+		_check(tile.get_theme_stylebox("normal") is StyleBoxEmpty,
+			"%s button has no backing behind its tile" % bid)
+		_check(tile.get_theme_stylebox("disabled") is StyleBoxEmpty,
+			"%s button has no backing when spent" % bid)
 		_check(tile.text == "x%d" % board.inventory[bid], "%s button shows its count" % bid)
 		_check(tile.tooltip_text != "", "%s button names the tile on its tooltip" % bid)
+
+	# Selecting a tile marks that one and only that one.
+	var ids: Array = board.inventory.keys()
+	if ids.size() >= 2:
+		level._on_block_button_pressed(ids[0])
+		for other in ids:
+			var sym: HexTileIcon = inventory_bar.get_node("block_%s" % other).get_node(
+				level.TILE_SYMBOL_NAME)
+			_check(sym.selected == (other == ids[0]),
+				"selecting %s leaves %s %s" % [ids[0], other,
+					"selected" if other == ids[0] else "unselected"])
+		# Delete mode is not a tile, so it clears the tile selection.
+		level._on_delete_button_toggled(true)
+		var cleared: HexTileIcon = inventory_bar.get_node("block_%s" % ids[0]).get_node(
+			level.TILE_SYMBOL_NAME)
+		_check(not cleared.selected, "delete mode clears the tile selection")
+		level._on_delete_button_toggled(false)
+
+	# Running a type down to zero has to show on the tile, since the
+	# greyed-out disc that used to say so is gone.
+	if ids.size() >= 1:
+		var spent_id = ids[0]
+		var before: int = board.inventory[spent_id]
+		board.inventory[spent_id] = 0
+		level._refresh_inventory_labels()
+		var spent: HexTileIcon = inventory_bar.get_node("block_%s" % spent_id).get_node(
+			level.TILE_SYMBOL_NAME)
+		_check(not spent.available, "a spent tile is drawn as unavailable")
+		board.inventory[spent_id] = before
+		level._refresh_inventory_labels()
+		_check(spent.available, "a restocked tile is drawn as available again")
 
 	# The pause menu must be reachable before Start, since it now holds the
 	# only Retry.

@@ -591,6 +591,7 @@ func _build_inventory_bar() -> void:
 		button.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		inventory_bar.add_child(button)
 		_style_inventory_button(button)
+		_strip_button_background(button)
 		_add_tile_symbol(button, block)
 
 	budget_label.visible = board.use_block_budget
@@ -631,6 +632,41 @@ func _add_tile_symbol(button: Button, block: BlockData) -> void:
 	button.add_child(symbol)
 
 
+## Removes a button's round backing so only the tile symbol shows. The
+## symbol IS the button now, and a hexagon inside a blue disc read as a
+## sticker on a token rather than as the thing about to be placed.
+##
+## Sizes are untouched -- the button keeps its full 100x96 rect, so the tap
+## target is exactly what it was and VerifyTouchTargets still covers it.
+## What the backing was carrying, though, has to move onto the tile:
+## out-of-stock (the theme greyed the disc) and which block is selected
+## (nothing showed that before -- see HexTileIcon.SELECTED_BORDER_COLOR).
+## Focus included, or a keyboard-focused tile keeps a stray ring.
+func _strip_button_background(button: Button) -> void:
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var empty := StyleBoxEmpty.new()
+		var box: StyleBox = button.get_theme_stylebox(state)
+		if box != null:
+			empty.content_margin_left = box.content_margin_left
+			empty.content_margin_right = box.content_margin_right
+			empty.content_margin_top = box.content_margin_top
+			empty.content_margin_bottom = box.content_margin_bottom
+		button.add_theme_stylebox_override(state, empty)
+
+
+## Repaints every tile symbol's selected/available state. Cheap enough to
+## call on any change: HexTileIcon.set_state() only redraws when something
+## actually moved.
+func _refresh_tile_selection() -> void:
+	for block_id in block_catalog.keys():
+		var button: Button = inventory_bar.get_node_or_null("block_%s" % block_id)
+		if button == null:
+			continue
+		var symbol: HexTileIcon = button.get_node_or_null(TILE_SYMBOL_NAME)
+		if symbol != null:
+			symbol.set_state(board.selected_block_id == block_id, not button.disabled)
+
+
 func _refresh_inventory_labels() -> void:
 	if board.use_block_budget:
 		# One shared pool -- every button just names its block type (no
@@ -646,6 +682,7 @@ func _refresh_inventory_labels() -> void:
 				button.text = ""
 				button.disabled = out_of_blocks
 		budget_label.text = "Tiles left: %d" % board.block_budget_remaining
+		_refresh_tile_selection()
 		return
 
 	for block_id in board.inventory.keys():
@@ -655,11 +692,13 @@ func _refresh_inventory_labels() -> void:
 			# tooltip), so the label is just how many are left.
 			button.text = "x%d" % board.inventory[block_id]
 			button.disabled = board.inventory[block_id] <= 0
+	_refresh_tile_selection()
 
 
 func _on_block_button_pressed(block_id: String) -> void:
 	board.selected_block_id = block_id
 	_set_delete_mode(false)
+	_refresh_tile_selection()
 
 
 ## Toggled by the inventory bar's Delete button. Turning it on deselects
@@ -670,6 +709,7 @@ func _on_delete_button_toggled(toggled_on: bool) -> void:
 	delete_mode = toggled_on
 	if toggled_on:
 		board.selected_block_id = ""
+	_refresh_tile_selection()
 
 
 func _set_delete_mode(enabled: bool) -> void:

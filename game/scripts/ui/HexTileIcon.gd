@@ -26,12 +26,35 @@ const ICON_SCALE := 1.5
 const BORDER_COLOR := Color(0, 0, 0, 0.4)
 const BORDER_WIDTH := 1.0
 
-## What to draw. Set both, then call refresh().
+## The selected tile's border, in place of the dark one. The buttons carry no
+## background any more, so this outline is the ONLY thing saying which block
+## a tap will place -- and before it there was nothing at all: the tile
+## buttons are plain Buttons, so selecting one changed nothing on screen.
+const SELECTED_BORDER_COLOR := Color(1, 1, 1, 0.95)
+const SELECTED_BORDER_WIDTH := 3.0
+
+## How far an unavailable tile fades. Out-of-stock used to be shown by the
+## theme greying the button's circle; with the circle gone the tile itself
+## has to carry it, or a spent block looks identical to an available one.
+const UNAVAILABLE_ALPHA := 0.3
+
+## What to draw. Set these, then call refresh().
 var block: BlockData = null
 var flat: bool = false
+var selected: bool = false
+var available: bool = true
 
 
 func refresh() -> void:
+	queue_redraw()
+
+
+## Sets selection/availability in one go, redrawing only if something moved.
+func set_state(is_selected: bool, is_available: bool) -> void:
+	if selected == is_selected and available == is_available:
+		return
+	selected = is_selected
+	available = is_available
 	queue_redraw()
 
 
@@ -90,14 +113,20 @@ func _draw() -> void:
 	# Centre the footprint's bounding box in the control.
 	var origin := size * 0.5 - (min_p + max_p) * 0.5 * radius
 
+	var fade: float = 1.0 if available else UNAVAILABLE_ALPHA
+	var fill := Color(block.color.r, block.color.g, block.color.b, block.color.a * fade)
+	var border := SELECTED_BORDER_COLOR if selected else BORDER_COLOR
+	border.a *= fade
+	var border_width := SELECTED_BORDER_WIDTH if selected else BORDER_WIDTH
+
 	for coord in cells:
 		var points := PackedVector2Array()
 		for i in range(6):
 			points.append(origin + _unit_corner(_unit_center(coord), i) * radius)
-		draw_colored_polygon(points, block.color)
+		draw_colored_polygon(points, fill)
 		var outline := points.duplicate()
 		outline.append(points[0])
-		draw_polyline(outline, BORDER_COLOR, BORDER_WIDTH, true)
+		draw_polyline(outline, border, border_width, true)
 
 	# A glyph on EVERY cell of the footprint, which is what the board does:
 	# place_block() writes placed_blocks for each covered cell, and
@@ -107,7 +136,9 @@ func _draw() -> void:
 	# single smudged blob straddling the seam.)
 	if block.icon != null:
 		var glyph := radius * ICON_SCALE
+		var tint := Color(1, 1, 1, fade)
 		for coord in cells:
 			var center := origin + _unit_center(coord) * radius
 			draw_texture_rect(block.icon,
-				Rect2(center - Vector2(glyph, glyph) * 0.5, Vector2(glyph, glyph)), false)
+				Rect2(center - Vector2(glyph, glyph) * 0.5, Vector2(glyph, glyph)),
+				false, tint)
