@@ -1,5 +1,30 @@
 # Flash Flood — Dev Progress
 
+## Status: the Diverters are plain diagonal arrows (2026-09-10)
+
+Both Diverter glyphs were bent chevrons -- a shaft that stepped sideways
+before turning. At tile size the kink read as a fold in the path rather than
+as a direction. A Diverter's exit is a single straight push, so the glyph is
+now a single straight arrow along the diagonal: shaft, triangular head,
+nothing else. Mirrored for left/right, same house style (100x100 viewBox,
+`#1e2530` outline at stroke-width 5, `#f7931e` fill).
+
+The glyph sits at 45 degrees rather than at either grid's true exit bearing,
+which is a deliberate compromise: the same SVG serves both orientations, and
+they disagree. On a pointy grid a Diverter exits 30 degrees off vertical; on
+a flat one it exits 30 degrees off *horizontal*. 45 splits them, and the
+board already draws the exact bearing separately in
+`_draw_block_direction_arrows()` -- the icon says which block this is, the
+board's own arrow says precisely where the water goes.
+
+Both copies were updated: `game/assets/icons/` and the `icons/` set at the
+repo root, which were identical and now still are. `icon-system.md`'s
+per-type note said "mirrored orange chevrons" and now describes the arrows.
+
+⚠️ Editing an SVG needs `godot --headless --import --path game` before the
+change shows up -- running a project with `--path` does not reimport assets.
+All 12 suites pass.
+
 ## Status: the tile bar has one order and even spacing (2026-09-10)
 
 Two separate faults in the inventory bar.

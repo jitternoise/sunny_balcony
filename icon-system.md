@@ -27,8 +27,10 @@ any hex fill.
 - **Wall** — boulder/rock glyph, stone gray-brown with a highlight facet and shadow
   facet plus crack lines for volume. Only block that stops natural fall, so it reads as
   the physically "solid" one.
-- **Diverter-Right / Diverter-Left** — mirrored orange chevrons that physically point the
-  exit direction. No legend needed; the icon *is* the rule.
+- **Diverter-Right / Diverter-Left** — mirrored orange arrows, straight along the
+  diagonal, that physically point the exit direction. No legend needed; the icon *is*
+  the rule. They were bent chevrons until 2026-09-10; the kink read as a fold in the
+  path rather than as a direction, and a Diverter's exit is a single straight push.
 - **Splitter** — one stem forking into two arrows, explaining "sends water both ways" on
   sight.
 - **Fire** — warm gradient flame on a dark ember tile, the hottest-looking cell on the
