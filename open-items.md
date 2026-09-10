@@ -295,6 +295,21 @@ Level 1 is the first thing a new player touches, so it is the one to fix
 first. Whether the levels or the solution book is the thing that is wrong
 has still not been decided.
 
+**⛔ Level 68 is not a broken solution — the level itself cannot be won
+(settled 2026-09-10).** Its inventory is one wall, it has no dirt and no
+plant, and its geyser activates on contact rather than on a tap, so the
+whole solution space is "one wall, one cell, one measure". Enumerating it —
+57 legal cells × every placement measure 0–39, plus every place-then-
+relocate-once pair — produces **zero wins**; with no block at all the water
+runs off the edge at measure 16. `tools/solve_broken.gd` alone does not
+settle this (it places everything pre-Start and caps at two placements); the
+exhaustive run closed the timed and relocate cases.
+
+So 68 needs a **data fix, not a solution-book fix**: another block in
+`starting_inventory`, or a redrawn board. It is also one of the ten par-fork
+levels (`par_measures = 24`), so until it is fixed its map spur can never
+open. See finding 33 in `handheld-audit.md`.
+
 ---
 
 ## 🔍 Superseded in part by the handheld audit (2026-09-08)

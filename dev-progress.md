@@ -1,5 +1,83 @@
 # Flash Flood — Dev Progress
 
+## Status: the twelve unverified audit findings are settled (2026-09-10)
+
+`handheld-audit.md` ended with twelve findings whose verifiers died on a usage
+limit. All twelve now have a verdict: **eight confirmed, two confirmed but not
+currently reachable, two stale**. They are numbered 33–44 in the audit. Nothing
+was fixed this session — this was verification work, and two of the verdicts
+say the right move is to leave the code alone.
+
+**Level 68 cannot be won by any play. This is the serious one.** Its inventory
+is a single wall, it has no dirt and no hydro plant, and its geyser activates
+on contact with water rather than on a tap — so the player's entire agency is
+one wall, at one cell, on one measure, and that space is small enough to
+enumerate completely. **57 legal wall cells × every placement measure 0–39,
+plus every place-then-relocate-once pair: zero wins.** With no block at all the
+water runs off the edge at measure 16.
+
+`tools/solve_broken.gd` reports FAILED too, but on its own it does not settle
+the question — it places everything pre-Start and caps at two placements, so it
+cannot see a timed placement or a relocation. The exhaustive run closed those.
+`open-items.md` had 68 filed as a broken *documented solution*; it is a broken
+*level*, and it is one of the ten par forks, so its map spur can never open.
+
+**The RTL inset swap is real and cannot fire.** Forcing `layout_direction =
+RTL` on the level HUD with asymmetric simulated insets (left 100, right 20)
+puts the 100 on the right edge and the 20 on the left — Godot mirrors a
+Control's offsets under RTL, and `inset_full_rect()` writes offsets. But
+finding #2's `root_node_layout_direction=1` pins the tree to LTR, and that
+holds under `--language ar` (`root is_layout_rtl=false`, insets correct).
+Deliberately not changed: the code is correct for every configuration the game
+can currently be in, and it interlocks with the localisation finding — whoever
+turns on translation turns this on with it.
+
+**The catapult is worse than the finding claimed.** It is offered on all 12
+jamboree levels (19, 79–86, 90, 94, 98), taught nowhere — no `intro_text` in
+any of the 100 levels contains "catapult" or "bomb" — and its only affordance
+is a 300 ms press-and-hold that nothing hints at. On **9 of those 12** there
+are zero `dirt_cells`, and `fire_catapult()` only clears dirt, so its
+advertised function is impossible there; it still acts as a 1-cell solid, which
+the 2-wide Wall cannot give you, so it is undocumented rather than useless.
+
+Two related input findings also confirmed: releasing an aim *always* fires
+(no cancel gesture, no distance-zero escape, default aim `Hex.DOWN_LEFT`), and
+16 units of drift during the hold does not merely lose the shot — it clears
+`_catapult_press_active` while `_drag_active` stays false on a board that fits,
+so the release falls through to `_handle_tap()` and **picks the catapult back
+up**. Press, drift a millimetre, lift, and the block silently returns to the
+inventory.
+
+**Cell sizes measured, and 62 of 100 is right.** At a real 720×1280 viewport
+under Xvfb (viewport size asserted before trusting a number — `--headless`
+reports a square 1280×1280 and would have measured the wrong thing), taking the
+hex's narrow cross-section as the tap target: 62 of 100 levels fall under the
+96-unit / 48 dp bar the project's own `VerifyTouchTargets` applies to every
+other control. Level 18 is the worst at 49.8 units — half the minimum, ~4.7 mm
+on a 68 mm handset, matching the finder's 4.4 mm on a narrower one. Level 18 is
+also a par fork, so the game's tightest speed challenge runs on its smallest
+targets.
+
+⚠️ That 62 is a **coincidence** with the 62 levels whose `max_scroll_down` is
+0. Different metric, different levels, same count. Do not conflate them.
+
+**Two were already fixed** by the 2026-09-08 work and are marked stale: the
+drag threshold no longer eats taps on boards that cannot scroll, and Start /
+Pause / Back are 104×96 units rather than 31 dp. The surviving half of the
+latter — Pause being the only mid-level route to Retry — is now a design choice
+rather than an accessibility defect.
+
+Also confirmed, all by exhaustion rather than inference: the par spur node is
+`disabled = true` unconditionally (deliberate, the bonus levels do not exist);
+the single string explaining par is a `tooltip_text`, which a touchscreen never
+shows; no HUD element displays elapsed measures or the par target, so par is a
+race against an unseen clock; and there are 100 baked `intro_text` strings
+against zero `tr()` call sites.
+
+Three throwaway probe scripts did the measuring and were deleted; the method
+for each is recorded in the audit entry so any of it can be re-run. No engine
+code changed, so no suite was re-run.
+
 ## Status: hex borders are antialiased; tile art re-measured, not fixed (2026-09-09)
 
 Findings 25 and 26 of `handheld-audit.md`. One is fixed. The other turned out

@@ -13,7 +13,11 @@ a device* is marked as such. Two findings were proven by execution and are
 flagged ✅ **PROVEN**; those are not inferences.
 
 Twelve further findings never got a verdict — their verifiers died on a usage
-limit mid-run. They are listed unverified at the end rather than dropped.
+limit mid-run. **Those twelve were settled on 2026-09-10** and are numbered
+33–44 at the end: eight confirmed, two confirmed but not currently reachable,
+two already fixed by later work. One of them, level 68 being unwinnable by any
+play, was proven by exhaustive search and is the most serious item in this
+document that is still open.
 
 ---
 
@@ -452,30 +456,218 @@ found three of the finder's supporting arguments wrong and lowered the severity.
 
 ---
 
-## ⏸ Raised but never verified
+## ✅ Settled 2026-09-10 — the twelve that lost their verifier
 
-Twelve findings lost their verifier to a usage limit. They are **unconfirmed** —
-some may be wrong — but they cluster in areas nothing else covered, and two claim
-critical severity:
+All twelve are now checked. **Eight confirmed, two confirmed but not
+currently reachable, two stale** (already fixed by later work). Each verdict
+below says how it was established; the ones marked *measured* were run, not
+read.
 
-| Claim | Anchor |
-|---|---|
-| Level 68 is unwinnable at all, so its par can never be earned *(CRITICAL claimed)* | `level_068.tres:24` |
-| The RTL safe-area left inset is applied to the right edge and vice versa | `SafeArea.gd:57` |
-| Earning par opens a spur whose node is permanently disabled | `LevelSelect.gd:371` |
-| The par mechanic is explained only in a tooltip — unreachable on a touchscreen | `LevelSelect.gd:372` |
-| Par is a timed challenge with no timer anywhere in the HUD | `Level.gd:916` |
-| The Bomb Catapult is reachable from level 19 but taught nowhere | `Level.gd:509` |
-| Once promoted to aiming there is no way out of a catapult press | `Level.gd:681` |
-| The catapult needs a 300 ms motionless hold; 1.4 mm of drift converts it | `Level.gd:689` |
-| 62 of 100 levels have hex cells below 48 dp; level 18 is 4.4 mm wide | `HexBoard.gd:784` |
-| On all 62 small-cell levels `DRAG_THRESHOLD` can only destroy taps | `Level.gd:153` |
-| Start / Pause / Back are 31 dp, and Pause is the only route to Retry | `Level.tscn:54` |
-| 100 level strings are baked into `.tres` with zero `tr()` call sites | `LevelData.gd:17` |
+| # | Claim | Verdict |
+|---|---|---|
+| 33 | Level 68 is unwinnable at all | ✅ **CONFIRMED — CRITICAL** (exhaustive search) |
+| 34 | RTL swaps the safe-area left/right insets | ⚠️ mechanism real, **unreachable today** |
+| 35 | The par spur's node is permanently disabled | ✅ confirmed — deliberate |
+| 36 | Par is explained only in a tooltip | ✅ confirmed |
+| 37 | Par is timed with no timer in the HUD | ✅ confirmed |
+| 38 | The Bomb Catapult is taught nowhere | ✅ confirmed, and worse than claimed |
+| 39 | No way out of a catapult aim | ✅ confirmed |
+| 40 | 1.4 mm of drift kills the catapult hold | ✅ confirmed — it un-places the block |
+| 41 | 62 of 100 levels have sub-48 dp cells | ✅ confirmed (measured) |
+| 42 | `DRAG_THRESHOLD` destroys taps on those levels | ⛔ **stale** — fixed 2026-09-08 |
+| 43 | Start / Pause / Back are 31 dp | ⛔ **stale** — now 104×96 units |
+| 44 | 100 baked strings, zero `tr()` | ✅ confirmed |
 
-Level 68 is already tracked in `open-items.md` as a broken *documented solution*
-whose wall placement is rejected outright; the stronger claim that **no**
-solution exists was never checked. `tools/solve_broken.gd` exists to settle it.
+### 33. Level 68 cannot be won by any play — CRITICAL ✅ MEASURED
+`game/data/levels/level_068.tres`
+
+Level 68 ships `starting_inventory = {"wall": 1}`, no dirt, no hydro plant,
+and a geyser that activates on contact with water rather than on a tap. So the
+player's entire agency is *one wall, at one cell, placed on one measure* — and
+that space is small enough to enumerate completely.
+
+Enumerated: **65 playable cells, 57 of them legal wall positions, × every
+placement measure 0–39, plus every place-then-relocate-once pair.** Zero wins.
+With no block at all the water runs off the edge at measure 16.
+
+`tools/solve_broken.gd` reported `FAILED` too, but on its own it does not
+settle the question: it places everything pre-Start and caps at two placements.
+The exhaustive run above closes the timed and relocate cases it cannot reach.
+
+**This is not just a broken documented solution** — the entry in
+`open-items.md` undersells it. Level 68 is one of the ten par-fork levels
+(`par_measures = 24`), so its side path on the map can never open, and the
+level itself is a dead end in a linear unlock chain. It needs a data fix:
+another block in its inventory, or a redrawn board.
+
+### 34. RTL would swap the safe-area insets, but RTL is switched off ⚠️ MEASURED
+`game/scripts/ui/SafeArea.gd:53`
+
+The mechanism is real and was measured. Forcing `layout_direction = RTL` on the
+level HUD with asymmetric simulated insets (`left 100, right 20`):
+
+```
+LTR : gap at left edge 100.0   gap at right edge  20.0   # correct
+RTL : gap at left edge  20.0   gap at right edge 100.0   # swapped
+```
+
+`inset_full_rect()` writes `offset_left`/`offset_right`, and Godot mirrors a
+Control's offsets when its layout direction is RTL, so a left-edge cutout would
+be padded on the right.
+
+**It cannot fire today.** Finding #2's fix pins the whole tree to LTR, and that
+holds even under an Arabic system language:
+
+```
+--language ar  ->  locale=ar   root is_layout_rtl=false   insets land correctly
+```
+
+Left as-is deliberately: the code is correct for every configuration the game
+can currently be in, and the fix for the latent case is only correct once there
+is something to localise. Interlocks with #44 — whoever turns on translation
+turns this on with it.
+
+### 35. The par spur's node is disabled whether or not par is earned ✅
+`game/scripts/ui/LevelSelect.gd:388`
+
+Confirmed, and deliberate — `_build_bonus_node()` sets `button.disabled = true`
+unconditionally, with a comment saying the bonus levels do not exist yet. What
+earning par changes is the colour (amber vs grey) and the padlock badge. So the
+reward for a par run is a node that looks unlocked and still cannot be pressed.
+Harmless as a placeholder; a trap the day bonus levels ship, because nothing
+else has to change for the node to *look* live.
+
+### 36. Par is explained in exactly one tooltip ✅
+`game/scripts/ui/LevelSelect.gd:391`
+
+Confirmed by exhaustion: `"finish level %d inside par to open the way"` is the
+only string in the project that explains what par is. Godot shows
+`tooltip_text` on mouse hover; a touchscreen has no hover, so on the target
+platform that string is unreachable. The only other mention of par anywhere is
+the win popup's after-the-fact note (`Level.gd:1074`), which tells you whether
+you made it *after* the level is over.
+
+None of the ten par levels (8, 18, 28, 38, 48, 58, 68, 78, 88, 98) mentions par
+or speed in its `intro_text` — checked all ten.
+
+### 37. Par is a timed challenge with no clock ✅
+`game/scripts/gameplay/Level.gd:1071`
+
+Confirmed. `measures_elapsed` is compared against `par_measures` at win time
+and never surfaced before then. The HUD (`Level.tscn` `UI/HUD`) holds exactly a
+StatusLabel, a BudgetLabel, an InventoryBar and Start/Pause/Back — no measure
+counter, no par target, no elapsed indicator. A player attempting par is racing
+a number they have never been shown against a clock they cannot see.
+
+### 38. The Bomb Catapult is offered from level 19, taught nowhere, and is
+inert on most levels that offer it ✅
+`game/scripts/gameplay/Level.gd:552`
+
+Confirmed and then some. `_build_inventory_bar()` offers `block_catalog.keys()`
+— the whole catalog, catapult included — on any level with
+`use_block_budget`. That is **12 levels: 19, 79, 80, 81, 82, 83, 84, 85, 86,
+90, 94, 98**, the first of them level 19, which gives the player 3 placements
+total.
+
+Nothing teaches it: no `intro_text` on any of the 100 levels contains
+"catapult" or "bomb", and there is no hint string anywhere. Its whole
+affordance is a 300 ms press-and-hold followed by an aim-drag — undiscoverable
+by tapping, which is what every other block in the game wants.
+
+**And on 9 of those 12 levels it has nothing to do.** `fire_catapult()` only
+converts `DIRT` terrain to `EMPTY`, and levels 19, 79–86 have **zero**
+`dirt_cells`. Only 90, 94 and 98 (10, 20 and 20 dirt cells) can use a shot at
+all. On the other nine the catapult is placeable but unfireable-to-any-effect —
+it still acts as a solid to water (`HexBoard.gd:1681` counts CATAPULT as a
+wall), which is its only value there, and a 1-cell solid is something the
+2-wide Wall cannot give you. So it is not strictly a wasted placement, just an
+undocumented one whose advertised function is impossible.
+
+### 39. Releasing an aim always fires ✅
+`game/scripts/gameplay/Level.gd:786`
+
+Confirmed. Once `_catapult_aiming` is true, the release branch calls
+`board.fire_catapult()` unconditionally — there is no distance-zero escape, no
+cancel gesture, no second-finger abort (the multi-touch fix makes a second
+finger a no-op rather than a cancel). A press held 300 ms by accident spends
+the block, aimed `Hex.DOWN_LEFT` at minimum range, which is the default
+`_process()` sets before the player has dragged anywhere.
+
+### 40. 16 units of drift converts the hold — into an un-place ✅
+`game/scripts/gameplay/Level.gd:746`
+
+Confirmed, and the consequence is worse than "the shot is lost". The drag
+branch clears `_catapult_press_active` unconditionally past `DRAG_THRESHOLD`
+(16 viewport units, ~1.4 mm on a 1080-wide phone), while `_drag_active` stays
+false on the majority of levels whose boards fit the screen. So the release
+falls through to `_handle_tap()`, which finds a block on that cell and **picks
+the catapult back up**.
+
+The player's experience: press and hold a catapult, drift a millimetre, lift —
+and the catapult vanishes back into the inventory instead of firing. Both
+outcomes are silent.
+
+### 41. 62 of 100 levels draw hexes below the 48 dp minimum ✅ MEASURED
+`game/scripts/gameplay/HexBoard.gd:771`
+
+Measured at a real 720×1280 portrait viewport (under `xvfb`, viewport size
+asserted at 720×1280 before trusting a number — `--headless` reports a square
+1280×1280 and would have measured the wrong thing). Tap target taken as the
+hex's *narrow* cross-section, `sqrt(3)·Hex.SIZE` on a pointy grid.
+
+| narrow side (units) | dp | levels |
+|---|---|---|
+| 49.8 | 24.9 | **1** — level 18 |
+| 72.0 | 36.0 | 52 |
+| 80.2 | 40.1 | 9 |
+| 108.0 | 54.0 | 37 |
+| 162.0 | 81.0 | 1 — level 16 |
+
+**62 of 100 fall under the 96-unit / 48 dp bar** the project's own
+`VerifyTouchTargets` applies to every other control. Level 18 is the worst at
+half the minimum — about 4.7 mm on a 68 mm-wide handset, which matches the
+finder's 4.4 mm on a narrower one.
+
+Level 18 is also a par-fork level, so its speed challenge is run on the
+smallest targets in the game.
+
+⚠️ The count 62 is a **coincidence** with the 62 levels whose
+`max_scroll_down` is 0 — a different metric that happens to land on the same
+number. They are not the same 62 and must not be conflated.
+
+### 42. ⛔ STALE — the drag threshold no longer eats taps
+Fixed 2026-09-08 (finding #12). `Level.gd:766` now promotes a press to a drag
+only `if board.max_scroll_down > 0.0`, so on a board that fits, a shaky tap
+still places its block. The comment there quotes this finding.
+
+### 43. ⛔ STALE — the HUD buttons are full-size targets
+Fixed 2026-09-08 (finding #11). Start, Pause and Back are each **104×96
+viewport units** in `Level.tscn` — at or above the 96-unit bar
+`VerifyTouchTargets` enforces, which covers them.
+
+The second half of the claim still holds structurally: `RetryButton` exists
+only inside `PausePanel` and `LosePanel`, so mid-level the Pause menu is the
+only route to Retry. With Pause now a 104×96 target that is a design choice
+rather than an accessibility defect.
+
+### 44. No localisation path exists ✅
+`game/scripts/resources/LevelData.gd:17`
+
+Confirmed by count: **100 `intro_text` strings** baked into the level `.tres`
+files, and **zero** `tr()` call sites across `scripts/` and `scenes/`. Every
+UI string is likewise a literal in a `.tscn` or a format string in GDScript.
+Shipping another language means moving 100 authored strings out of resource
+data, not adding a translation file. Interlocks with #34.
+
+---
+
+## Still nothing has run on a device
+
+Settling the twelve above changes none of the standing caveats: every
+measurement here is Linux / Xvfb / llvmpipe. The physical-size figures in #41
+assume a 68 mm-wide handset and the dp figures assume the 360 dp-wide modal
+Android screen the project's own test uses; a real device is still the only
+thing that confirms either.
 
 ---
 
