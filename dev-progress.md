@@ -1,5 +1,49 @@
 # Flash Flood — Dev Progress
 
+## Status: undo works on a queued block, and the header stops clipping (2026-09-09)
+
+Findings 31 and 24 of `handheld-audit.md`.
+
+**Tapping a block you just placed now cancels it, even while it is queued.**
+Post-Start a placement sits in `pending_placements` until the next PLACEMENT
+beat, so for up to a full measure the block exists only as the ghost
+`_draw_cell()` paints. `_handle_tap()` tested `placed_blocks` alone, so the
+undo affordance was dead for exactly the second in which a player notices the
+mistake: tap a hex, watch the ghost appear, realise it is one row off, tap it
+again — nothing. Now tests `block_anchors` too.
+
+`block_anchors` rather than `pending_placements` because `place_block()`
+writes it at queue time for *every* cell of the footprint, so this also picks
+up either half of a 2-wide Wall. `remove_block()` already knew how to cancel a
+queued placement (refunding once, not once per cell) — only the guard in front
+of it was wrong.
+
+Checked the regression that widening a condition invites: a stale anchor would
+make an empty cell swallow taps forever. It cannot happen — every removal path
+erases `block_anchors`, immediately pre-Start and in `resolve_placement_phase()`
+for a queued one — so the only cells with an anchor and no `placed_blocks`
+entry are precisely the pending placements this is meant to catch. Pinned with
+a check that a cancelled cell still accepts a new placement.
+
+**`MAP_MARGIN_TOP` 120 → 148.** Level Select's `HeaderBar` is screen chrome
+drawn *over* the ScrollContainer rather than a sibling that pushes it down, so
+the map has to leave room for it by hand, and didn't. 88 (bar) + 38 (node
+half) + 11 (badge overhang) = 137, plus breathing room.
+
+**`tests/VerifyUndoAndHeader.tscn`, 14 checks. Its first version was too weak
+and said so.** It measured the top node's rect and passed at y=110 — but an
+*uncompleted* level has no badge at all, so it was measuring the node edge
+alone and never touched the overhang the finding was actually about. It now
+completes level 100 first so a check badge exists, and asserts the node has a
+child before trusting the measurement. That turned a soft pass into the real
+number: **y=71 against an 88-tall bar, 17 units of badge clipped** — matching
+the audit's "17 of the 32 units" exactly. Now y=99.
+
+Verified against the old code: **4 failures without the fixes, 0 with them.**
+
+All eleven suites pass, solution book unchanged at 88 / 11 / 1, BoardSnapshots
+0 of 10 changed (neither fix touches board drawing).
+
 ## Status: the map opens where you left off, and the HUD is readable (2026-09-09)
 
 Findings 19 and 20 of `handheld-audit.md` — the two cheapest remaining items.

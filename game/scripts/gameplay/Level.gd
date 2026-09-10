@@ -965,7 +965,23 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	# "undo a placement" affordance, and it works in real time whether or
 	# not water is actively flowing. Only an empty cell with something
 	# selected falls through to placing a new block.
-	if board.placed_blocks.has(coord):
+	#
+	# block_anchors, not just placed_blocks. Post-Start a placement is QUEUED
+	# until the next PLACEMENT beat, so for up to a full measure the block
+	# exists only in pending_placements -- visibly, as the ghost _draw_cell()
+	# paints. Testing placed_blocks alone meant the undo affordance was dead
+	# for exactly that measure: the player taps a hex, sees the ghost appear,
+	# realises within the same second that it is one row off, taps it again
+	# and nothing happens. block_anchors is written at queue time by
+	# place_block() for every cell of the footprint, so this also picks up
+	# either half of a 2-wide Wall, and remove_block() already knows how to
+	# cancel a pending placement (it refunds once, not once per cell).
+	#
+	# Safe against stale entries: every removal path erases block_anchors --
+	# immediately pre-Start, and in resolve_placement_phase() for a queued
+	# one -- so the only cells with an anchor and no placed_blocks entry are
+	# precisely the pending placements this is meant to catch.
+	if board.placed_blocks.has(coord) or board.block_anchors.has(coord):
 		if board.remove_block(coord):
 			_refresh_inventory_labels()
 		return

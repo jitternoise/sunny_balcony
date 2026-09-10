@@ -144,7 +144,16 @@ const NODE_PHASE := PI / 3.0
 ## map at 720 would strand it against the left edge of a wider screen with
 ## dead grass down the right.
 const MAP_DESIGN_WIDTH := 720.0
-const MAP_MARGIN_TOP := 120.0
+## Clear space above the topmost node, and it has to clear the HeaderBar --
+## which is screen chrome drawn over the ScrollContainer, not part of the
+## scrolling content, so the map has to leave room for it rather than being
+## pushed down by it. At 120 the top node's own edge (centre - NODE_SIZE/2 =
+## 120 - 38 = 82) sat behind an 88-tall bar, and its completion badge, which
+## overhangs the node by BADGE_SIZE * 0.34 ~= 11, was clipped to a half-disc.
+## 88 (bar) + 38 (node half) + 11 (badge overhang) = 137, plus breathing room.
+## Note the safe-area inset is added on top of this separately, so a notch
+## does not eat into it.
+const MAP_MARGIN_TOP := 148.0
 const MAP_MARGIN_BOTTOM := 110.0
 const HEADER_HEIGHT := 40.0 # height of a chapter-name marker
 

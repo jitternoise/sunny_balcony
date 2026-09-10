@@ -39,6 +39,8 @@ xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 30 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyMapScroll.tscn # map opens on your level, 14 checks
+xvfb-run -a --server-args="-screen 0 720x1280x24" \
+  godot --resolution 720x1280 res://tests/VerifyUndoAndHeader.tscn # cancel a queued placement, 14 checks
 ```
 
 ⚠️ **Most test scenes write to real save slot 0** (they set
