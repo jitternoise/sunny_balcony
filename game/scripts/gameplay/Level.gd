@@ -274,6 +274,7 @@ func _ready() -> void:
 	win_next_button.pressed.connect(_on_win_next_pressed)
 
 	_build_inventory_bar()
+	_set_pre_start_status()
 	_apply_safe_area()
 	_show_intro_popup_if_needed()
 
@@ -327,6 +328,17 @@ func _cancel_catapult_aim() -> void:
 ## the player taps "Got it". A level with an empty intro_text (the field's
 ## default) skips this entirely -- no popup, nothing blocked, same as
 ## before this feature existed.
+## The pre-Start prompt. Authored in Level.tscn as "Place your blocks, then
+## press play", which is wrong on a level that hands out no blocks -- the
+## first two tutorials are watch-only, and telling a brand-new player to
+## place blocks they do not have is the worst possible first instruction.
+func _set_pre_start_status() -> void:
+	var has_blocks: bool = (board.use_block_budget
+		or not level_data.starting_inventory.is_empty())
+	status_label.text = ("Place your blocks, then press play" if has_blocks
+		else "Press play and watch")
+
+
 func _show_intro_popup_if_needed() -> void:
 	if level_data.intro_text.is_empty():
 		intro_panel.visible = false
@@ -390,7 +402,10 @@ func _on_retry_pressed() -> void:
 	board.selected_block_id = ""
 	board.setup(level_data, block_catalog)
 	_build_inventory_bar()
-	status_label.text = "Fires remaining: %d" % board.fires_remaining
+	# Retry puts the level back to its pre-Start state, so the prompt should
+	# be the pre-Start one -- not a fire count, which is what a level that
+	# is actually running shows.
+	_set_pre_start_status()
 
 
 ## Freezes the game: holds the tick timer (so no beat advances and the water
@@ -532,9 +547,17 @@ func _build_inventory_bar() -> void:
 		inventory_bar.remove_child(child)
 		child.queue_free()
 
-	# Delete (eraser) mode toggle -- always the first button in the bar, on
-	# every level, since every level lets the player pick blocks back up.
-	# See delete_mode / _on_delete_button_toggled().
+	# What this level actually offers. A level can offer nothing at all --
+	# the first two tutorials are watch-only -- and then the whole bar is
+	# skipped, delete button included: an eraser with nothing to erase is
+	# clutter on the first screen a new player ever sees.
+	var block_ids: Array = block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys()
+	if block_ids.is_empty():
+		return
+
+	# Delete (eraser) mode toggle -- the first button in the bar on every
+	# level that has something to place, since those all let the player pick
+	# blocks back up. See delete_mode / _on_delete_button_toggled().
 	var delete_button := Button.new()
 	delete_button.name = DELETE_BUTTON_NAME
 	delete_button.icon = DELETE_ICON
@@ -545,7 +568,6 @@ func _build_inventory_bar() -> void:
 	inventory_bar.add_child(delete_button)
 	_style_inventory_button(delete_button, DELETE_BUTTON_WIDTH)
 
-	var block_ids: Array = block_catalog.keys() if board.use_block_budget else level_data.starting_inventory.keys()
 	for block_id in block_ids:
 		var block: BlockData = block_catalog[block_id]
 		var button := Button.new()
@@ -1097,10 +1119,13 @@ func _on_level_won() -> void:
 ## global class constant (LevelSelect.gd declares `class_name LevelSelect`)
 ## without needing an instance of that scene.
 func _next_level_path() -> String:
-	var idx := LevelSelect.LEVEL_PATHS.find(_level_path)
-	if idx == -1 or idx + 1 >= LevelSelect.LEVEL_PATHS.size():
+	# campaign_paths(), not LEVEL_PATHS: the tutorial runs ahead of level 1,
+	# so "next" after the last tutorial is level 1 rather than nowhere.
+	var paths := LevelSelect.campaign_paths()
+	var idx := paths.find(_level_path)
+	if idx == -1 or idx + 1 >= paths.size():
 		return ""
-	return LevelSelect.LEVEL_PATHS[idx + 1]
+	return paths[idx + 1]
 
 
 ## Advances past the win popup. If there's a next level, queues it up

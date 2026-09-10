@@ -33,9 +33,14 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	var map: LevelMap = screen.get_node("ScrollContainer/MapRoot")
-	_check(map.points.size() == screen.TOTAL_LEVEL_SLOTS,
-		"the trail has one point per level (%d)" % map.points.size())
-	_check(map.reached_count == 16, "the trail is lit as far as the furthest unlocked level")
+	# One point per TRAIL SLOT, which since the tutorial was added is five
+	# more than TOTAL_LEVEL_SLOTS -- the tutorial sits below level 1.
+	_check(map.points.size() == screen.total_slots(),
+		"the trail has one point per slot (%d)" % map.points.size())
+	# Levels 1-15 are complete, so level 16 is the furthest unlocked -- and
+	# it now sits at a slot five further along than its own number.
+	_check(map.reached_count == screen.slot_of_level(16) + 1,
+		"the trail is lit as far as the furthest unlocked level (%d)" % map.reached_count)
 	_check(map.custom_minimum_size.y > 1000.0, "the map is taller than one screen, so it scrolls")
 
 	# Level 1 sits at the bottom of the map and 100 at the top, matching the
@@ -53,8 +58,15 @@ func _ready() -> void:
 			nodes[int(name.trim_prefix("level_"))] = child
 		elif name.begins_with("bonus_"):
 			bonus[int(name.trim_prefix("bonus_"))] = child
-	_check(nodes.size() == screen.TOTAL_LEVEL_SLOTS,
-		"every level has a node on the map (%d)" % nodes.size())
+	_check(nodes.size() == screen.total_slots(),
+		"every slot has a node on the map (%d)" % nodes.size())
+	for tutorial_path in screen.TUTORIAL_PATHS:
+		var tutorial: LevelData = load(tutorial_path)
+		_check(nodes.has(tutorial.level_id),
+			"tutorial %d has a node" % tutorial.level_id)
+		if nodes.has(tutorial.level_id):
+			_check(not (nodes[tutorial.level_id] as Button).disabled,
+				"tutorial %d is enterable" % tutorial.level_id)
 
 	_check(not nodes[15].disabled and nodes[15].tooltip_text != "", "a completed level is tappable and named")
 	_check(not nodes[16].disabled, "the furthest unlocked level is tappable")

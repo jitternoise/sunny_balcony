@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 902
+display_name = "Tutorial 2 — Out Goes the Fire"
+intro_text = "A fire is burning on the riverbed. Water puts a fire out simply by running over it, so anything on the water's path gets doused on the way past. This stream already runs through both the fire and the pool. Press play."
+grid_radius = 3
+water_sources = Array[Vector2i]([Vector2i(0, -3)])
+fire_cells = Array[Vector2i]([Vector2i(-2, 0)])
+pool_targets = {
+Vector2i(-3, 3): 4
+}
+starting_inventory = {}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

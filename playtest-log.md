@@ -44,6 +44,8 @@ pass.
 - ⏱ **par N** — a fork level. Finishing within N measures opens its map spur.
   Nothing in the game tells the player this (finding 36), so treat "did I
   even know I was being timed?" as a real observation here.
+- Tutorial entries carry no 📏 flag: at radius 3 and 4 they draw the biggest
+  hexes in the game, which is what a first level should do.
 - 📏 — the hex's narrow cross-section in dp, measured at 720×1280. Under 48 is
   below the touch-target minimum this project holds every other control to.
   62 levels are. Irrelevant with a mouse; it is here so you know which levels
@@ -53,6 +55,77 @@ pass.
 were measured when the Wall was 1 tile wide. Marked inline where that applies.
 
 ---
+
+
+## Learning the River (tutorial)
+
+Five levels that run before level 1 on the map. They carry ids 901-905 and
+are always unlocked. Judge them on one question: **did the lesson land, in
+one try, without you already knowing the game?**
+
+### Tutorial 1 — The River Runs
+
+`pointy r3 · 0 fires · pool (-3,3)x4 · source (0,-3)`
+
+- kit: *nothing to place — press play and watch*
+- teaches: water falls and zigzags on its own; the pool at the bottom is the goal
+- fastest known: **9 measures** (10.8 s), and there is no other way to play it
+
+| verdict | difficulty | measures | notes |
+|---|---|---|---|
+|  |  |  |  |
+
+### Tutorial 2 — Out Goes the Fire
+
+`pointy r3 · 1 fire · pool (-3,3)x4 · source (0,-3)`
+
+- kit: *nothing to place*
+- teaches: water puts a fire out simply by running over it
+- fastest known: **10 measures** (12.0 s)
+
+| verdict | difficulty | measures | notes |
+|---|---|---|---|
+|  |  |  |  |
+
+### Tutorial 3 — Steer the Stream
+
+`pointy r3 · 0 fires · pool (-1,1)x4 · source (0,-3)`
+
+- kit: divert_right x1
+- teaches: blocks go down before Start, and a Diverter (R) pushes water down-right
+- solution: `divert_right (-1, -1)` | win 7 — the only placement that wins
+
+| verdict | difficulty | measures | notes |
+|---|---|---|---|
+|  |  |  |  |
+
+### Tutorial 4 — Think Again
+
+`pointy r3 · 0 fires · pool (-3,0)x4 · source (0,-3)`
+
+- kit: divert_left x1, divert_right x1
+- teaches: tapping a placed block picks it back up — both diverters are offered
+  and only one, in one cell, wins, so a wrong first guess is the point
+- solution: `divert_left (-1, -2)` | win 6 — the only winning (type, cell) pair
+
+| verdict | difficulty | measures | notes |
+|---|---|---|---|
+|  |  |  |  |
+
+### Tutorial 5 — Two Cells Wide
+
+`pointy r4 · 0 fires · pool (-1,0)x4 · source (0,-4)`
+
+- kit: wall x1
+- teaches: **a Wall covers the tapped hex AND its right-hand neighbour.** The
+  stream runs through (-2,-1); the only wall that wins is anchored at (-3,-1),
+  one hex to the left. Walling (-2,-1) directly covers both exits and seals
+  the stream in — the instructive failure.
+- solution: `wall (-3, -1)` | win 7
+
+| verdict | difficulty | measures | notes |
+|---|---|---|---|
+|  |  |  |  |
 
 
 ## Riverbed Basics (levels 1–12)

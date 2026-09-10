@@ -42,6 +42,15 @@ var par_levels: Dictionary = {} # level_id (int) -> true
 ## checkbox for testing on a release export.
 var debug_unlock_all: bool = OS.is_debug_build()
 
+## The tutorial levels live outside the numbered campaign so that adding them
+## did not renumber all 100 levels (and invalidate every save, every
+## documented solution and every doc that names a level by number). They are
+## ordinary LevelData resources with ids in this range, always unlocked, and
+## they never move highest_unlocked_level -- see is_level_unlocked() and
+## mark_level_complete(). LevelSelect.TUTORIAL_PATHS lists them in order.
+const TUTORIAL_ID_FIRST := 901
+const TUTORIAL_ID_LAST := 905
+
 ## True when the active slot had a save on disk and NONE of it could be read
 ## -- neither the primary nor its backup. The progress fields are left at
 ## their new-game defaults, which look exactly like a fresh start, so this
@@ -274,7 +283,10 @@ func delete_slot(slot: int) -> void:
 
 func mark_level_complete(level_id: int) -> void:
 	completed_levels[level_id] = true
-	if level_id + 1 > highest_unlocked_level:
+	# A finished tutorial is recorded (so its map node gets its check) but
+	# never advances the campaign. Without this guard, finishing tutorial 1
+	# would set highest_unlocked_level to 902 and unlock all 100 levels.
+	if not is_tutorial_level(level_id) and level_id + 1 > highest_unlocked_level:
 		highest_unlocked_level = level_id + 1
 	save_current_slot()
 
@@ -307,6 +319,15 @@ func has_par(level_id: int) -> bool:
 
 
 func is_level_unlocked(level_id: int) -> bool:
+	# The tutorial is where a new game starts, so it is never gated -- and it
+	# must not be compared against highest_unlocked_level, which counts
+	# campaign levels and would read 901 as "far beyond level 100, locked".
+	if is_tutorial_level(level_id):
+		return true
 	if debug_unlock_all:
 		return true
 	return level_id <= highest_unlocked_level
+
+
+func is_tutorial_level(level_id: int) -> bool:
+	return level_id >= TUTORIAL_ID_FIRST and level_id <= TUTORIAL_ID_LAST

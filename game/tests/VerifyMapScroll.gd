@@ -53,14 +53,52 @@ func _open_at(highest: int) -> Dictionary:
 	return out
 
 
+## Same as _open_at(), but reports where an ARBITRARY node sits rather than
+## the one matching the player's progress -- used to check what a given save
+## actually lands on.
+func _open_on_node(highest: int, node_name: String) -> Dictionary:
+	GameState.load_slot(TEST_SLOT)
+	GameState.highest_unlocked_level = highest
+	GameState.debug_unlock_all = false
+	var select: Node = load("res://scenes/LevelSelect.tscn").instantiate()
+	add_child(select)
+	for i in range(8):
+		await get_tree().process_frame
+	var scroll: ScrollContainer = select.get_node("ScrollContainer")
+	var node: Control = select.get_node("ScrollContainer/MapRoot").get_node_or_null(node_name)
+	var out := {
+		"scroll": float(scroll.scroll_vertical),
+		"viewport": scroll.size.y,
+		"node_y": node.position.y + node.size.y * 0.5 if node else -1.0,
+	}
+	select.queue_free()
+	remove_child(select)
+	await get_tree().process_frame
+	return out
+
+
 func _ready() -> void:
 	GameState.debug_unlock_all = false
 	GameState.delete_slot(TEST_SLOT)
 
-	print("A fresh save still opens at the bottom (Level 1)")
+	print("A fresh save opens at the bottom -- now on Tutorial 1")
 	var fresh := await _open_at(1)
 	_check(fresh["scroll"] >= fresh["max"] - 1,
 		"scrolled to the bottom (%d of max %d)" % [fresh["scroll"], fresh["max"]])
+	var first_tutorial: LevelData = load(LevelSelect.TUTORIAL_PATHS[0])
+	var t1 := await _open_on_node(1, "level_%d" % first_tutorial.level_id)
+	_check(t1["node_y"] >= t1["scroll"] and t1["node_y"] <= t1["scroll"] + t1["viewport"],
+		"Tutorial 1's node is on screen for a new save")
+
+	# The gate on that: a player who skipped the tutorial and is deep in the
+	# campaign must NOT be thrown back down to it, which is what an
+	# ungated "open on the first unfinished tutorial" rule does -- their
+	# tutorial nodes stay unfinished forever.
+	print("A player who skipped the tutorial is not dragged back to it")
+	var skipper := await _open_on_node(82, "level_%d" % first_tutorial.level_id)
+	_check(skipper["node_y"] < skipper["scroll"]
+			or skipper["node_y"] > skipper["scroll"] + skipper["viewport"],
+		"Tutorial 1 is off screen for a level-82 player")
 
 	print("A player partway up opens on their own level")
 	for level in [24, 47, 82]:

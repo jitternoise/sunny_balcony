@@ -1,5 +1,73 @@
 # Flash Flood — Dev Progress
 
+## Status: a five-level tutorial now runs ahead of level 1 (2026-09-10)
+
+Level 1 handed a new player **four blocks of three types** and never said what
+a Diverter did or that a Wall covers two hexes. Five tutorial levels now sit
+below it on the trail, each teaching exactly one thing.
+
+**They are not levels 1-5, on purpose.** Numbering them into the campaign
+would have renumbered all 100 authored levels, and with them every save, every
+entry in `level-solutions.md` and `level-min-times.md`, the ten par forks and
+the `BONUS_FORK_OFFSET` that has to line up with them. The tutorial carries
+ids **901-905** instead (`GameState.TUTORIAL_ID_FIRST`) and occupies the first
+five slots of the map trail. Level 1 is still level 1; nothing was renumbered
+and no save needs migrating.
+
+The consequence to remember: **a trail slot is no longer a level number.**
+Slot 5 is level 1, slot 104 is level 100. The bonus spurs indexed
+`points[gate - 1]` and would have landed five nodes off; they now go through
+`LevelSelect.slot_of_level()`.
+
+**The curriculum, one lesson each:**
+
+| | Level | Teaches | Wins in |
+|---|---|---|---|
+| T1 | The River Runs | water falls and zigzags on its own; the pool is the goal | 9 measures, no blocks |
+| T2 | Out Goes the Fire | water on a fire puts it out, just by passing over | 10 measures, no blocks |
+| T3 | Steer the Stream | a Diverter, placed before Start | 7, `divert_right (-1,-1)` |
+| T4 | Think Again | tap a placed block to take it back | 6, `divert_left (-1,-2)` |
+| T5 | Two Cells Wide | **the Wall covers the tapped hex AND its right neighbour** | 7, `wall (-3,-1)` |
+
+**The boards were searched for, not guessed.** A throwaway probe enumerated
+every pool position against every single placement and kept only boards where
+doing nothing loses and **exactly one** placement wins — an ambiguous tutorial
+teaches nothing. T5 is the prize: its stream runs through `(-2,-1)`, and the
+only wall that wins is anchored at `(-3,-1)`, one hex to the LEFT, so the
+second cell of the footprint is what does the blocking. Walling the obvious
+hex covers both exits and seals the stream in. `VerifyTutorial` asserts that
+naive answer still fails, because the day it starts working the level stops
+teaching anything.
+
+⚠️ A first pass of that probe reported every board unsolvable. The candidate
+levels had no `starting_inventory`, so `place_block()` rejected all 1369
+placements and the failure looked like a property of the boards. Any future
+search over placements must give the level an inventory first.
+
+**Two things the first screen of the game got wrong, found by looking at it
+rather than by testing.** The HUD said "Place your blocks, then press play" on
+a level that hands out no blocks, and the tray drew a delete button with
+nothing to delete. Both now key off whether the level offers anything:
+`_set_pre_start_status()`, and `_build_inventory_bar()` returning early. Retry
+uses the same prompt, so a retried level reads the way a fresh one does
+instead of showing a fire count while stopped.
+
+**Two bugs caught by the suites rather than by review.** Finishing a tutorial
+would have set `highest_unlocked_level` to 902 and opened all 100 levels —
+`mark_level_complete()` now ignores tutorial ids. And the map's
+"open where you left off" rule, once it preferred the first unfinished
+tutorial, dragged a level-82 player who skipped the tutorial back to the
+bottom of the trail on every visit; it is gated on the campaign not having
+started. `VerifyMapScroll` now covers both directions.
+
+`VerifyTutorial` is new (118 checks). All 12 suites pass, `smoke_test` passes,
+and the solution book is unchanged at 88 / 11 / 1 — no campaign level was
+touched.
+
+Not done: the tutorial has no completion gate. A player can skip it entirely
+from the map, which is deliberate for now, and finishing it unlocks nothing
+that was not already open.
+
 ## Status: the twelve unverified audit findings are settled (2026-09-10)
 
 `handheld-audit.md` ended with twelve findings whose verifiers died on a usage

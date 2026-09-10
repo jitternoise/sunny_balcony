@@ -34,6 +34,7 @@ godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corrupti
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
 godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
 godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
+godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 118 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 30 checks
@@ -153,7 +154,15 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 
 - **The Wall is 2 tiles wide.** Placing one covers the tapped cell *and* a
   neighbour. This invalidated 11 documented solutions and is the single most
-  common source of "why doesn't this level win any more".
+  common source of "why doesn't this level win any more". Tutorial 5 exists
+  to teach exactly this.
+- **A trail slot is not a level number.** The five tutorial levels sit below
+  level 1 on the map, so slot 5 is level 1 and slot 104 is level 100. Use
+  `LevelSelect.slot_of_level()` / `level_of_slot()`; indexing `points[]` by a
+  level number puts the bonus spurs five nodes off. The tutorial ids are
+  901-905 (`GameState.TUTORIAL_ID_FIRST`), deliberately outside the campaign
+  so that adding them did not renumber 100 levels and invalidate every save.
+  They are always unlocked and never advance `highest_unlocked_level`.
 - **"Solid to water" is two different tests, on purpose.** `_is_wall()` is
   what *natural fall* asks, and counts an activated geyser as solid.
   `_is_solid_block()` is what the two *block-redirect* loops ask, and does

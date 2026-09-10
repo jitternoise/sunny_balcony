@@ -106,6 +106,24 @@ const LEVEL_PATHS: Array[String] = [
 	"res://data/levels/level_100.tres",
 ]
 
+## The tutorial track, played before level 1. These sit at the BOTTOM of the
+## trail, below level 1, and are always unlocked.
+##
+## They are deliberately not levels 1-5: numbering them into the campaign
+## would have renumbered all 100 authored levels and invalidated every save,
+## every entry in level-solutions.md and every doc that names a level by
+## number. They carry ids 901-905 instead -- see GameState.TUTORIAL_ID_FIRST.
+const TUTORIAL_PATHS: Array[String] = [
+	"res://data/levels/tutorial_1.tres",
+	"res://data/levels/tutorial_2.tres",
+	"res://data/levels/tutorial_3.tres",
+	"res://data/levels/tutorial_4.tres",
+	"res://data/levels/tutorial_5.tres",
+]
+
+## Chapter name over the tutorial stretch of the trail.
+const TUTORIAL_GROUP_NAME := "Learning the River"
+
 ## Task-based level groups, used to render a non-clickable header row above
 ## each group's topmost button in the (bottom-up) list -- see
 ## _build_level_buttons(). first/last are 1-based level numbers, inclusive.
@@ -126,6 +144,33 @@ const GROUPS: Array[Dictionary] = [
 ]
 
 const TOTAL_LEVEL_SLOTS := 100
+
+## Every node on the trail, tutorial first: slot 0..4 are the tutorial,
+## slot 5.. are levels 1..100. Nothing else in the file may assume that a
+## slot index and a level number are the same thing -- they stopped being
+## the same when the tutorial was added.
+static func total_slots() -> int:
+	return TUTORIAL_PATHS.size() + TOTAL_LEVEL_SLOTS
+
+
+## The trail slot a campaign level number occupies.
+static func slot_of_level(level_number: int) -> int:
+	return TUTORIAL_PATHS.size() + level_number - 1
+
+
+## The campaign level number at a trail slot, or 0 for a tutorial slot.
+static func level_of_slot(slot: int) -> int:
+	var n := slot - TUTORIAL_PATHS.size() + 1
+	return n if n >= 1 else 0
+
+
+## Every playable path in play order -- the tutorial, then the campaign.
+## Level.gd's "next level" walks this, so tutorial 5 leads into level 1.
+static func campaign_paths() -> Array[String]:
+	var paths: Array[String] = []
+	paths.append_array(TUTORIAL_PATHS)
+	paths.append_array(LEVEL_PATHS)
+	return paths
 
 ## Map geometry. Levels are laid out bottom-to-top along a sine-wave trail:
 ## level 1 sits at the bottom (where the view opens) and the campaign winds
@@ -313,16 +358,23 @@ func _build_map() -> void:
 	# gap wherever a new chapter starts, then a second time to place things
 	# -- the first pass is what makes the bottom-anchored y values possible.
 	var offsets: Array[float] = []
-	var group_label_offsets := {} # group index -> distance up from the bottom
+	var label_offsets: Array[Dictionary] = [] # {name, offset up from the bottom}
 	var up: float = MAP_MARGIN_BOTTOM + inset.w
-	for i in range(TOTAL_LEVEL_SLOTS):
-		var level_number := i + 1
-		var group_index := _group_index_starting_at(level_number)
-		if group_index != -1 and i > 0:
+	for i in range(total_slots()):
+		var level_number := level_of_slot(i)
+		var chapter := ""
+		if i == 0:
+			chapter = TUTORIAL_GROUP_NAME
+		elif level_number > 0:
+			var group_index := _group_index_starting_at(level_number)
+			if group_index != -1:
+				chapter = GROUPS[group_index]["name"]
+		if chapter != "" and i > 0:
 			up += GROUP_GAP
-			group_label_offsets[group_index] = up - GROUP_GAP * 0.5
-		elif group_index != -1:
-			group_label_offsets[group_index] = up - (MAP_MARGIN_BOTTOM + inset.w) * 0.55
+			label_offsets.append({"name": chapter, "offset": up - GROUP_GAP * 0.5})
+		elif chapter != "":
+			label_offsets.append({"name": chapter,
+				"offset": up - (MAP_MARGIN_BOTTOM + inset.w) * 0.55})
 		offsets.append(up)
 		up += NODE_SPACING
 	var content_height: float = up - NODE_SPACING + MAP_MARGIN_TOP + inset.y
@@ -334,30 +386,50 @@ func _build_map() -> void:
 	# unchanged.
 	var amplitude: float = NODE_AMPLITUDE * (_map_width / MAP_DESIGN_WIDTH)
 	var points := PackedVector2Array()
-	for i in range(TOTAL_LEVEL_SLOTS):
+	for i in range(total_slots()):
 		points.append(Vector2(
 			_map_left + _map_width * 0.5 + amplitude * sin(i * NODE_PHASE),
 			content_height - offsets[i]))
 
-	for group_index in group_label_offsets.keys():
+	for entry in label_offsets:
 		map_root.add_child(_build_group_label(
-			GROUPS[group_index]["name"], content_height - group_label_offsets[group_index]))
+			entry["name"], content_height - entry["offset"]))
 
+	# Where the view opens. A brand-new save should land on the tutorial
+	# rather than on level 1 -- which is unlocked from the very first launch
+	# and would otherwise always win this.
+	#
+	# Only on a brand-new save, though: gated on the campaign not having
+	# started, or a player who skipped the tutorial and is on level 82 gets
+	# thrown back to the bottom of the trail every time they open the map,
+	# because their tutorial nodes are still unfinished.
 	var reached := 1
-	for i in range(TOTAL_LEVEL_SLOTS):
-		var level_number := i + 1
-		if i < LEVEL_PATHS.size():
-			var level_data: LevelData = load(LEVEL_PATHS[i])
+	var open_at := -1
+	var campaign_started: bool = GameState.highest_unlocked_level > 1
+	for i in range(total_slots()):
+		var level_number := level_of_slot(i)
+		if level_number == 0:
+			var tutorial_data: LevelData = load(TUTORIAL_PATHS[i])
+			reached = maxi(reached, i + 1)
+			if (open_at == -1 and not campaign_started
+					and not GameState.completed_levels.has(tutorial_data.level_id)):
+				open_at = i + 1
+			map_root.add_child(_build_level_node(
+				tutorial_data, TUTORIAL_PATHS[i], points[i], "T%d" % (i + 1)))
+		elif level_number <= LEVEL_PATHS.size():
+			var level_data: LevelData = load(LEVEL_PATHS[level_number - 1])
 			if GameState.is_level_unlocked(level_data.level_id):
-				reached = maxi(reached, level_number)
-			map_root.add_child(_build_level_node(level_data, LEVEL_PATHS[i], points[i]))
+				reached = maxi(reached, i + 1)
+			map_root.add_child(_build_level_node(
+				level_data, LEVEL_PATHS[level_number - 1], points[i]))
 		else:
 			map_root.add_child(_build_placeholder_node(level_number, points[i]))
 
-	# Side paths off every 8th level of a set of ten.
+	# Side paths off every 8th level of a set of ten. Indexed by trail SLOT,
+	# not by level number -- the tutorial shifted the two apart.
 	var spurs: Array[Dictionary] = []
 	for gate in range(BONUS_FORK_OFFSET, TOTAL_LEVEL_SLOTS + 1, BONUS_FORK_STEP):
-		var anchor: Vector2 = points[gate - 1]
+		var anchor: Vector2 = points[slot_of_level(gate)]
 		var spur_end := _spur_end(anchor)
 		var open: bool = GameState.has_par(gate) or GameState.debug_unlock_all
 		spurs.append({"from": anchor, "to": spur_end, "open": open})
@@ -367,7 +439,7 @@ func _build_map() -> void:
 	map_root.spurs = spurs
 	map_root.reached_count = reached
 	map_root.queue_redraw()
-	_scroll_to_reached(points[reached - 1].y)
+	_scroll_to_reached(points[(open_at if open_at != -1 else reached) - 1].y)
 
 
 ## Where a fork level's spur reaches to. Pushed toward whichever side of the
@@ -429,13 +501,16 @@ func _build_group_label(group_name: String, y: float) -> Label:
 ## whichever badges apply: a check once completed, a padlock while locked,
 ## and -- only on the levels that have a Hydro Plant -- a turbine showing
 ## whether that level's optional bonus has been earned.
-func _build_level_node(level_data: LevelData, path: String, center: Vector2) -> Button:
+## `label` overrides the text on the node. The campaign uses the level id,
+## which IS its number; the tutorial cannot, since its ids are 901-905.
+func _build_level_node(level_data: LevelData, path: String, center: Vector2,
+		label: String = "") -> Button:
 	var unlocked := GameState.is_level_unlocked(level_data.level_id)
 	var completed: bool = GameState.completed_levels.has(level_data.level_id)
 
 	var button := Button.new()
 	button.name = "level_%d" % level_data.level_id
-	button.text = str(level_data.level_id)
+	button.text = label if label != "" else str(level_data.level_id)
 	button.tooltip_text = level_data.display_name
 	button.disabled = not unlocked
 	button.size = Vector2(NODE_SIZE, NODE_SIZE)

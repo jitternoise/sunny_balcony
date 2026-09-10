@@ -89,6 +89,13 @@ sound and music (no `AudioStreamPlayer` anywhere); a settings
 menu; an accessibility pass; level-complete visual polish; any level curriculum
 beyond `GameState.is_level_unlocked()`'s linear gate.
 
+✅ **A five-level tutorial was added 2026-09-10** (ids 901-905, the first five
+slots of the map trail — see `dev-progress.md`). It teaches the fall, fire,
+placement, picking a block back up, and the 2-wide Wall. Still open around it:
+the tutorial is **not gated** — a player can skip it from the map, and
+finishing it unlocks nothing that was not already open. Whether it should be
+compulsory on a fresh save is undecided.
+
 **No campaign-complete screen.** Unchanged in substance, but the old list
 described it at level 20 — it is now level 100. `_on_level_won()` sets the win
 button's label to "Level Select" when `_next_level_path()` is empty. Finishing

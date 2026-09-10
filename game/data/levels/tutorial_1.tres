@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 901
+display_name = "Tutorial 1 — The River Runs"
+intro_text = "Once a year the river floods. It falls on its own, zigzagging from side to side as it goes -- you do not steer it directly. Down at the bottom is a pool. Fill it and you win. Press play and watch the water find its way."
+grid_radius = 3
+water_sources = Array[Vector2i]([Vector2i(0, -3)])
+fire_cells = Array[Vector2i]([])
+pool_targets = {
+Vector2i(-3, 3): 4
+}
+starting_inventory = {}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+level_id = 905
+display_name = "Tutorial 5 — Two Cells Wide"
+intro_text = "A Wall stops water dead instead of steering it -- and a Wall is TWO hexes wide. It covers the hex you tap AND its neighbour to the right. That second hex is easy to forget, and it is the one that matters here: block the stream's path and it will take the other diagonal instead. Watch the preview before you press play."
+grid_radius = 4
+water_sources = Array[Vector2i]([Vector2i(0, -4)])
+fire_cells = Array[Vector2i]([])
+pool_targets = {
+Vector2i(-1, 0): 4
+}
+starting_inventory = {"wall": 1}
+blocked_cells = Array[Vector2i]([])
+town_cells = Array[Vector2i]([])
+geyser_cells = Array[Vector2i]([])
+total_block_budget = 0
