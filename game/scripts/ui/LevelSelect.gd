@@ -358,7 +358,7 @@ func _build_map() -> void:
 	map_root.spurs = spurs
 	map_root.reached_count = reached
 	map_root.queue_redraw()
-	_scroll_to_bottom()
+	_scroll_to_reached(points[reached - 1].y)
 
 
 ## Where a fork level's spur reaches to. Pushed toward whichever side of the
@@ -514,12 +514,24 @@ func _add_badge(button: Button, texture: Texture2D, offset: Vector2,
 	disc.add_child(glyph)
 
 
-## Starts the view scrolled to the bottom (Level 1). One frame of delay so
-## ScrollContainer knows the freshly-built content height; the huge value is
-## clamped to the true max automatically.
-func _scroll_to_bottom() -> void:
+## Opens the view on the level the player is actually up to, centred.
+##
+## This used to slam the scroll to the bottom -- Level 1 -- every single time
+## the screen was built, which is on every cold start, every return from a
+## level, and every Back out of one. The trail runs bottom-to-top over 100
+## nodes, so a player on level 47 landed two and a half screen-heights below
+## their own progress and had to drag up to it, every time.
+##
+## Level 1 still lands at the bottom on a fresh save: `reached` is 1 there, and
+## points[0] is the bottom-most node, so the clamp below produces the old
+## behaviour exactly. Nothing changes for a new player.
+##
+## One frame of delay so ScrollContainer knows the freshly-built content
+## height; scroll_vertical clamps itself to the real range, so overshooting at
+## either end is safe.
+func _scroll_to_reached(node_y: float) -> void:
 	await get_tree().process_frame
-	scroll.scroll_vertical = 1000000000
+	scroll.scroll_vertical = int(node_y - scroll.size.y * 0.5)
 
 
 func _on_level_selected(path: String) -> void:

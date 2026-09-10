@@ -48,6 +48,8 @@ offset_left = 40.0
 offset_top = 52.0
 offset_right = 240.0
 offset_bottom = 80.0
+theme_override_colors/font_outline_color = Color(0.14, 0.3, 0.13, 0.9)
+theme_override_constants/outline_size = 6
 autowrap_mode = 3
 text = "Place your blocks, then press play"
 
@@ -94,6 +96,8 @@ offset_left = 40.0
 offset_top = -174.0
 offset_right = 244.0
 offset_bottom = -146.0
+theme_override_colors/font_outline_color = Color(0.14, 0.3, 0.13, 0.9)
+theme_override_constants/outline_size = 6
 text = "Tiles left: 0"
 
 [node name="InventoryBar" type="HBoxContainer" parent="UI/HUD"]

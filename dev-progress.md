@@ -1,5 +1,57 @@
 # Flash Flood — Dev Progress
 
+## Status: the map opens where you left off, and the HUD is readable (2026-09-09)
+
+Findings 19 and 20 of `handheld-audit.md` — the two cheapest remaining items.
+
+**Level Select opens on your own progress.** `_scroll_to_bottom()` slammed
+`scroll_vertical` to `1000000000` on every build — every cold start, every
+return from a level, every Back. The trail runs bottom-to-top over 100 nodes,
+so a player on level 47 landed with their own progress **more than three
+screen-heights above the viewport**, every single time. Measured before the
+fix: level 47's node sits at y=6052 while the view opened at 10254–11534.
+It now centres the highest unlocked node.
+
+A fresh save is unaffected, which was the regression risk running the other
+way: `reached` is 1, `points[0]` is the bottom-most node, and the clamp
+produces the old behaviour exactly — verified at 10254 of max 10254.
+
+**The two HUD readouts have an outline.** `StatusLabel` and `BudgetLabel` were
+pure white with no outline, and on a shared-budget level `BudgetLabel` is the
+*only* place the remaining block count appears. They now carry the same
+treatment `LevelSelect._build_group_label()` already used —
+`font_outline_color = Color(0.14, 0.3, 0.13, 0.9)`, `outline_size = 6`.
+
+Worth being precise about what that buys, because an outline does not change
+the fill's contrast with the background:
+
+| | ratio |
+|---|---|
+| white on sky blue (unchanged) | 1.73:1 |
+| white on grass (unchanged) | 2.75:1 |
+| **white against the new outline** | **9.80:1** |
+| outline against sky blue | 5.65:1 |
+| outline against grass | 3.56:1 |
+| white on a dark board tile | 14.47:1 |
+
+So the glyph now always has one high-contrast edge whatever sits behind it:
+over sky or grass the dark rim carries it, and over the dark board the white
+fill already did (14.47:1) — the rim there is only 1.48:1, but it does not
+need to be.
+
+**`tests/VerifyMapScroll.tscn`, 14 checks**, covering both. It asserts the
+reached node is not merely on screen but near the middle, that level 100
+clamps instead of overshooting, and — the important one — that a fresh save
+still opens at the bottom. Verified against the old code: **8 failures without
+the fixes, 0 with them.** It runs on save slot 98, not slot 0, per the warning
+in CLAUDE.md.
+
+All ten suites pass and the solution book is unchanged at 88 / 11 / 1. All 10
+`BoardSnapshots` change, as expected from an outline that appears on every
+level; the diffs are confined to the label rectangles — `level_001` is
+(39,56)–(219,102), StatusLabel alone, and `level_082` adds the BudgetLabel row
+at y≈1126 because it is a budget level.
+
 ## Status: every control is a real touch target now (2026-09-09)
 
 Finding 11 of `handheld-audit.md`, the largest remaining item and the first
