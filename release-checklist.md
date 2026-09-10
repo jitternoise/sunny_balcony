@@ -10,6 +10,10 @@ networking**. That makes most of the privacy paperwork trivial, but the
 paperwork still has to be filed. Where the answer would change if you added
 ads or a paid tier, the item says so.
 
+**Decision 2026-09-10: publish as an organization on both stores.** The
+listings show the company name, both accounts need a D-U-N-S number and a
+legal entity behind it, and the Play closed-testing gate does not apply.
+
 Legend: `[ ]` to do · **⏱** something with a waiting period, start it early ·
 **💻** needs the Mac · **📱** needs a physical device.
 
@@ -20,23 +24,34 @@ Legend: `[ ]` to do · **⏱** something with a waiting period, start it early �
 These have waiting periods you cannot shorten. Kick them off before any of
 the build work.
 
-- [ ] **Google Play developer account** — one-time US$25. Personal accounts
-      created after 2023-11-13 need a **12-tester, 14-day closed test** before
-      Google grants production access (see §6). Identity verification with a
-      government ID is now mandatory for every new personal account, and
-      Google is extending developer verification to *all* app installs on
-      certified Android devices, so this is not skippable.
-- [ ] **Apple Developer Program** — US$99/year. Individual enrolment takes
-      roughly 1-2 days; an Organization needs a **D-U-N-S number** (free, but
-      up to ~4 weeks to issue) and 1-2 weeks of Apple verification.
-- [ ] **Decide individual vs organization on both stores, and use the same
-      answer on both.** An individual's legal name appears on the listing.
-      A business name needs a registered business and a D-U-N-S on both
-      sides. Changing later means a new account and a migration.
-- [ ] **Recruit the 12 Android testers** now if the Play account is personal.
-      They must stay opted in *continuously* for 14 days; a tester who drops
-      out resets the clock for that seat. Friends with Android phones,
-      a Discord, or one of the tester-exchange communities.
+- [ ] **A registered legal entity.** Both stores need one to contract with.
+      Apple refuses DBAs, trade names and branches; Google wants the exact
+      legal name from the incorporation certificate, not a trading name.
+      If the company does not exist yet, forming it is the first item on
+      the critical path.
+- [ ] **D-U-N-S number** for that entity. Free from Dun & Bradstreet, but
+      issuance can take up to ~4 weeks. Apple has a fast-track lookup and
+      request form on its developer site; use the same number on both
+      stores. The registered name and address on the D-U-N-S record must
+      match the incorporation documents exactly.
+- [ ] **A public website on a domain the company owns**, with real content.
+      Apple rejects parked domains, "coming soon" pages and social-media
+      links. Google asks for a website on organization accounts too. The
+      privacy policy and support page (§1) can live here.
+- [ ] **A work email on that domain** for the enrolling person. Apple
+      requires it; Google's verification goes more smoothly with it.
+- [ ] **Google Play developer account (organization)** — one-time US$25.
+      Verification needs: the D-U-N-S, business registration or
+      incorporation documents, proof of a physical address (a registered-
+      agent address is rejected), and a government ID for the **authorized
+      representative**, who must appear on the business registration.
+      Organization accounts are **exempt from the 12-tester / 14-day closed
+      test**, which removes the longest wait from the Play side.
+- [ ] **Apple Developer Program (organization)** — US$99/year. The person
+      enrolling must have **legal authority to bind the organization**; if
+      that is not the owner or founder, Apple phones a named reference at
+      the company to confirm it. Expect 1-2 weeks of verification after the
+      D-U-N-S is in place, plus a verification phone call.
 - [ ] **Get hold of hardware** 📱: at least one Android phone (ideally one
       with a camera cutout, one older/cheaper one) and one iPhone. A Mac is
       required for the iOS build and upload 💻; nothing else can do it.
@@ -62,11 +77,13 @@ the build work.
       monitored.
 - [ ] **EU Digital Services Act trader status** — Apple requires every
       account to declare it, and non-declared apps are removed from the EU
-      storefront. A free hobby game with no monetisation can usually declare
-      *non-trader*. Anything monetised (ads, paid, IAP) makes you a trader
-      and Apple then **publishes your address, phone and email** on the
-      listing; a PO box and a dedicated number are the usual answer. Play has
-      its own DSA declaration in the Console.
+      storefront. A company distributing an app is a trader in practice
+      even when the app is free, so plan on *trader* and know that Apple
+      then **publishes the company address, phone number and email on the
+      EU listing**. Use the registered office or a PO box and a dedicated
+      number, not anyone's personal contact details. Apple verifies the
+      details before the app is approved in the EU. Play has its own DSA
+      declaration in the Console; give it the same details.
 - [ ] **Agreements.** Accept the Apple Developer Program License Agreement
       and the Play Developer Distribution Agreement. Only sign the Apple
       *Paid Apps* agreement and set up Play's merchant account if the game
@@ -270,12 +287,12 @@ shows a tick.
 - [ ] Upload the AAB to **Internal testing** first. Read the **pre-launch
       report** (Google runs it on ~10 real devices and flags crashes,
       accessibility, and 16 KB issues).
-- [ ] **Closed testing** (personal accounts created after 2023-11-13):
-      create a closed track, add the 12+ testers by email or Google Group,
-      keep the release live and the testers opted in for **14 continuous
-      days**, then **apply for production access** from the Dashboard and
-      answer Google's questionnaire about what you tested and learned.
-      Expect ~7 days for Google's decision.
+- [ ] **Closed testing** is optional for an organization account (the
+      12-tester / 14-day gate applies only to personal accounts created
+      after 2023-11-13). Still run one: a closed track with a handful of
+      real people on their own phones catches what the pre-launch report
+      does not, and the Console lets you promote that build straight to
+      production.
 - [ ] Countries/regions: pick all, or exclude specific ones. Note that
       once the DSA and developer-verification rules apply, EU and
       Brazil/Indonesia/Singapore/Thailand distribution depends on verified
@@ -339,7 +356,9 @@ shows a tick.
       Budget one maintenance update a year purely for those.
 - [ ] Renew the Apple membership yearly or the app is pulled.
 - [ ] Keep the keystore backups current and the Play/Apple account recovery
-      details (phone, 2FA) working.
+      details (phone, 2FA) working. On both stores the account belongs to
+      the organization: add a second admin so a single person leaving or
+      losing a phone does not lock the company out.
 
 ---
 
@@ -351,6 +370,8 @@ shows a tick.
 - [Everything about the 12 testers requirement (community guide)](https://support.google.com/googleplay/android-developer/community-guide/255621488/everything-about-the-12-testers-requirement)
 - [Android developer verification rollout (Android Developers Blog, 2026-03)](https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html)
 - [Required information to create a Play Console developer account](https://support.google.com/googleplay/android-developer/answer/13628312)
+- [Choose a developer account type](https://support.google.com/googleplay/android-developer/answer/13634885)
+- [Verifying your Play Console developer account for organizations (PDF)](https://play.google.com/console/about/static/pdf/Verifying_your_Play_Console_developer_account_for_organizations.pdf)
 - [Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469)
 - [Content rating requirements (IARC)](https://support.google.com/googleplay/android-developer/answer/9859655)
 - [Preview assets: icon, feature graphic, screenshots](https://support.google.com/googleplay/android-developer/answer/9866151)
@@ -364,6 +385,8 @@ shows a tick.
 - [Manage EU DSA trader requirements](https://developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/)
 - [App Privacy Details](https://developer.apple.com/app-store/app-privacy-details/)
 - [Apple Developer Program enrollment](https://developer.apple.com/programs/enroll/)
+- [Program enrollment help (organization requirements)](https://developer.apple.com/help/account/membership/program-enrollment/)
+- [D-U-N-S Number (Apple help, lookup and request)](https://developer.apple.com/help/account/membership/D-U-N-S/)
 - [App Store screenshot sizes 2026](https://aso.dev/app-store-connect/screenshots/)
 - [ITSAppUsesNonExemptEncryption explained](https://orbitkit.io/blog/app-store-export-compliance-encryption/)
 - [App Store rejections guide (RevenueCat)](https://www.revenuecat.com/blog/growth/the-ultimate-guide-to-app-store-rejections)

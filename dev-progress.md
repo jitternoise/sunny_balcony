@@ -11,6 +11,11 @@ target API 36 from 2026-08-31, Xcode 26 / iOS 26 SDK since 2026-04-28. It
 folds in the existing pre-export items from `open-items.md` and flags level
 68 (audit finding 33) as a release blocker. No code changed.
 
+Decision: **publish as an organization on both stores.** The checklist now
+leads with the legal entity, D-U-N-S, company website and domain email, and
+notes that organization accounts skip Play's 12-tester closed-testing gate
+but are traders under the EU DSA, so the company contact details go public.
+
 ## Status: direction glyphs point at their real exit bearing (2026-09-10)
 
 The 45-degree compromise in the entry below is gone. The Diverters and the
