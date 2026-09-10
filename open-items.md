@@ -318,6 +318,136 @@ in this project can see an export-only defect**, because every test scene and
 both verification tools run against the source tree. The audit's remaining
 export-readiness items are all still open.
 
+## 🎯 Feature backlog (added 2026-09-09)
+
+Three ideas, none started. Each entry records what already exists and where it
+would hook in, so picking one up doesn't mean redoing the research.
+
+**Two of the three want the same thing first.** The almost-lost warning asks
+"is this run about to lose?" and the early acceleration asks "has this run
+already won?" — different questions, one missing capability: a trustworthy
+forward simulation of the live board. The only lookahead in shipped code
+(`_predict_flow_arrows()`) cannot answer either. Build that once and both
+features get much smaller; build them separately and it gets built twice.
+
+### 1. Incorporate the animals
+
+The 15 character assets exist and none of them are in the engine.
+
+**This is not a blank slate — read `story-bible.md` first.** It is an agreed
+design (2026-08-31) whose 13 chapters map onto `LevelSelect.GROUPS`
+name-for-name and range-for-range, so the chapter→animal mapping is already
+decided even though no `.tres` carries a chapter field (derive it from
+`GROUPS`, or add one).
+
+**Highest-value first slice**, and the bible calls it ~90% of the
+storytelling: replace the 4-box pool status bar with the chapter animal in 5
+states. Same data (`pool_fill`, `POOL_BEATS_REQUIRED = 4`), no new mechanics,
+and the art already exists as `characters/pool-sequence/s0`–`s4`. The hook is
+`HexBoard._draw_pool_status_bar()` (`HexBoard.gd:2530`) — **replace its body
+only**. `_draw_status_bar()` (`HexBoard.gd:2541`) is shared with the Geyser
+and must keep working.
+
+Second slice: chapter vignettes at group boundaries. The bible's named hook is
+the win popup's Next path, `Level._on_win_next_pressed()` (`Level.gd:1097`).
+
+Things worth knowing before starting:
+
+- **Use `characters/svg/`, not `characters/png/`.** The PNGs are 8-bit RGB
+  with no alpha and would draw an opaque box over the hex. The SVGs are
+  already in the house style (100×100 viewBox, stroke `#0b3d63`, width 5 —
+  deliberately matching `game/assets/icons/`).
+- **Pipeline**: copy into `game/assets/characters/`, open the editor once to
+  generate the `.svg.import` files, then set `svg/scale=3.0` to match the 20
+  existing icons. The default `1.0` gives a blurry 100px texture.
+- **The 5 pool frames are separate files, not a strip.** `_draw_tile_art()` /
+  `_anim_frame()` expect a horizontal sheet, so this needs either a per-frame
+  texture array or a re-exported sheet *with* alpha.
+- `characters/README.md` flags the sheepdog, the "everyone" crowd glyph and
+  the mole as the three weakest reads — redraw before animating.
+- If any of this art reaches further from a cell centre than
+  `Hex.SIZE * 2 + 48`, widen `_visible_draw_rect()`'s margin or it will pop in
+  at the screen edge — and note `BoardSnapshots` cannot catch that (see
+  CLAUDE.md).
+
+### 2. Almost-lost warning, with a way out
+
+**Tell the player they are *going* to lose, and give them an action to change
+it.** Predictive, not a post-hoc "that was close".
+
+⏳ **The intervention is undecided and the owner will elaborate.** Do not
+invent one — what the player actually gets to *do* is the whole feature, and
+the rest of this entry is only the groundwork.
+
+There is no precedent anywhere in the codebase: grepping for close-call /
+near-miss / tension concepts returns nothing relevant.
+
+What exists to build on:
+
+- **The loss paths are few and precise.** `HexBoard._lose()`
+  (`HexBoard.gd:1944`) and `LoseReason = {EDGE, TOWN}` (`HexBoard.gd:589`),
+  with exactly four call sites: `HexBoard.gd:1865` (pointy bottom edge,
+  `coord.y > grid_radius`), `1876` (town — any water entering a
+  `CellState.TOWN` cell, instant, no fill counter), and `1542` / `1622` for
+  the flat-grid equivalents.
+- **A read-only "would this lose?" predicate already exists**: the flow-preview
+  path (`HexBoard.gd:2056-2059`) replicates the same edge tests without
+  calling `_lose()`.
+- **Timing constrains the design.** Losses fire on beat 2 (WATER), wins on
+  beat 4 (STATUS). A warning has to land *before* the water step that kills —
+  which is exactly why the 4-step geometric preview isn't enough and why this
+  shares the forward-simulation dependency above.
+
+Open: how many measures ahead to warn; whether it is always on or an assist
+option; and whether it should also cover a run that can no longer *win* (a
+stalled board is a different condition from one about to lose).
+
+### 3. Accelerate once the win is settled
+
+When the water is already on a winning line several tiles out, speed the level
+up rather than play out a foregone conclusion at normal pace.
+
+**Wins only.** A doomed run stays at normal speed so the player can watch what
+went wrong.
+
+**The mechanism is one variable**: `ticks_per_beat` (`Level.gd:31`, currently
+2). Its own doc comment already says a dynamic tempo "would just reassign this
+at runtime."
+
+**And it is safe by construction**, which is worth stating because it looks
+risky and isn't: the sim runs off a `Timer`, not frames, and `measures_elapsed`
+counts beats rather than seconds. Changing `ticks_per_beat` changes wall-clock
+speed but **not the measure count** — so outcomes, `par_measures` and the
+88/11/1 solution book are all unaffected. Only `level-min-times.md`'s
+*seconds* column would need a note.
+
+**The blocker is detection, and it is real.**
+
+- `_predict_flow_arrows()` (`HexBoard.gd:1990`) is **not sufficient**: 4 steps
+  deep (`PREVIEW_ARROW_STEPS = 4`, `HexBoard.gd:257`), purely geometric, no
+  time dimension, deliberately treats FIRE as never-consuming, counts neither
+  pool fill nor fires remaining, and cannot judge a win.
+- `FFSim` (`game/tools/Sim.gd`) *is* the right engine — it drives the real
+  board, so rule drift is structurally impossible — but it always starts from
+  `board.setup()` on a fresh `.tres`, and `tools/` is excluded from every
+  export, so it cannot ship as-is.
+- Two candidate approaches: add `HexBoard` state snapshot/restore, or add a
+  `run_from(board, max_measures)` variant — `Sim.gd`'s phase loop is already
+  state-agnostic, it is only the entry point that assumes a fresh board.
+- **A speculative run must not touch the live board.** `_try_enter()` writes
+  `_pending_terrain` / `flooded_towns` and can emit `level_lost`;
+  `_note_dirt_stall()` / `_note_hydro_contact()` mutate; `_process_mudslides()`
+  rewrites `cell_terrain` / `dig_progress`.
+
+Open: what "several tiles early" means numerically; whether the speed-up ramps
+or snaps; whether the player can cancel it; and how it reads against the 12 Hz
+animation heartbeat.
+
+**Decide this alongside the existing tempo work, not separately.** The "Tempo
+work — all three items untouched" section above and the unwired 72/80 BPM spec
+in `toolset-and-requirements.md` ("Music-driven timing spec") both reassign
+this same knob.
+
 ## 🚚 Pre-export checklist (added 2026-09-08)
 
 Neither export has been configured — no `export_presets.cfg` is committed
