@@ -1,5 +1,61 @@
 # Flash Flood — Dev Progress
 
+## Status: hex borders are antialiased; tile art re-measured, not fixed (2026-09-09)
+
+Findings 25 and 26 of `handheld-audit.md`. One is fixed. The other turned out
+to rest on a half-wrong premise and is deliberately left alone — see below.
+
+**25 — hex borders.** Reproduced at 1080×2400 (canvas scale 1.5, the modal
+Android resolution): **192 runs of 1 px, 353 of 2 px, 208 of 3 px** for what
+should be a uniform line, across only **3 distinct luminance values**. Identical
+cell edges landing on 1, 2 or 3 device pixels with no gradient between them.
+`antialiased=true` on all 16 stroke calls in `HexBoard.gd` gives 22 tones; at
+5× zoom the diagonals go from stair-stepped to smooth while the verticals are
+unchanged, which is exactly right — verticals sit on the pixel grid and never
+had the problem.
+
+**MSAA 2D is not a substitute, and this was measured rather than assumed.**
+With `rendering/anti_aliasing/quality/msaa_2d=1` and no per-call flag the
+output is identical to plain — 3 tones, 193 draw calls. Godot's 2D MSAA does
+not touch line primitives in the Compatibility renderer, so the per-call flag
+is the only lever.
+
+**It costs, and the number is worth having:** draw calls **193 → 369** on level
+22 (+91%), frame time +11% under llvmpipe. Still well below the ~1064 before
+culling, but it hands back half of that win. Recorded in the audit so it can be
+reconsidered on a device.
+
+**26 — tile art. Re-measured, and the title was half wrong.** It said
+"magnified 1.3–2.0×". Sweeping `Hex.SIZE` across all 100 levels against the
+128 px source frames:
+
+| canvas scale | drawn px | magnified | minified |
+|---|---|---|---|
+| 1.0 (720-wide) | 58–187 | 1 | **99** |
+| 1.5 (1080-wide, modal) | 86–281 | 47 | **53** |
+| 2.0 (1440-wide) | 115–374 | **99** | 1 |
+
+On the commonest Android resolution it is a near-even split, and on
+small-celled levels the art is *minified*. Smallest cell is level 18
+(`Hex.SIZE` 28.8), largest level 16 (93.5).
+
+**Left unfixed on purpose.** The magnified half needs higher-resolution source
+art, and there is no vector source for the water or fire sheets anywhere in the
+repo — only the PNGs — so that is art work. The minified half is what mipmaps
+would fix, one import flag, except that mipmapping a horizontal sprite sheet
+blends neighbouring frames at coarser mips — exactly what `SHEET_REGION_INSET`
+exists to hold off, and at mip 1 that inset is half of what it would need.
+Godot's canvas default filter ignores mipmaps anyway, so it is a two-part
+change whose failure mode is cross-frame bleed that **cannot be validated
+without a GPU**. The shimmer it would cure is mild (≤1.5× minification); the
+bleed it might cause is not. The audit entry now records the route that solves
+both at once: re-author at 256 px per frame *with padding*, then mipmaps are
+safe.
+
+All eleven suites pass and the solution book is unchanged at 88 / 11 / 1. All
+10 `BoardSnapshots` change, as expected when every hex border on every board
+gains a gradient.
+
 ## Status: undo works on a queued block, and the header stops clipping (2026-09-09)
 
 Findings 31 and 24 of `handheld-audit.md`.

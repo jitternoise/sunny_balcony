@@ -332,7 +332,7 @@ claim: the level *can* be paused back into place; it does not keep ticking.
 
 ## 🖥 Rendering on hardware that is not llvmpipe
 
-### 25. Hex borders render 1–2 device px unevenly — MEDIUM
+### 25. Hex borders render 1–2 device px unevenly — MEDIUM ✅ FIXED 2026-09-09
 `game/scripts/gameplay/HexBoard.gd:2250`
 
 `draw_polyline` without `antialiased=true` at canvas scale 1.5 (1080×2400 — the
@@ -342,13 +342,59 @@ captured at scale 2.0, level 1 still shows 386 width-1 runs mixed with width-2.
 Every screenshot ever taken of this project is at scale 1.0, where the artifact
 cannot occur.
 
-### 26. Tile art is authored at 128 px and magnified 1.3–2.0× — MEDIUM
+Reproduced at 1080×2400: **192 runs of 1 px, 353 of 2 px and 208 of 3 px** for
+what should be a uniform line, across only **3 distinct luminance values** —
+hard-edged, no gradient at all. `antialiased=true` on all 16 stroke calls gives
+22 tones and smooth diagonals (verticals were always fine; they sit on the
+pixel grid).
+
+**MSAA 2D is not a substitute** — measured, not assumed. With
+`rendering/anti_aliasing/quality/msaa_2d=1` and no per-call flag the output is
+byte-identical to plain: still 3 tones, still 193 draw calls. Godot's 2D MSAA
+does not touch line primitives in the Compatibility renderer.
+
+Cost, measured: draw calls **193 → 369** on level 22 (+91%), frame time +11%
+under llvmpipe. That is still far below the ~1064 before culling, but it is
+half the culling win given back.
+
+### 26. Tile art is 128 px against a drawn size of 58–374 px — MEDIUM
 `game/scripts/gameplay/HexBoard.gd:2652`
 
-The SVGs got a 3× import scale; the five PNG sheets got nothing. The water and
-flame animations — the most eye-catching things on the board — are the softest.
-The verifier swept all 100 levels and found the worst case is level 16, not the
-level the finders named.
+The SVGs got a 3× import scale; the five PNG sheets (each 768×128 = six 128 px
+frames, RGBA, `mipmaps/generate=false`) got nothing.
+
+> **Re-measured 2026-09-09, and the premise was half wrong.** The title used to
+> say "magnified 1.3–2.0×". Sweeping `Hex.SIZE` across all 100 levels and
+> multiplying out the FILL draw size (`Hex.SIZE * 2`) against the 128 px source:
+>
+> | canvas scale | drawn px | magnified | minified |
+> |---|---|---|---|
+> | 1.0 (720-wide) | 58–187 | 1 | **99** |
+> | 1.5 (1080-wide, modal) | 86–281 | 47 | **53** |
+> | 2.0 (1440-wide) | 115–374 | **99** | 1 |
+>
+> So on the commonest Android resolution it is a near-even split, and on
+> small-celled levels the art is *minified*, not magnified. Smallest cell is
+> level 18 (`Hex.SIZE` 28.8), largest level 16 (93.5).
+
+**Still open, and deliberately not fixed here**, because neither half is safely
+actionable without a device or an artist:
+
+- The **magnified** half needs higher-resolution source art. There is no vector
+  source for the water or fire sheets anywhere in the repo — only the PNGs — so
+  re-authoring at 256 px per frame is art work, not a settings change.
+- The **minified** half is what mipmaps would fix, and they are one import flag.
+  But mipmapping a *horizontal sprite sheet* blends neighbouring frames at
+  coarser mips, which is precisely what `SHEET_REGION_INSET` (half a texel)
+  exists to hold off — at mip 1 that inset is half of what it needs to be. And
+  Godot's canvas default filter ignores mipmaps anyway, so it is a two-part
+  change whose failure mode is cross-frame bleed that **cannot be validated
+  without a GPU**. The minification is at most 1.5×, so the shimmer it would
+  cure is mild; the bleed it might cause is not.
+
+If this is picked up: re-author the five sheets at 256 px per frame *with
+padding between frames*, then mipmaps become safe and both halves are solved at
+once.
 
 ### 27. The visual regression net never renders water — LOW
 `game/tests/BoardSnapshots.gd:4`

@@ -2321,7 +2321,7 @@ func _draw_cell(coord: Vector2i) -> void:
 	# 3. cell border
 	var outline := points.duplicate()
 	outline.append(points[0])
-	draw_polyline(outline, Color(0, 0, 0, 0.4), 1.0)
+	draw_polyline(outline, Color(0, 0, 0, 0.4), 1.0, true)
 
 	# 4. Fixed level furniture gets a second, inset outline -- see
 	#    PRESET_OUTLINE_COLOR and _is_preset_cell(). Both halves of a 2-wide
@@ -2331,7 +2331,7 @@ func _draw_cell(coord: Vector2i) -> void:
 		for i in range(6):
 			inner.append(center + (Hex.hex_corner(center, i) - center) * PRESET_OUTLINE_INSET)
 		inner.append(inner[0])
-		draw_polyline(inner, PRESET_OUTLINE_COLOR, 2.0)
+		draw_polyline(inner, PRESET_OUTLINE_COLOR, 2.0, true)
 
 	# 5. glyph. A state with a sheet animates; one with only an icon draws
 	#    it statically, which is how a tile type gets converted to animation
@@ -2362,7 +2362,7 @@ func _draw_cell(coord: Vector2i) -> void:
 		# something, same ring style _draw_source_marker() always shows on
 		# a source, just a warmer color so it doesn't read as "already
 		# flowing."
-		draw_arc(center, Hex.SIZE * 0.55, 0, TAU, 24, Color(1.0, 0.85, 0.3, 0.9), 2.5)
+		draw_arc(center, Hex.SIZE * 0.55, 0, TAU, 24, Color(1.0, 0.85, 0.3, 0.9), 2.5, true)
 
 	# Ghosted placements get their block's glyph too, at full opacity over
 	# the translucent fill -- the icon is what actually tells the player
@@ -2461,14 +2461,14 @@ func _draw_block_direction_arrows(coord: Vector2i, block_id: String) -> void:
 			continue
 		var arrow_start := center + dir_vec * (Hex.SIZE * 0.42)
 		var arrow_end := center + dir_vec * (Hex.SIZE * 0.92)
-		draw_line(arrow_start, arrow_end, color, 2.0)
+		draw_line(arrow_start, arrow_end, color, 2.0, true)
 
 		# Arrowhead: two short strokes angled back from the tip, same
 		# shape and scale as the dormant geyser's.
 		var back := -dir_vec * (Hex.SIZE * 0.16)
 		var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.10)
-		draw_line(arrow_end, arrow_end + back + perp, color, 2.0)
-		draw_line(arrow_end, arrow_end + back - perp, color, 2.0)
+		draw_line(arrow_end, arrow_end + back + perp, color, 2.0, true)
+		draw_line(arrow_end, arrow_end + back - perp, color, 2.0, true)
 
 
 ## The direction a dormant geyser's stream will take on its very first move
@@ -2499,14 +2499,14 @@ func _draw_geyser_direction_arrow(coord: Vector2i) -> void:
 	var color := Color(0.85, 0.7, 0.9, 0.85)
 	var arrow_start := center + dir_vec * (Hex.SIZE * 0.42)
 	var arrow_end := center + dir_vec * (Hex.SIZE * 0.92)
-	draw_line(arrow_start, arrow_end, color, 2.0)
+	draw_line(arrow_start, arrow_end, color, 2.0, true)
 
 	# Arrowhead: two short strokes angled back from the tip, same shape as
 	# _draw_source_marker()'s, scaled down.
 	var back := -dir_vec * (Hex.SIZE * 0.16)
 	var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.10)
-	draw_line(arrow_end, arrow_end + back + perp, color, 2.0)
-	draw_line(arrow_end, arrow_end + back - perp, color, 2.0)
+	draw_line(arrow_end, arrow_end + back + perp, color, 2.0, true)
+	draw_line(arrow_end, arrow_end + back - perp, color, 2.0, true)
 
 
 ## Draws `texture` centered on `center`, scaled to comfortably fit inside a
@@ -2596,7 +2596,7 @@ func _draw_source_marker(coord: Vector2i) -> void:
 
 	var ring_color := Color(1.0, 1.0, 1.0, 0.9)
 
-	draw_arc(center, Hex.SIZE * 0.55, 0, TAU, 24, ring_color, 2.5)
+	draw_arc(center, Hex.SIZE * 0.55, 0, TAU, 24, ring_color, 2.5, true)
 
 	if show_flow_preview:
 		return
@@ -2606,13 +2606,13 @@ func _draw_source_marker(coord: Vector2i) -> void:
 	var dir_vec := (target_center - center).normalized()
 	var arrow_start := center + dir_vec * (Hex.SIZE * 0.15)
 	var arrow_end := center + dir_vec * (Hex.SIZE * 0.85)
-	draw_line(arrow_start, arrow_end, ring_color, 3.0)
+	draw_line(arrow_start, arrow_end, ring_color, 3.0, true)
 
 	# Arrowhead: two short strokes angled back from the tip.
 	var back := -dir_vec * (Hex.SIZE * 0.22)
 	var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.14)
-	draw_line(arrow_end, arrow_end + back + perp, ring_color, 3.0)
-	draw_line(arrow_end, arrow_end + back - perp, ring_color, 3.0)
+	draw_line(arrow_end, arrow_end + back + perp, ring_color, 3.0, true)
+	draw_line(arrow_end, arrow_end + back - perp, ring_color, 3.0, true)
 
 
 ## The direction a freshly-spawned drop at `coord` will try first -- always
@@ -2656,13 +2656,13 @@ func _draw_flow_arrow(from_coord: Vector2i, to_coord: Vector2i, alpha_scale: flo
 	var dir_vec := (to_center - from_center).normalized()
 	var arrow_start := from_center + dir_vec * (Hex.SIZE * 0.3)
 	var arrow_end := to_center - dir_vec * (Hex.SIZE * 0.3)
-	draw_line(arrow_start, arrow_end, color, 3.0)
+	draw_line(arrow_start, arrow_end, color, 3.0, true)
 
 	# Arrowhead: two short strokes angled back from the tip.
 	var back := -dir_vec * (Hex.SIZE * 0.22)
 	var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.14)
-	draw_line(arrow_end, arrow_end + back + perp, color, 3.0)
-	draw_line(arrow_end, arrow_end + back - perp, color, 3.0)
+	draw_line(arrow_end, arrow_end + back + perp, color, 3.0, true)
+	draw_line(arrow_end, arrow_end + back - perp, color, 3.0, true)
 
 
 ## Live preview of a charging Bomb Catapult shot (see active_catapult_aim /
