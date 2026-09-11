@@ -67,6 +67,24 @@ class_name LevelData
 ## Only the dictionary's keys (which cells are pools) matter.
 @export var pool_targets: Dictionary = {}
 
+## The three OTHER cells of each pool's lake: pool anchor (a pool_targets
+## key) -> Array[Vector2i] of the cells that complete it. A pool is four
+## hexes, the same footprint as a town, drawn as one body of water.
+##
+## Mechanically the four cells are one target: water landing on ANY of them
+## fills the same counter (keyed by the anchor in HexBoard.pool_fill), at
+## most one beat per beat however many cells are wet -- see
+## HexBoard._resolve_terrain_contact(). All four absorb water, all four
+## refuse a block, all four draw as pool. The status bar is drawn once,
+## above the lake.
+##
+## Every pool must have exactly three cells here, all playable, none a
+## source, none other terrain -- tools/smoke_test.gd enforces it. The
+## shape is not fixed: the town cluster is a rhombus, and that is preferred
+## where it fits, but a corridor or a board edge may force a different
+## four-cell shape (see tools/grow_lakes.gd, which chose them).
+@export var lake_cells: Dictionary = {}
+
 ## Blocks baked into the level as FIXED terrain: axial coordinate ->
 ## (NOTE: for a multi-cell block type -- see BlockData.footprint_offsets,
 ## e.g. the 2-wide Wall -- the coordinate is the block's ANCHOR, and it

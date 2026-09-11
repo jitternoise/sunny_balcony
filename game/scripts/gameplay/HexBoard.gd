@@ -372,6 +372,18 @@ var flooded_towns: Dictionary = {}
 var pool_fill: Dictionary = {}
 var fires_remaining: int = 0
 
+## Vector2i -> Vector2i. Every cell of every lake mapped to that lake's
+## anchor (its pool_targets key); the anchor maps to itself. This is what
+## makes a four-cell pool one target: pool_fill is keyed by anchor, and any
+## cell's contact is credited there -- see _resolve_terrain_contact().
+var lake_anchor: Dictionary = {}
+
+## Anchors credited during the CURRENT terrain beat. Cleared each beat by
+## resolve_terrain_phase(). A lake fills by one per beat however many of its
+## cells are wet -- a Splitter feeding two cells of one lake must not fill it
+## twice as fast, or "four beats of connection" stops meaning anything.
+var _lakes_credited_this_beat: Dictionary = {}
+
 ## Vector2i -> int. Same cumulative/preserved semantics as pool_fill, but for
 ## geysers -- capped at GEYSER_BEATS_REQUIRED. Once a geyser reaches the cap
 ## it's moved from here into active_geysers and its terrain reverts to EMPTY
@@ -643,9 +655,16 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 		cell_terrain[coord] = CellState.FIRE
 	fires_remaining = data.fire_cells.size()
 
+	lake_anchor.clear()
+	_lakes_credited_this_beat.clear()
 	for coord in data.pool_targets.keys():
 		cell_terrain[coord] = CellState.POOL
 		pool_fill[coord] = 0
+		lake_anchor[coord] = coord
+		# The rest of the lake: pool terrain too, credited to this anchor.
+		for extra in data.lake_cells.get(coord, []):
+			cell_terrain[extra] = CellState.POOL
+			lake_anchor[extra] = coord
 
 	for coord in data.town_cells:
 		cell_terrain[coord] = CellState.TOWN
@@ -1284,6 +1303,7 @@ func resolve_water_phase() -> void:
 func resolve_terrain_phase() -> void:
 	if game_over:
 		return
+	_lakes_credited_this_beat.clear()
 	for coord in _pending_terrain:
 		_resolve_terrain_contact(coord)
 	_pending_terrain.clear()
@@ -1318,9 +1338,16 @@ func _resolve_terrain_contact(coord: Vector2i) -> void:
 		return
 
 	if terrain == CellState.POOL:
-		# Capped at POOL_BEATS_REQUIRED -- water connecting on beats beyond
-		# that doesn't do anything further, it's already maxed out.
-		pool_fill[coord] = mini(pool_fill.get(coord, 0) + 1, POOL_BEATS_REQUIRED)
+		# Credited to the LAKE, not the cell: all four cells of a pool share
+		# one counter, keyed by the anchor. And only once per beat -- two
+		# streams into two cells of the same lake are still one beat of
+		# connection. Capped at POOL_BEATS_REQUIRED: water connecting on
+		# beats beyond that does nothing further, it is already full.
+		var anchor: Vector2i = lake_anchor.get(coord, coord)
+		if _lakes_credited_this_beat.has(anchor):
+			return
+		_lakes_credited_this_beat[anchor] = true
+		pool_fill[anchor] = mini(pool_fill.get(anchor, 0) + 1, POOL_BEATS_REQUIRED)
 		return
 
 	if terrain == CellState.GEYSER:
@@ -2167,7 +2194,8 @@ func _resolve_tile_state(coord: Vector2i) -> StringName:
 	if terrain == CellState.FIRE:
 		return TILE_FIRE
 	if terrain == CellState.POOL:
-		return TILE_POOL_FULL if (pool_fill.get(coord, 0) as int) >= POOL_BEATS_REQUIRED else TILE_POOL
+		var anchor: Vector2i = lake_anchor.get(coord, coord)
+		return TILE_POOL_FULL if (pool_fill.get(anchor, 0) as int) >= POOL_BEATS_REQUIRED else TILE_POOL
 	if terrain == CellState.TOWN:
 		return TILE_TOWN_FLOODED if flooded_towns.has(coord) else TILE_TOWN
 	if terrain == CellState.GEYSER:
@@ -2547,10 +2575,38 @@ func _draw_icon(center: Vector2, texture: Texture2D, scale_factor: float = ICON_
 ## Boxes stay flipped even if the water disconnects later -- progress is
 ## cumulative, not reset by a gap.
 func _draw_pool_status_bar(coord: Vector2i) -> void:
-	var connected_beats: int = pool_fill.get(coord, 0) as int
+	var anchor: Vector2i = lake_anchor.get(coord, coord)
+	var connected_beats: int = pool_fill.get(anchor, 0) as int
 	if connected_beats <= 0:
 		return # bar hasn't "popped up" yet -- no connection landed here yet
-	_draw_status_bar(coord, connected_beats, POOL_BEATS_REQUIRED, Color(0.2, 0.85, 0.4))
+	# One bar per LAKE, not per cell: drawn only from the cell that sits
+	# highest on screen, and centred over the whole lake rather than over
+	# that one hex, so a four-cell pool reads as one target with one bar.
+	var cells := lake_cells_of(anchor)
+	var top_y := INF
+	var top_cell := coord
+	var centre_x := 0.0
+	for cell in cells:
+		var c := Hex.axial_to_pixel(cell)
+		centre_x += c.x
+		if c.y < top_y - 0.001 or (absf(c.y - top_y) <= 0.001 and cell < top_cell):
+			top_y = c.y
+			top_cell = cell
+	if coord != top_cell:
+		return
+	centre_x /= cells.size()
+	_draw_status_bar_at(Vector2(centre_x, top_y), connected_beats, POOL_BEATS_REQUIRED, Color(0.2, 0.85, 0.4))
+
+
+## Every cell of the lake anchored at `anchor` -- the anchor itself first,
+## then level_data.lake_cells' extras. A pool with no lake entry is a
+## single cell, so the engine keeps working on data that predates lakes.
+func lake_cells_of(anchor: Vector2i) -> Array:
+	var cells := [anchor]
+	if level_data != null:
+		for extra in level_data.lake_cells.get(anchor, []):
+			cells.append(extra)
+	return cells
 
 
 ## Shared box-bar renderer for anything that fills up over a fixed number of
@@ -2558,10 +2614,16 @@ func _draw_pool_status_bar(coord: Vector2i) -> void:
 ## of them lit in `lit_color`, the rest dark. Used by both
 ## _draw_pool_status_bar() and the Geyser branch in _draw_cell().
 func _draw_status_bar(coord: Vector2i, filled: int, required: int, lit_color: Color) -> void:
+	_draw_status_bar_at(Hex.axial_to_pixel(coord), filled, required, lit_color)
+
+
+## The same bar positioned by a pixel centre rather than a cell, for a lake
+## whose bar belongs to four cells at once. `center` is treated as the
+## centre of the cell the bar sits above.
+func _draw_status_bar_at(center: Vector2, filled: int, required: int, lit_color: Color) -> void:
 	if filled <= 0:
 		return # bar hasn't "popped up" yet -- no connection landed here yet
 
-	var center := Hex.axial_to_pixel(coord)
 	var box_size := 10.0
 	var gap := 4.0
 	var total_width: float = required * box_size + (required - 1) * gap

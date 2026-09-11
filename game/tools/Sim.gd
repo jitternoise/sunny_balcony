@@ -75,6 +75,14 @@ func run(level_path: String, plan: Dictionary = {}) -> Dictionary:
 	if data == null:
 		return {"outcome": "error", "reason": "could not load " + level_path,
 				"measures": 0, "placements_rejected": []}
+	return run_data(data, plan)
+
+
+## run() on a LevelData already in hand -- for trialling a MODIFIED level
+## (a candidate lake footprint, a moved pool) without writing it to disk
+## first. The data is duplicated, so the caller's copy is never mutated.
+func run_data(level_data: LevelData, plan: Dictionary = {}) -> Dictionary:
+	var data: LevelData = level_data.duplicate(true)
 
 	var board: HexBoard = HexBoard.new()
 	add_child(board)
