@@ -73,6 +73,15 @@ var loaded_from_backup: bool = false
 # on _ready(). This avoids needing a second autoload just to pass one path.
 var pending_level_path: String = ""
 
+## The level the player was most recently IN, set by Level.gd on _ready().
+## LevelSelect opens the map centred on this node, so leaving a level -- by
+## Back, by Retry's sibling Level Select, or from the win or lose popup --
+## puts you back where you were rather than at your furthest progress,
+## which is what replaying level 24 with the campaign at 82 used to do.
+## Session-only and never saved: on a cold start the map opens on progress,
+## and load_slot() clears it so a slot switch cannot carry it across.
+var last_played_level_path: String = ""
+
 
 func _ready() -> void:
 	var dir := DirAccess.open("user://")
@@ -145,6 +154,7 @@ func load_slot(slot: int) -> void:
 	current_slot = slot
 	load_failed = false
 	loaded_from_backup = false
+	last_played_level_path = "" # another slot's last level means nothing here
 	highest_unlocked_level = 1
 	completed_levels.clear()
 	hydro_bonus_levels.clear()

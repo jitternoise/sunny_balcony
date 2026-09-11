@@ -30,8 +30,9 @@ func _check(cond: bool, what: String) -> void:
 
 ## Builds Level Select with progress up to `highest`, and reports where it
 ## scrolled to and where that level's node actually sits.
-func _open_at(highest: int) -> Dictionary:
-	GameState.load_slot(TEST_SLOT)
+func _open_at(highest: int, last_played: String = "") -> Dictionary:
+	GameState.load_slot(TEST_SLOT) # clears last_played_level_path, by design
+	GameState.last_played_level_path = last_played
 	GameState.highest_unlocked_level = highest
 	GameState.debug_unlock_all = false
 	var select: Node = load("res://scenes/LevelSelect.tscn").instantiate()
@@ -56,8 +57,9 @@ func _open_at(highest: int) -> Dictionary:
 ## Same as _open_at(), but reports where an ARBITRARY node sits rather than
 ## the one matching the player's progress -- used to check what a given save
 ## actually lands on.
-func _open_on_node(highest: int, node_name: String) -> Dictionary:
-	GameState.load_slot(TEST_SLOT)
+func _open_on_node(highest: int, node_name: String, last_played: String = "") -> Dictionary:
+	GameState.load_slot(TEST_SLOT) # clears last_played_level_path, by design
+	GameState.last_played_level_path = last_played
 	GameState.highest_unlocked_level = highest
 	GameState.debug_unlock_all = false
 	var select: Node = load("res://scenes/LevelSelect.tscn").instantiate()
@@ -68,6 +70,7 @@ func _open_on_node(highest: int, node_name: String) -> Dictionary:
 	var node: Control = select.get_node("ScrollContainer/MapRoot").get_node_or_null(node_name)
 	var out := {
 		"scroll": float(scroll.scroll_vertical),
+		"max": maxf(select.get_node("ScrollContainer/MapRoot").size.y - scroll.size.y, 0.0),
 		"viewport": scroll.size.y,
 		"node_y": node.position.y + node.size.y * 0.5 if node else -1.0,
 	}
@@ -80,6 +83,7 @@ func _open_on_node(highest: int, node_name: String) -> Dictionary:
 func _ready() -> void:
 	GameState.debug_unlock_all = false
 	GameState.delete_slot(TEST_SLOT)
+	GameState.last_played_level_path = ""
 
 	print("A fresh save opens at the bottom -- now on Tutorial 1")
 	var fresh := await _open_at(1)
@@ -112,6 +116,45 @@ func _ready() -> void:
 		var centre: float = top + at["viewport"] * 0.5
 		_check(absf(at["node_y"] - centre) <= at["viewport"] * 0.25,
 			"...and near the middle of the view, not clinging to an edge")
+
+	print("Leaving a level brings the map back centred on THAT level")
+	# Replaying level 24 with the campaign at 82 used to land the player back
+	# at 82 -- the map only knew about progress, not about where they had
+	# just been. Level.gd records itself on _ready(); here it is set directly
+	# so the test does not depend on the Level scene.
+	var back := await _open_on_node(82, "level_24", LevelSelect.LEVEL_PATHS[23])
+	var back_centre: float = back["scroll"] + back["viewport"] * 0.5
+	_check(absf(back["node_y"] - back_centre) <= back["viewport"] * 0.25,
+		"after leaving level 24, the map is centred on level 24 (progress at 82)")
+
+	# The same for a tutorial, whose slot is not its id. Tutorial 3 is the
+	# third node from the bottom of the trail, so centring it exactly would
+	# mean scrolling past the end of the map -- the honest requirement is
+	# "on screen, with the scroll at its limit", not "dead centre".
+	var t3: LevelData = load(LevelSelect.TUTORIAL_PATHS[2])
+	var back_t := await _open_on_node(82, "level_%d" % t3.level_id, LevelSelect.TUTORIAL_PATHS[2])
+	_check(back_t["node_y"] >= back_t["scroll"]
+			and back_t["node_y"] <= back_t["scroll"] + back_t["viewport"],
+		"after leaving tutorial 3, tutorial 3 is on screen")
+	_check(back_t["scroll"] >= back_t["max"] - 1.0,
+		"...scrolled as far toward it as the map allows (%.0f of %.0f)" % [back_t["scroll"], back_t["max"]])
+
+	# And it beats the brand-new-save tutorial rule too: a new player who
+	# opens level 1 and backs out should see level 1, not be sent to T1.
+	var back_new := await _open_on_node(1, "level_1", LevelSelect.LEVEL_PATHS[0])
+	var n_centre: float = back_new["scroll"] + back_new["viewport"] * 0.5
+	_check(absf(back_new["node_y"] - n_centre) <= back_new["viewport"] * 0.25,
+		"a new player who backs out of level 1 lands on level 1")
+
+	# An unknown path is ignored rather than crashing or scrolling somewhere
+	# odd, and a slot switch clears the record entirely.
+	var ignored := await _open_at(47, "res://data/levels/does_not_exist.tres")
+	var ignored_centre: float = ignored["scroll"] + ignored["viewport"] * 0.5
+	_check(absf(ignored["node_y"] - ignored_centre) <= ignored["viewport"] * 0.25,
+		"an unknown last-played path falls back to progress")
+	GameState.last_played_level_path = LevelSelect.LEVEL_PATHS[23]
+	GameState.load_slot(TEST_SLOT)
+	_check(GameState.last_played_level_path == "", "switching save slot forgets the last level")
 
 	print("Level 100 clamps to the top rather than overshooting")
 	var top_end := await _open_at(100)

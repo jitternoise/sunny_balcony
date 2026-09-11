@@ -1,5 +1,37 @@
 # Flash Flood — Dev Progress
 
+## Status: leaving a level returns you to it on the map (2026-09-11)
+
+The map opened on the player's *furthest* level every time, so replaying
+level 24 with the campaign at 82 and pressing Back dropped you at 82 -- two
+screens away from the node you had just been looking at.
+
+`GameState.last_played_level_path` now records the level on `Level._ready()`,
+and `LevelSelect._build_map()` prefers it as the scroll target over both the
+new-save tutorial rule and furthest progress. Every exit sets it the same way
+because they all go through the same `_ready()`: Back, the pause menu's Level
+Select, and the win and lose popups.
+
+**Session-only, and cleared by `load_slot()`.** It is never written to a save
+-- a cold start should open on progress, which it still does -- and a slot
+switch wipes it so that playing level 40 in Slot 1 cannot centre Slot 2's map
+on a node that slot has not unlocked.
+
+⚠️ That clearing bit the test first: `VerifyMapScroll`'s helpers call
+`load_slot()` on the way in, so a path set before the call was gone before
+the scene built. The helpers take it as a parameter now, applied after.
+
+⚠️ And tutorial 3 cannot be centred. It is the third node from the bottom of
+the trail; centring it would mean scrolling 322 px past the end of the map,
+and the test's 25%-of-viewport tolerance is 320. That is the scroll clamp
+doing its job, not a defect, so that case asserts the honest requirement --
+on screen, with the scroll at its limit -- rather than dead centre.
+
+Five new cases in `VerifyMapScroll`: level 24 with progress at 82, tutorial
+3, a new player backing out of level 1 (beats the go-to-tutorial rule), an
+unknown path falling back to progress, and the slot switch forgetting. All
+13 suites pass.
+
 ## Status: a grid that fits is centred on screen (2026-09-11)
 
 Handheld-audit finding #18. `_fit_hex_layout()` pinned every grid to

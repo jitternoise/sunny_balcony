@@ -1,6 +1,10 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; since the parameters that go here are meant to be edited.
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -8,28 +12,9 @@ config_version=5
 
 config/name="Flash Flood"
 run/main_scene="res://scenes/MainMenu.tscn"
-config/features=PackedStringArray("4.6", "GL Compatibility")
-; Android only: stop the engine quitting the app by itself the moment the
-; hardware/gesture Back button is pressed, on whatever screen the player
-; happens to be on. Each scene root handles NOTIFICATION_WM_GO_BACK_REQUEST
-; and routes Back to its own Back destination instead (MainMenu quits, every
-; other screen steps back one level). No effect on iOS, which never sends the
-; notification, or on desktop.
 config/quit_on_go_back=false
-; Nothing in this game animates faster than the 12 Hz board heartbeat
-; (HexBoard.ANIM_TICK_FPS), and the simulation runs off a Timer rather than
-; off frames, so the frame rate cannot change a level's outcome -- it only
-; costs battery. The default is 0, meaning unlimited: vsync then paces the
-; engine at the panel's refresh, so a 120 Hz phone re-submits the whole
-; board's draw list 120 times a second to show a picture that changes 12
-; times a second, most often while the player is sitting still deciding
-; where to put a block. 60 keeps input latency and animation smoothness
-; while halving that on a high-refresh handset.
+config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
-; Sky blue, matching every scene's Sky ColorRect. The engine paints this
-; behind the boot splash and anywhere a frame leaves pixels untouched, and
-; its default is a near-black grey -- with stretch/aspect=expand there are
-; no letterbox bars to hide it, so any gap would read as a black edge.
 boot_splash/bg_color=Color(0.53, 0.81, 0.92, 1)
 
 [autoload]
@@ -40,24 +25,12 @@ GameState="*res://scripts/autoload/GameState.gd"
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
-; Desktop only, and ignored on handhelds. The game is portrait-locked, so
-; the window must not be reshaped into a landscape one -- with
-; stretch/aspect=expand a wide window really does reshape the viewport,
-; where letterboxing used to hide it.
 window/size/resizable=false
-; ...but a fixed 720x1280 window does not fit a typical laptop screen, so
-; the desktop window opens at 3/4 scale. This changes the WINDOW only: the
-; viewport stays 720x1280, and 540x960 is the same 9:16, so the game is
-; pixel-for-pixel the portrait layout, just smaller.
 window/size/window_width_override=540
 window/size/window_height_override=960
-; DisplayServer.SCREEN_PORTRAIT. This is an int enum in Godot 4
-; (Landscape=0, Portrait=1, ...), NOT the Godot 3 string: the exporters and
-; the Android startup path read it as an int, and "portrait".to_int() is 0,
-; which is Landscape -- the exact opposite of what was intended.
-window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [gui]
 
@@ -65,21 +38,10 @@ theme/custom="res://theme/oval_theme.tres"
 
 [internationalization]
 
-; Control.LAYOUT_DIRECTION_LTR. Godot derives the root layout direction from
-; OS.get_locale() alone -- no translation files needed -- and mirrors every
-; Container-placed Control when that locale is right-to-left. The game has no
-; translations at all (zero tr() call sites), so there is nothing to mirror
-; INTO, but the mirroring happens anyway: on an Arabic, Hebrew, Persian or
-; Urdu handset every Level Select node moved right by exactly one viewport
-; width (level 1 from x=322 to x=1042 on a 720-wide viewport), putting all 100
-; of them off-screen and rendering the campaign map blank. Pinning the root to
-; LTR opts out. Revisit if the game is ever localised into an RTL language --
-; then the layout wants fixing rather than pinning.
 rendering/root_node_layout_direction=1
 
 [rendering]
 
-; Same reasoning as boot_splash/bg_color above.
-environment/defaults/default_clear_color=Color(0.53, 0.81, 0.92, 1)
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.53, 0.81, 0.92, 1)

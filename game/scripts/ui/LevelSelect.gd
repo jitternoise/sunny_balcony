@@ -439,7 +439,18 @@ func _build_map() -> void:
 	map_root.spurs = spurs
 	map_root.reached_count = reached
 	map_root.queue_redraw()
-	_scroll_to_reached(points[(open_at if open_at != -1 else reached) - 1].y)
+
+	# Where the view opens, in order of preference: the level the player
+	# just left, if any; else the tutorial on a brand-new save; else their
+	# furthest progress. The first is what makes Back from level 24 land on
+	# level 24 rather than on level 82.
+	var target_slot: int = reached
+	if open_at != -1:
+		target_slot = open_at
+	var last_slot := campaign_paths().find(GameState.last_played_level_path)
+	if last_slot != -1:
+		target_slot = last_slot + 1
+	_scroll_to_reached(points[target_slot - 1].y)
 
 
 ## Where a fork level's spur reaches to. Pushed toward whichever side of the

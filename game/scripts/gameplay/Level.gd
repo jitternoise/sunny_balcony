@@ -268,6 +268,8 @@ var _last_tap_msec: int = 0
 func _ready() -> void:
 	block_catalog = _load_block_catalog()
 	_level_path = GameState.pending_level_path
+	# So the map comes back centred on this level, whichever way we leave.
+	GameState.last_played_level_path = _level_path
 	level_data = load(_level_path)
 
 	board.setup(level_data, block_catalog)
