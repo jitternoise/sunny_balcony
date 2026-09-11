@@ -66,8 +66,15 @@ func _check_no_insets() -> void:
 	_check(Vector4(hud.offset_left, hud.offset_top, hud.offset_right, hud.offset_bottom) == Vector4.ZERO,
 			"level HUD fills the viewport")
 	var board = level.get_node("Board")
-	_about(board.top_position_y + board.grid_bounds.position.y, board.GRID_TOP_MARGIN_PX,
-			"board top sits at GRID_TOP_MARGIN_PX")
+	# A grid taller than the band is pinned at GRID_TOP_MARGIN_PX; one that
+	# fits is centred below it. Either way it never rises above the margin.
+	# (Headless reports a square viewport, so every board overflows here
+	# and the pinned case is the one exercised -- VerifyBoardCentring covers
+	# the centred case at the real 720x1280.)
+	var board_top: float = board.top_position_y + board.grid_bounds.position.y
+	_check(board_top >= board.GRID_TOP_MARGIN_PX - 0.5, "board top never rises above GRID_TOP_MARGIN_PX")
+	if board.max_scroll_down > 0.0:
+		_about(board_top, board.GRID_TOP_MARGIN_PX, "an overflowing board is pinned at GRID_TOP_MARGIN_PX")
 	level.free()
 
 	var select := await _open_scene("res://scenes/LevelSelect.tscn")
@@ -95,7 +102,7 @@ func _check_level_insets() -> void:
 
 	var board = level.get_node("Board")
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
-	_about(board.top_position_y + board.grid_bounds.position.y, 96.0 + board.GRID_TOP_MARGIN_PX,
+	_check(board.top_position_y + board.grid_bounds.position.y >= 96.0 + board.GRID_TOP_MARGIN_PX - 0.5,
 			"board top clears the cutout")
 	var grid_bottom: float = board.top_position_y + board.grid_bounds.end.y
 	var visible_bottom: float = viewport_size.y - 72.0 - board.BOTTOM_UI_RESERVED_PX

@@ -764,10 +764,11 @@ func _on_viewport_resized() -> void:
 
 ## Solves for the tile size (Hex.SIZE) that makes this level's grid exactly
 ## GRID_WIDTH_FRACTION of the viewport's width, then positions this node
-## (self.position) so the grid's top-left bounding corner lands at the
-## centred side margin, GRID_TOP_MARGIN_PX down. Also computes
-## max_scroll_down so Level.gd knows how far the player can drag the grid
-## up to see its bottom, for grids taller than one screen.
+## (self.position) so the grid sits centred between the side margins and
+## vertically centred in the band between the HUD and the inventory bar --
+## or, for a grid taller than that band, GRID_TOP_MARGIN_PX down with
+## max_scroll_down telling Level.gd how far the player can drag it up to
+## see its bottom.
 func _fit_hex_layout() -> void:
 	var viewport_size := _viewport_size()
 
@@ -824,11 +825,21 @@ func _fit_hex_layout() -> void:
 	var top_margin: float = safe.y + GRID_TOP_MARGIN_PX
 
 	position.x = left_margin - grid_left
-	top_position_y = top_margin - grid_top
-	position.y = top_position_y
 
+	# The band the grid can occupy: below the HUD's top row, above the
+	# inventory bar, inside any cutout or gesture-bar inset.
 	var available_height: float = viewport_size.y - top_margin - BOTTOM_UI_RESERVED_PX - safe.w
 	max_scroll_down = maxf(0.0, grid_height - available_height)
+
+	# A grid that fits is centred in that band rather than pinned to its
+	# top. Pinned, a radius-3 tutorial board sat under the HUD with the
+	# lower half of the screen empty grass, which read as a layout bug (and
+	# was filed as one -- handheld-audit.md #18). A grid taller than the
+	# band still starts at the top, since the player scrolls it up to see
+	# the rest and the top is where the water starts.
+	var slack: float = maxf(0.0, available_height - grid_height)
+	top_position_y = top_margin - grid_top + slack / 2.0
+	position.y = top_position_y
 
 
 func in_playable_area(coord: Vector2i) -> bool:

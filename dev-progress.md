@@ -1,5 +1,38 @@
 # Flash Flood — Dev Progress
 
+## Status: a grid that fits is centred on screen (2026-09-11)
+
+Handheld-audit finding #18. `_fit_hex_layout()` pinned every grid to
+`GRID_TOP_MARGIN_PX`, so a radius-3 or radius-4 board -- 53 of 100 levels, and
+all five tutorials -- sat under the HUD with the lower half of the screen empty
+grass. It read as a layout bug and on a 6.7" handset put every tappable hex
+above the midpoint.
+
+The fix is the one the audit proposed: when the grid is shorter than the band
+between the HUD and the inventory bar, add half the slack to `top_position_y`.
+A grid taller than the band is unchanged -- pinned at the top and scrolled by
+the player, since the top is where the water starts.
+
+**Measured, at the real 720×1280 under Xvfb:** tutorial 1 175 px above /
+175 below; level 1 178 / 178; flat level 55 108.2 / 108.2; and under a
+simulated 96 px cutout + 72 px gesture bar, 91 / 91 inside the inset band.
+Level 22 is still at 152, with `max_scroll_down` > 0.
+
+**`BoardSnapshots` split exactly as it should:** the four overflowing boards
+(13, 22, 82, 87) are byte-identical before and after, the six that fit moved.
+
+⚠️ **`VerifySafeArea` asserted the old behaviour and kept passing.** It
+checked "board top sits at `GRID_TOP_MARGIN_PX`", which is only true of a
+pinned board -- and under `--headless` the viewport is a square 1280×1280 where
+every board overflows, so the pinned case is the only one it ever saw. The
+assertion was true by accident of headless geometry and would have failed on
+a real viewport for any fitting level. It now states the actual rule (never
+above the margin; exactly at it when scrolling) and `VerifyBoardCentring` is a
+new display test for the centred case, which refuses to run at any viewport
+other than 720×1280 because the question is meaningless headless.
+
+All 13 suites pass.
+
 ## Status: store release checklist written (2026-09-10)
 
 `release-checklist.md` at the repo root: the step-by-step path to shipping on

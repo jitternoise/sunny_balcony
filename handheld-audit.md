@@ -284,7 +284,7 @@ hex geometry if you want the win.
 
 ## 📐 Layout and legibility on a real handset
 
-### 18. The board is pinned to the top of the screen — MEDIUM
+### 18. The board is pinned to the top of the screen — MEDIUM ✅ FIXED 2026-09-11
 `game/scripts/gameplay/HexBoard.gd:820`
 
 On 53 of 100 levels every tappable hex sits above the midpoint of a 20:9 phone,
@@ -292,6 +292,13 @@ with the bottom third dead and no way to drag the board down. Right-handed
 one-handed play on a 6.7" handset means reaching past the middle of the screen
 for every tap. Fix: centre the grid in the available band when it is shorter
 than the screen.
+
+**Fixed as proposed.** `_fit_hex_layout()` adds half the band's slack to
+`top_position_y` when the grid fits; an overflowing grid is still pinned and
+scrolls. Measured at 720×1280: tutorial 1 sits 175 px above / 175 below, level 1
+178 / 178, flat level 55 108.2 / 108.2, and under a simulated 96 px cutout +
+72 px gesture bar 91 / 91 inside the inset band. Level 22 stays at 152.
+`VerifyBoardCentring` (new, needs a display) pins all of it.
 
 ### 19. Level Select re-scrolls to level 1 on every entry — MEDIUM
 `game/scripts/ui/LevelSelect.gd:350`
