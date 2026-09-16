@@ -256,6 +256,8 @@ var _base_offsets: Dictionary = {}
 @onready var scroll: ScrollContainer = $ScrollContainer
 @onready var map_root: LevelMap = $ScrollContainer/MapRoot
 @onready var back_button: Button = $BackButton
+@onready var options_button: Button = $OptionsButton
+@onready var options_menu: OptionsMenu = $OptionsMenu
 @onready var debug_unlock_toggle: CheckButton = $DebugUnlockToggle
 @onready var header_bar: ColorRect = $HeaderBar
 @onready var header_shadow: ColorRect = $HeaderShadow
@@ -263,6 +265,7 @@ var _base_offsets: Dictionary = {}
 
 func _ready() -> void:
 	back_button.pressed.connect(_go_back)
+	options_button.pressed.connect(options_menu.open)
 	# Editor and debug exports only. In a release build this is the only
 	# control on the screen with words on it -- every other one is a bare
 	# icon -- so it reads as a feature and invites the tap. Its own doc
@@ -283,7 +286,7 @@ func _ready() -> void:
 	var vp := get_viewport()
 	if vp and not vp.size_changed.is_connected(_on_viewport_resized):
 		vp.size_changed.connect(_on_viewport_resized)
-	for control in [back_button, debug_unlock_toggle, header_bar, header_shadow]:
+	for control in [back_button, options_button, debug_unlock_toggle, header_bar, header_shadow]:
 		_base_offsets[control] = Vector4(
 			control.offset_left, control.offset_top,
 			control.offset_right, control.offset_bottom)
@@ -303,6 +306,7 @@ func _on_viewport_resized() -> void:
 func _apply_safe_area() -> void:
 	var inset := SafeArea.insets(get_viewport())
 	_shift_control(back_button, inset.x, inset.y)
+	_shift_control(options_button, -inset.z, inset.y)
 	_shift_control(debug_unlock_toggle, -inset.z, inset.y)
 	var header_base: Vector4 = _base_offsets[header_bar]
 	header_bar.offset_bottom = header_base.w + inset.y
@@ -328,10 +332,14 @@ func _go_back() -> void:
 
 ## Android's hardware/gesture Back. See MainMenu.gd's _notification() for why
 ## the engine's own quit_on_go_back handling is switched off project-wide.
+## Closes the Options popup if it is up, otherwise leaves the screen.
 ## Never fires on iOS.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
-		_go_back()
+		if options_menu.visible:
+			options_menu.close()
+		else:
+			_go_back()
 
 
 func _on_debug_unlock_toggled(pressed: bool) -> void:

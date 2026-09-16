@@ -244,6 +244,8 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   `open-items.md` — the iOS Compatibility renderer reaching Metal through
   ANGLE is the open question.
 - **No audio at all.** `story-bible.md` argues it becomes load-bearing once
-  the story layer goes wordless.
+  the story layer goes wordless. The plumbing exists: `default_bus_layout.tres`
+  has `Music` and `SFX` buses and the Options menu (`Settings` autoload)
+  mutes them, so a new player only has to name its bus.
 - **Exclude `tests/` and `tools/` from any export.** They are inert but ship
   otherwise, and they read files outside `res://`.

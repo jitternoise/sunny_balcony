@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay/Level.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/gameplay/HexBoard.gd" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://cqvescchdo1dq" path="res://assets/icons/ui_exit.svg" id="6"]
 [ext_resource type="Texture2D" uid="uid://dj7end5xwc6nw" path="res://assets/icons/ui_next.svg" id="7"]
 [ext_resource type="Texture2D" uid="uid://c1hbo3vei45v4" path="res://assets/icons/ui_check.svg" id="8"]
+[ext_resource type="Texture2D" uid="uid://u4jyvf56b0d6" path="res://assets/icons/ui_options.svg" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/OptionsMenu.tscn" id="10"]
 
 [node name="Level" type="Node2D"]
 script = ExtResource("1")
@@ -316,3 +318,13 @@ custom_minimum_size = Vector2(104, 96)
 tooltip_text = "Level Select"
 icon = ExtResource("6")
 icon_alignment = 1
+
+[node name="OptionsButton" type="Button" parent="UI/PausePanel/Center/Panel/VBox/ButtonRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(104, 96)
+tooltip_text = "Options"
+icon = ExtResource("9")
+icon_alignment = 1
+
+[node name="OptionsMenu" parent="UI" instance=ExtResource("10")]
+layout_mode = 1

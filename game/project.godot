@@ -20,6 +20,11 @@ boot_splash/bg_color=Color(0.53, 0.81, 0.92, 1)
 [autoload]
 
 GameState="*res://scripts/autoload/GameState.gd"
+Settings="*res://scripts/autoload/Settings.gd"
+
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [display]
 

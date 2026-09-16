@@ -1,5 +1,38 @@
 # Flash Flood — Dev Progress
 
+## Status: Options menu, slot progress lines, side-path sticker (2026-09-15)
+
+**Options menu.** One scene, `scenes/OptionsMenu.tscn` (`OptionsMenu.gd`),
+instanced on the main menu (an Options button), on Level Select (a gear in
+the header, right of the debug toggle) and in the pause menu (a fourth
+button in its row). Two CheckButtons, "Music" and "Sound effects", ON when
+audible, plus Close. Modal like the level popups: root and Dim both STOP
+input. In a level it draws over the pause menu and the game stays paused
+underneath; `_update_board_animation()` and the Android Back handler both
+know about it. Back closes Options first on every screen.
+
+**Settings autoload** (`scripts/autoload/Settings.gd`) holds the two mute
+flags, persists them to `user://settings.cfg` -- per device, not per save
+slot -- and mutes the `Music` / `SFX` buses in the new
+`default_bus_layout.tres`. There is still no audio; when it arrives each
+player names its bus and the menu already controls it.
+
+**Save slots** are now two-line rows: "Slot N (continue)" over "Furthest
+level: 37" / "All 100 levels complete" / "No progress yet" / "Save could not
+be read", from `GameState.peek_slot()` (primary, else backup, never loaded).
+With developer mode on (`debug_unlock_all`, the default in the editor and a
+debug export) every slot says "Developer mode -- all levels unlocked"
+instead, since a furthest level would be a lie there. Each row carries a
+sticker icon on the right, greyed until every side-path level is complete
+(`GameState.side_path_complete_in()`). The ten bonus ids are reserved as
+1001-1010 (`BONUS_ID_FIRST`); none is authored, so the sticker is grey on
+every save today and the gate is already the real rule.
+
+Verified: all headless suites plus TouchTargets / MapScroll / UndoAndHeader
+/ BoardCentring under xvfb pass, screenshots eyeballed at 720x1280.
+`VerifyTutorial` and `VerifyHydroBonus` stay red from the lake migration
+(tutorials 3-5, level 18) -- pre-existing, to be reviewed separately.
+
 ## Status: every pool is now a four-hex lake in the level data (2026-09-15)
 
 The migration that commit 4fec6d3 (the engine half) deferred. All 100 level

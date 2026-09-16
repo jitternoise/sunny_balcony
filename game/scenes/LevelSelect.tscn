@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/LevelSelect.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ui/LevelMap.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://cqvescchdo1dq" path="res://assets/icons/ui_exit.svg" id="3"]
+[ext_resource type="Texture2D" uid="uid://u4jyvf56b0d6" path="res://assets/icons/ui_options.svg" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/OptionsMenu.tscn" id="5"]
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -52,12 +54,27 @@ tooltip_text = "Main Menu"
 icon = ExtResource("3")
 icon_alignment = 1
 
+[node name="OptionsButton" type="Button" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -111.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 72.0
+tooltip_text = "Options"
+icon = ExtResource("4")
+icon_alignment = 1
+
 [node name="DebugUnlockToggle" type="CheckButton" parent="."]
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -290.0
+offset_left = -400.0
 offset_top = 20.0
-offset_right = -16.0
+offset_right = -126.0
 offset_bottom = 68.0
 text = "Unlock All"
+
+[node name="OptionsMenu" parent="." instance=ExtResource("5")]
+layout_mode = 1

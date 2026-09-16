@@ -2,12 +2,15 @@ extends Control
 
 @onready var continue_button: Button = $VBoxContainer/ContinueButton
 @onready var new_game_button: Button = $VBoxContainer/NewGameButton
+@onready var options_button: Button = $VBoxContainer/OptionsButton
 @onready var quit_button: Button = $VBoxContainer/QuitButton
+@onready var options_menu: OptionsMenu = $OptionsMenu
 
 
 func _ready() -> void:
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
+	options_button.pressed.connect(options_menu.open)
 	quit_button.pressed.connect(_on_quit_pressed)
 
 	# iOS ships no user-facing "quit the app" affordance: Apple's guidelines
@@ -47,9 +50,13 @@ func _on_quit_pressed() -> void:
 ## own Back destination instead (see the matching _notification() in
 ## SaveSlotSelect.gd, LevelSelect.gd and Level.gd). The main menu is the top of
 ## the navigation stack, so here Back really does mean "leave the game" -- the
-## one screen where the old engine default happened to be correct.
+## one screen where the old engine default happened to be correct -- unless
+## the Options popup is up, in which case it closes that instead.
 ##
 ## Never fires on iOS: there is no system back event to receive.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
-		_on_quit_pressed()
+		if options_menu.visible:
+			options_menu.close()
+		else:
+			_on_quit_pressed()

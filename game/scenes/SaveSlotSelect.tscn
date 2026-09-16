@@ -29,11 +29,12 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -120.0
-offset_top = -100.0
-offset_right = 120.0
-offset_bottom = 100.0
+offset_left = -240.0
+offset_top = -200.0
+offset_right = 240.0
+offset_bottom = 200.0
 alignment = 1
+theme_override_constants/separation = 16
 
 [node name="BackButton" type="Button" parent="."]
 layout_mode = 1

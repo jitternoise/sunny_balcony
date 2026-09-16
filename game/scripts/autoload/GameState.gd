@@ -51,6 +51,15 @@ var debug_unlock_all: bool = OS.is_debug_build()
 const TUTORIAL_ID_FIRST := 901
 const TUTORIAL_ID_LAST := 905
 
+## The side-path (bonus) levels: one per fork on the Level Select map, ten
+## in all -- see LevelSelect.BONUS_FORK_OFFSET. Like the tutorial they live
+## outside the numbered campaign so that adding them renumbers nothing.
+## None is authored yet, so no save can hold one; the ids are reserved here
+## so that the sticker gate below (side_path_complete()) is already the
+## real rule when they arrive, rather than a placeholder to replace.
+const BONUS_ID_FIRST := 1001
+const BONUS_LEVEL_COUNT := 10
+
 ## True when the active slot had a save on disk and NONE of it could be read
 ## -- neither the primary nor its backup. The progress fields are left at
 ## their new-game defaults, which look exactly like a fresh start, so this
@@ -119,9 +128,51 @@ func slot_exists(slot: int) -> bool:
 func slot_status(slot: int) -> SlotStatus:
 	if not slot_exists(slot):
 		return SlotStatus.EMPTY
-	if _read_save(_save_path(slot)) != null or _read_save(_backup_path(slot)) != null:
+	if peek_slot(slot) != null:
 		return SlotStatus.OK
 	return SlotStatus.DAMAGED
+
+
+## The parsed save for a slot -- the primary, or the backup when the
+## primary cannot be read -- WITHOUT loading it into the progress fields.
+## null when there is nothing readable. This is what the slot screen uses
+## to describe a slot ("furthest level 37") before the player commits to
+## it; the same fallback order as load_slot(), so the two never disagree
+## about which file counts.
+func peek_slot(slot: int):
+	var data = _read_save(_save_path(slot))
+	if data != null:
+		return data
+	return _read_save(_backup_path(slot))
+
+
+## The furthest campaign level a parsed save has reached, 1..100. The
+## tutorial never moves this (see mark_level_complete()), and finishing
+## level 100 leaves it at 101, which is clamped: there is no level 101 to
+## point at.
+static func furthest_level_in(parsed: Dictionary) -> int:
+	return clampi(int(parsed.get("highest_unlocked_level", 1)), 1, 100)
+
+
+## True once every level a parsed save could have finished IS finished:
+## the whole campaign.
+static func campaign_complete_in(parsed: Dictionary) -> bool:
+	return int(parsed.get("highest_unlocked_level", 1)) > 100
+
+
+## The one sticker a save file can earn: every side-path level finished.
+## Read from a parsed save so the slot screen can show it for a slot that
+## is not loaded. Always false today -- no bonus level exists to finish --
+## which is exactly the greyed-out state the slot screen draws.
+static func side_path_complete_in(parsed: Dictionary) -> bool:
+	# JSON hands ids back as floats, so compare as ints, as _apply_save() does.
+	var completed := {}
+	for level_id in parsed.get("completed_levels", []):
+		completed[int(level_id)] = true
+	for i in range(BONUS_LEVEL_COUNT):
+		if not completed.has(BONUS_ID_FIRST + i):
+			return false
+	return true
 
 
 ## Reads and parses one save file. Returns the Dictionary, or null when the

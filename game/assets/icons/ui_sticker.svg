@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="48" height="48">
+  <!-- Save slot: the sticker earned by completing every side path. Drawn in
+       colour; the slot screen greys it with modulate until it is earned. -->
+  <circle cx="50" cy="50" r="46" fill="#f5c542" stroke="#ffffff" stroke-width="5"/>
+  <path d="M50 18 L59 40 L83 42 L65 57 L71 81 L50 68 L29 81 L35 57 L17 42 L41 40 Z" fill="#ffffff"/>
+  <path d="M50 30 L56 44 L71 45 L60 55 L64 70 L50 62 L36 70 L40 55 L29 45 L44 44 Z" fill="#e8873a"/>
+</svg>

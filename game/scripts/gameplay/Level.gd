@@ -62,6 +62,12 @@ var measures_elapsed: int = 0
 @onready var pause_resume_button: Button = $UI/PausePanel/Center/Panel/VBox/ResumeButton
 @onready var pause_retry_button: Button = $UI/PausePanel/Center/Panel/VBox/ButtonRow/RetryButton
 @onready var pause_level_select_button: Button = $UI/PausePanel/Center/Panel/VBox/ButtonRow/LevelSelectButton
+@onready var pause_options_button: Button = $UI/PausePanel/Center/Panel/VBox/ButtonRow/OptionsButton
+
+## The Options popup (mute music / mute sound effects), opened from the
+## pause menu and drawn over it. The game stays paused underneath: closing
+## Options returns to the pause menu, never straight to the board.
+@onready var options_menu: OptionsMenu = $UI/OptionsMenu
 
 ## Small modal-style popup shown on a loss (see _on_level_lost()): a dimmed
 ## overlay plus a centered panel with the loss reason and two buttons,
@@ -296,6 +302,7 @@ func _ready() -> void:
 	pause_resume_button.pressed.connect(_on_resume_pressed)
 	pause_retry_button.pressed.connect(_on_retry_pressed)
 	pause_level_select_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/LevelSelect.tscn"))
+	pause_options_button.pressed.connect(options_menu.open)
 	lose_retry_button.pressed.connect(_on_retry_pressed)
 	lose_level_select_button.pressed.connect(_go_to_level_select)
 	intro_got_it_button.pressed.connect(_on_intro_got_it_pressed)
@@ -491,7 +498,9 @@ func _notification(what: int) -> void:
 func _on_go_back_request() -> void:
 	if not is_node_ready() or board == null:
 		return
-	if intro_panel != null and intro_panel.visible:
+	if options_menu != null and options_menu.visible:
+		options_menu.close()                 # back closes Options, to the pause menu
+	elif intro_panel != null and intro_panel.visible:
 		_on_intro_got_it_pressed()           # back dismisses the briefing
 	elif _catapult_aiming:
 		_cancel_catapult_aim()               # back abandons a charging shot,
@@ -997,6 +1006,7 @@ func _update_board_animation() -> void:
 	if board == null:
 		return
 	var covered := paused \
+		or (options_menu != null and options_menu.visible) \
 		or (intro_panel != null and intro_panel.visible) \
 		or (win_panel != null and win_panel.visible) \
 		or (lose_panel != null and lose_panel.visible)
