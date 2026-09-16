@@ -12,8 +12,12 @@ corridor_half_width = 2
 water_sources = Array[Vector2i]([Vector2i(4, -9)])
 fire_cells = Array[Vector2i]([Vector2i(-6, 8), Vector2i(2, -4)])
 pool_targets = {
-Vector2i(-4, 9): 4,
-Vector2i(-6, 9): 4
+Vector2i(-6, 9): 4,
+Vector2i(-4, 9): 4
+}
+lake_cells = {
+Vector2i(-6, 9): Array[Vector2i]([Vector2i(-7, 9), Vector2i(-5, 8), Vector2i(-5, 9)]),
+Vector2i(-4, 9): Array[Vector2i]([Vector2i(-3, 8), Vector2i(-3, 9), Vector2i(-2, 8)])
 }
 starting_inventory = {}
 blocked_cells = Array[Vector2i]([])

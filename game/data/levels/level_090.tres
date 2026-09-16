@@ -14,6 +14,9 @@ fire_cells = Array[Vector2i]([Vector2i(5, -10)])
 pool_targets = {
 Vector2i(-5, 13): 4
 }
+lake_cells = {
+Vector2i(-5, 13): Array[Vector2i]([Vector2i(-7, 13), Vector2i(-6, 12), Vector2i(-6, 13)])
+}
 preset_blocks = {
 Vector2i(2, -1): "splitter"
 }

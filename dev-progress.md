@@ -1,5 +1,27 @@
 # Flash Flood — Dev Progress
 
+## Status: every pool is now a four-hex lake in the level data (2026-09-15)
+
+The migration that commit 4fec6d3 (the engine half) deferred. All 100 level
+files gain a `lake_cells` block: each pool anchor maps to three more cells,
+105 lakes in total. A generator picked, per pool, the connected four-cell
+set with the fewest cells on the water's path, preferring ones that kept the
+documented solution winning; on 13 levels the anchor had to move and
+`dirt_cells` was trimmed where a lake would otherwise sit on dirt. Levels
+44 and 51 were re-authored by hand -- their bottom-left corner cannot hold a
+lake, a fire and a town at once -- and tutorials 3-5 were re-laid so each
+still has exactly one winning placement (tutorial 5's must still be a Wall
+whose *second* cell blocks).
+
+`smoke_test.gd` now checks every pool has exactly three lake cells, all
+playable, none a source, none other terrain, none shared with another lake.
+`level-solutions.md` / `level-min-times.md` updated for 9, 17, 31, 44, 51,
+77, 88, 89.
+
+Verified: smoke test PASS; solution book 88 exact / 11 broken / 1 prose --
+the same 11 Wall-width breaks as before, nothing new. The three generator
+scripts were throwaway and are not committed.
+
 ## Status: leaving a level returns you to it on the map (2026-09-11)
 
 The map opened on the player's *furthest* level every time, so replaying

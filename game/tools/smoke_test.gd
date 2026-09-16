@@ -66,6 +66,32 @@ func _init() -> void:
 		if lv.pool_targets.is_empty() and lv.fire_cells.is_empty():
 			errors.append("%s has neither pools nor fires - unwinnable" % f)
 
+		# Every pool is a four-cell lake: exactly three extra cells, each
+		# playable, none a source, none shared with another lake, none
+		# other terrain. A pool with fewer draws as a single hex and a
+		# stray cell would either sit off the board or double as a fire.
+		var claimed := {}
+		for anchor in lv.pool_targets:
+			claimed[anchor] = true
+		for anchor in lv.pool_targets:
+			var extras: Array = lv.lake_cells.get(anchor, [])
+			if extras.size() != 3:
+				errors.append("%s pool %s has %d lake cells, wants 3" % [f, anchor, extras.size()])
+			for c in extras:
+				if _hex_distance(c) > lv.grid_radius or lv.blocked_cells.has(c):
+					errors.append("%s lake cell %s of pool %s is off the board" % [f, c, anchor])
+				if lv.water_sources.has(c):
+					errors.append("%s lake cell %s of pool %s is a water source" % [f, c, anchor])
+				if lv.fire_cells.has(c) or lv.town_cells.has(c) or lv.geyser_cells.has(c) \
+						or lv.dirt_cells.has(c) or lv.hydro_plant_cells.has(c):
+					errors.append("%s lake cell %s of pool %s is other terrain" % [f, c, anchor])
+				if claimed.has(c):
+					errors.append("%s lake cell %s of pool %s is also part of another pool" % [f, c, anchor])
+				claimed[c] = true
+		for anchor in lv.lake_cells:
+			if not lv.pool_targets.has(anchor):
+				errors.append("%s lake_cells has an anchor %s that is not a pool" % [f, anchor])
+
 		# Every preset block must exist in the catalog
 		for coord in lv.preset_blocks:
 			var bid: String = lv.preset_blocks[coord]

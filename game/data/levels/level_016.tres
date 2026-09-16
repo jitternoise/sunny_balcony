@@ -13,6 +13,9 @@ fire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 4)])
 pool_targets = {
 Vector2i(-3, 8): 4
 }
+lake_cells = {
+Vector2i(-3, 8): Array[Vector2i]([Vector2i(-5, 9), Vector2i(-4, 8), Vector2i(-4, 9)])
+}
 starting_inventory = {
 "divert_right": 1
 }

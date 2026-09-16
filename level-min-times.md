@@ -17,7 +17,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 6 | 12 | 14.4 s |
 | 7 | 8 | 9.6 s |
 | 8 | 13 | 15.6 s |
-| 9 | 12 | 14.4 s |
+| 9 | 11 | 13.2 s |
 | 10 | 11 | 13.2 s |
 | 11 | 11 | 13.2 s |
 | 12 | 8 | 9.6 s |
@@ -30,7 +30,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 14 | 21 | 25.2 s |
 | 15 | 21 | 25.2 s |
 | 16 | 23 | 27.6 s |
-| 17 | 29 | 34.8 s |
+| 17 | 30 | 36.0 s |
 
 ## Special Waters (levels 18-20) — 15.6 s to 30.0 s
 
@@ -64,7 +64,7 @@ Placement/dig time before Start is excluded (it's untimed).
 
 | Level | Measures | Min time |
 |---|---|---|
-| 31 | 12 | 14.4 s |
+| 31 | 11 | 13.2 s |
 | 32 | 13 | 15.6 s |
 | 33 | 12 | 14.4 s |
 | 34 | 13 | 15.6 s |
@@ -82,7 +82,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 41 | 13 | 15.6 s |
 | 42 | 12 | 14.4 s |
 | 43 | 13 | 15.6 s |
-| 44 | 14 | 16.8 s |
+| 44 | 12 | 14.4 s |
 | 45 | 12 | 14.4 s |
 | 46 | 13 | 15.6 s |
 
@@ -94,7 +94,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 48 | 13 | 15.6 s |
 | 49 | 12 | 14.4 s |
 | 50 | 13 | 15.6 s |
-| 51 | 12 | 14.4 s |
+| 51 | 10 | 12.0 s |
 | 52 | 13 | 15.6 s |
 | 53 | 12 | 14.4 s |
 | 54 | 13 | 15.6 s |
@@ -135,7 +135,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 74 | 16 | 19.2 s |
 | 75 | 21 | 25.2 s |
 | 76 | 26 | 31.2 s |
-| 77 | 28 | 33.6 s |
+| 77 | 26 | 31.2 s |
 | 78 | 33 | 39.6 s |
 
 ## Jamboree Runs (levels 79-86) — 24.0 s to 31.2 s
@@ -156,8 +156,8 @@ Placement/dig time before Start is excluded (it's untimed).
 | Level | Measures | Min time |
 |---|---|---|
 | 87 | 24 | 28.8 s |
-| 88 | 27 | 32.4 s |
-| 89 | 41 | 49.2 s |
+| 88 | 26 | 31.2 s |
+| 89 | 40 | 48.0 s |
 | 90 | 30 | 36.0 s |
 | 91 | 33 | 39.6 s |
 | 92 | 37 | 44.4 s |
