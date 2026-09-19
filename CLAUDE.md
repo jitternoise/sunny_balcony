@@ -35,7 +35,7 @@ godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corrupti
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
 godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
 godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
-godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 118 checks
+godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 30 checks
@@ -65,8 +65,17 @@ godot --headless --path game --script res://tools/verify_solutions.gd -- ../leve
 `game/tools/verify_solutions.gd`. A previous session missed it, built a
 duplicate whose parser silently skipped the 24 dig-bearing entries, and
 reported 9 broken solutions when the real figure was 11. Current expected
-result: **88 exact / 11 broken / 1 prose (level 22)**. The 11 are all wall
-placements, broken by the 2026-08-31 change making the Wall 2 tiles wide.
+result: **92 exact / 7 broken / 1 prose (level 22)**. The 7 (64, 66, 67,
+68, 69, 92, 96) are all wall placements broken by the 2026-08-31 change
+making the Wall 2 tiles wide. Every level in 1-50 has a verified solution.
+
+**Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16). A
+former radius-4 hexagon is now a radius-5 grid with rows +-5 and every
+offset column outside -3..2 in `blocked_cells`, its terrain slid sideways
+to fit. `HexBoard.bottom_row` (the lowest playable row) is what the edge
+loss tests against, NOT `grid_radius`, so blocking the bottom row is safe.
+Level 20 (flat grid) keeps its radius-4 hexagon and blocks columns q = -4,
+-3 and 4 instead, because the flat grid's loss test is `_cube_distance()`.
 
 ### Safe-area insets are simulated here, never real
 
@@ -154,7 +163,15 @@ level's outcome. Keep it that way.
 **Tile drawing is table-driven.** `_resolve_tile_state()` is the single place
 terrain precedence lives; `TILE_VISUALS` is the single place each state's
 appearance lives. To animate a tile type, add a sheet to its table entry — do
-not add a branch. A state with no sheet falls back to its static icon.
+not add a branch. A state with no sheet falls back to its static icon. Two
+states draw themselves instead: a geyser (no art yet) and a **pool**, whose
+look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
+stream's water sheet clipped at a waterline set by `pool_fill`, and rims only
+the lake's outer edges. A lake cell also skips the per-cell border.
+
+**Tutorial hints.** `LevelData.hint_cells` draws a dashed amber outline on a
+cell until a block sits there. Only the tutorials set it; list the Wall's
+ANCHOR cell, never both halves.
 
 **One animation heartbeat** (`ANIM_TICK_FPS`, 12). A redraw repaints the whole
 board, so independent per-type rates would multiply repaints. Derive every

@@ -1,11 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Water source: river, three converging wavy strands flowing into the
-       first-move down-left arrow -->
-  <g fill="none" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M30 12 Q42 24 30 34 Q18 44 30 54" stroke="#8fd4ff" stroke-width="7"/>
-    <path d="M50 8  Q62 22 48 34 Q36 46 50 58" stroke="#3b9ee6" stroke-width="8"/>
-    <path d="M70 12 Q80 26 66 38 Q54 50 66 60" stroke="#8fd4ff" stroke-width="7"/>
+  <!-- Water source: a rock ledge across the top of the cell with a
+       waterfall pouring over its lip into foam at the base. The first-move
+       arrow is drawn by HexBoard, not baked in here. -->
+  <!-- spray behind the falls -->
+  <g fill="#bfe4ff" opacity="0.85">
+    <circle cx="20" cy="70" r="3.5"/>
+    <circle cx="80" cy="68" r="3.5"/>
+    <circle cx="14" cy="80" r="2.5"/>
+    <circle cx="86" cy="79" r="2.5"/>
   </g>
-  <path d="M50 58 L36 74 L36 64 L26 64 L44 84 L58 68 L58 58 Z"
-        fill="#3b9ee6" stroke="#0b3d63" stroke-width="5" stroke-linejoin="round"/>
+  <!-- cascade -->
+  <path d="M33 25 L67 25 L73 84 L27 84 Z" fill="#3b9ee6" stroke="#0b3d63" stroke-width="4" stroke-linejoin="round"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M40 30 Q38 50 38 80" stroke="#8fd4ff" stroke-width="5"/>
+    <path d="M50 30 Q52 52 50 80" stroke="#eaf6ff" stroke-width="4"/>
+    <path d="M60 30 Q62 50 62 80" stroke="#8fd4ff" stroke-width="5"/>
+  </g>
+  <!-- rock ledge, drawn over the top of the cascade so the water reads as
+       pouring out from under its lip -->
+  <path d="M6 18 L94 18 L94 30 L86 34 L74 31 L62 35 L50 31 L38 35 L26 31 L14 34 L6 30 Z"
+        fill="#6b7280" stroke="#2b3140" stroke-width="3.5" stroke-linejoin="round"/>
+  <rect x="8" y="19.5" width="84" height="6" rx="1.5" fill="#9aa3b2"/>
+  <g stroke="#454b57" stroke-width="2.5" stroke-linecap="round">
+    <path d="M16 28 L21 28"/>
+    <path d="M72 28 L79 28"/>
+  </g>
+  <!-- the river running over the lip -->
+  <path d="M31 17 Q50 12 69 17 L69 24 Q50 20 31 24 Z" fill="#3b9ee6" stroke="#0b3d63" stroke-width="3" stroke-linejoin="round"/>
+  <!-- foam at the base -->
+  <ellipse cx="50" cy="86" rx="31" ry="8.5" fill="#eaf6ff" stroke="#0b3d63" stroke-width="3.5"/>
+  <g fill="#bfe4ff" stroke="#0b3d63" stroke-width="2.5">
+    <circle cx="27" cy="83" r="5"/>
+    <circle cx="73" cy="83" r="5"/>
+    <circle cx="50" cy="90" r="4"/>
+    <circle cx="40" cy="86" r="3"/>
+    <circle cx="61" cy="86" r="3"/>
+  </g>
 </svg>

@@ -8,16 +8,16 @@ level_id = 902
 display_name = "Tutorial 2 — Out Goes the Fire"
 intro_text = "A fire is burning on the riverbed. Water puts a fire out simply by running over it, so anything on the water's path gets doused on the way past. This stream already runs through both the fire and the pool. Press play."
 grid_radius = 3
-water_sources = Array[Vector2i]([Vector2i(0, -3)])
-fire_cells = Array[Vector2i]([Vector2i(-2, 0)])
+water_sources = Array[Vector2i]([Vector2i(2, -3)])
+fire_cells = Array[Vector2i]([Vector2i(0, 0)])
 pool_targets = {
-Vector2i(-3, 3): 4
+Vector2i(-2, 3): 4
 }
 lake_cells = {
-Vector2i(-3, 3): Array[Vector2i]([Vector2i(-2, 2), Vector2i(-2, 3), Vector2i(-1, 2)])
+Vector2i(-2, 3): Array[Vector2i]([Vector2i(-2, 2), Vector2i(-1, 2), Vector2i(-1, 3)])
 }
 starting_inventory = {}
-blocked_cells = Array[Vector2i]([])
+blocked_cells = Array[Vector2i]([Vector2i(-3, 0), Vector2i(-3, 1), Vector2i(-2, -1), Vector2i(1, 2), Vector2i(2, 0), Vector2i(2, 1), Vector2i(3, -2), Vector2i(3, -1), Vector2i(3, 0)])
 town_cells = Array[Vector2i]([])
 geyser_cells = Array[Vector2i]([])
 total_block_budget = 0

@@ -14,12 +14,14 @@ extends Node
 ## The levels that ship a Hydro Plant, and the centre cell each one sits on.
 ## Kept here as the expected shipping state so an accidental edit to a
 ## level's .tres shows up as a failure rather than passing silently.
+## Coordinates are in each level's CURRENT frame: levels 1-50 were slid
+## sideways into 6-wide columns on 2026-09-16, so 7, 18 and 33 moved.
 const PLANT_LEVELS := {
-	7: Vector2i(-1, 2),
+	7: Vector2i(0, 2),
 	13: Vector2i(1, -2),
-	18: Vector2i(-5, 0),
+	18: Vector2i(-2, 0),
 	25: Vector2i(0, -2),
-	33: Vector2i(-3, 1),
+	33: Vector2i(-2, 1),
 	52: Vector2i(0, -2),
 	63: Vector2i(-1, 0),
 	82: Vector2i(2, -4),

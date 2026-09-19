@@ -193,3 +193,12 @@ class_name LevelData
 ## and a slow or wasteful one does not. Par is checked on a win only, and
 ## never affects whether the level is won.
 @export var par_measures: int = 0
+
+## Tutorial hint: axial coordinates drawn with a bright dashed outline until
+## a block sits there, telling a first-time player exactly which hex to tap.
+## Only the tutorial levels set it; empty (the default) draws nothing. For a
+## 2-wide Wall list the ANCHOR cell -- the one the player taps -- not both
+## halves, since tapping the right-hand half places the wall one cell too
+## far right (tutorial 5's instructive failure). Purely visual: the engine
+## never reads it for placement or win logic.
+@export var hint_cells: Array[Vector2i] = []

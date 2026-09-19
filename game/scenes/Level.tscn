@@ -44,12 +44,23 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
+[node name="LevelLabel" type="Label" parent="UI/HUD"]
+layout_mode = 1
+offset_left = 40.0
+offset_top = 36.0
+offset_right = 240.0
+offset_bottom = 76.0
+theme_override_colors/font_outline_color = Color(0.14, 0.3, 0.13, 0.9)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 34
+text = "Level 1"
+
 [node name="StatusLabel" type="Label" parent="UI/HUD"]
 layout_mode = 1
 offset_left = 40.0
-offset_top = 52.0
+offset_top = 80.0
 offset_right = 240.0
-offset_bottom = 80.0
+offset_bottom = 136.0
 theme_override_colors/font_outline_color = Color(0.14, 0.3, 0.13, 0.9)
 theme_override_constants/outline_size = 6
 autowrap_mode = 3

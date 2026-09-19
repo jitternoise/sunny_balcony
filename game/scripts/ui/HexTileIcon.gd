@@ -58,6 +58,35 @@ func set_state(is_selected: bool, is_available: bool) -> void:
 	queue_redraw()
 
 
+## How much wider than a one-hex symbol this block's footprint draws when
+## every hex is kept at the one-hex size: 1.0 for a single cell, 1.5 for the
+## 2-wide Wall on a pointy grid. Level.gd sizes the tray symbol (and its
+## button) by this, so a Wall's two hexes are the same size as a Diverter's
+## one instead of being squeezed into the same 64 px -- at half size the
+## boulder was too small to pick out as a tap target.
+static func width_scale(block: BlockData, is_flat: bool) -> float:
+	var probe := HexTileIcon.new()
+	probe.block = block
+	probe.flat = is_flat
+	var span := probe._unit_span(probe._cells())
+	var one := probe._unit_span([Vector2i.ZERO])
+	probe.free()
+	return span.x / one.x if one.x > 0.0 else 1.0
+
+
+## Bounding box of `cells` at radius 1, in hex units.
+func _unit_span(cells: Array) -> Vector2:
+	var min_p := Vector2(INF, INF)
+	var max_p := Vector2(-INF, -INF)
+	for coord in cells:
+		var c := _unit_center(coord)
+		for i in range(6):
+			var p := _unit_corner(c, i)
+			min_p = min_p.min(p)
+			max_p = max_p.max(p)
+	return max_p - min_p
+
+
 ## Every cell this block covers: its anchor plus its footprint. The Wall's
 ## footprint is what makes it two hexes wide, and drawing that here is the
 ## point -- the tray is where a player decides what to place, so it is
@@ -93,9 +122,7 @@ func _draw() -> void:
 	var cells := _cells()
 
 	# Measure the whole footprint at radius 1, then solve for the radius
-	# that fits it inside this control -- a 2-wide Wall therefore draws its
-	# hexes smaller than a 1-wide Diverter draws its one, which is correct:
-	# both occupy the same button.
+	# that fits it inside this control.
 	var min_p := Vector2(INF, INF)
 	var max_p := Vector2(-INF, -INF)
 	for coord in cells:
@@ -108,6 +135,9 @@ func _draw() -> void:
 	if span.x <= 0.0 or span.y <= 0.0:
 		return
 
+	# Level.gd widens the control for a multi-hex footprint (see
+	# width_scale()), so this fit gives a Wall's hexes the same radius a
+	# one-hex block gets.
 	var box := size * FIT_MARGIN
 	var radius: float = minf(box.x / span.x, box.y / span.y)
 	# Centre the footprint's bounding box in the control.

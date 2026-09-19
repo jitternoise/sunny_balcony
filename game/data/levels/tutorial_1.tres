@@ -8,16 +8,16 @@ level_id = 901
 display_name = "Tutorial 1 — The River Runs"
 intro_text = "Once a year the river floods. It falls on its own, zigzagging from side to side as it goes -- you do not steer it directly. Down at the bottom is a pool. Fill it and you win. Press play and watch the water find its way."
 grid_radius = 3
-water_sources = Array[Vector2i]([Vector2i(0, -3)])
+water_sources = Array[Vector2i]([Vector2i(2, -3)])
 fire_cells = Array[Vector2i]([])
 pool_targets = {
-Vector2i(-3, 3): 4
+Vector2i(-2, 3): 4
 }
 lake_cells = {
-Vector2i(-3, 3): Array[Vector2i]([Vector2i(-2, 2), Vector2i(-2, 3), Vector2i(-1, 2)])
+Vector2i(-2, 3): Array[Vector2i]([Vector2i(-2, 2), Vector2i(-1, 2), Vector2i(-1, 3)])
 }
 starting_inventory = {}
-blocked_cells = Array[Vector2i]([])
+blocked_cells = Array[Vector2i]([Vector2i(-3, 0), Vector2i(-3, 1), Vector2i(-2, -1), Vector2i(1, 2), Vector2i(2, 0), Vector2i(2, 1), Vector2i(3, -2), Vector2i(3, -1), Vector2i(3, 0)])
 town_cells = Array[Vector2i]([])
 geyser_cells = Array[Vector2i]([])
 total_block_budget = 0

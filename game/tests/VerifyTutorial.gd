@@ -122,19 +122,19 @@ func _check_ordering() -> void:
 ## at all is level 68 all over again.
 func _check_boards() -> void:
 	var cases := [
-		{"path": "res://data/levels/tutorial_1.tres", "place": [], "win": 9,
+		{"path": "res://data/levels/tutorial_1.tres", "place": [], "win": 8,
 			"bare_wins": true},
-		{"path": "res://data/levels/tutorial_2.tres", "place": [], "win": 10,
+		{"path": "res://data/levels/tutorial_2.tres", "place": [], "win": 9,
 			"bare_wins": true},
 		{"path": "res://data/levels/tutorial_3.tres",
-			"place": [{"coord": Vector2i(-1, -1), "block": "divert_right"}],
-			"win": 7, "bare_wins": false},
+			"place": [{"coord": Vector2i(-1, 1), "block": "divert_right"}],
+			"win": 8, "bare_wins": false},
 		{"path": "res://data/levels/tutorial_4.tres",
-			"place": [{"coord": Vector2i(-1, -2), "block": "divert_left"}],
-			"win": 6, "bare_wins": false},
+			"place": [{"coord": Vector2i(0, 0), "block": "divert_left"}],
+			"win": 8, "bare_wins": false},
 		{"path": "res://data/levels/tutorial_5.tres",
-			"place": [{"coord": Vector2i(-3, -1), "block": "wall"}],
-			"win": 7, "bare_wins": false},
+			"place": [{"coord": Vector2i(-1, 0), "block": "wall"}],
+			"win": 9, "bare_wins": false},
 	]
 	for case in cases:
 		var name: String = (case["path"] as String).get_file()
@@ -148,12 +148,21 @@ func _check_boards() -> void:
 		_check(bare["won"] == case["bare_wins"],
 			"%s %s winnable with no block" % [name, "is" if case["bare_wins"] else "is not"])
 
+		# The hint outline must point at the cell the solution actually
+		# uses, and only the levels with something to place carry one.
+		var d: LevelData = load(case["path"])
+		if case["place"].is_empty():
+			_check(d.hint_cells.is_empty(), "%s has nothing to hint" % name)
+		else:
+			_check(d.hint_cells.size() == 1 and d.hint_cells[0] == case["place"][0]["coord"],
+				"%s hints the solution cell" % name)
+
 	# Tutorial 5's whole lesson is that the Wall covers the tapped hex AND
 	# its right-hand neighbour. Tapping the hex the stream actually runs
 	# through covers one cell too many and seals the stream in, so the
 	# naive answer must NOT win -- otherwise the level teaches nothing.
 	var naive := _run("res://data/levels/tutorial_5.tres",
-		[{"coord": Vector2i(-2, -1), "block": "wall"}])
+		[{"coord": Vector2i(0, 0), "block": "wall"}])
 	_check(not naive["won"], "tutorial 5: walling the obvious hex does not win")
 	_check(not naive["rejected"], "tutorial 5: the naive wall is still placeable")
 

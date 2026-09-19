@@ -7,23 +7,23 @@ script = ExtResource("1")
 level_id = 18
 display_name = "18. Geyser Awakens"
 intro_text = "A dormant Geyser wakes after a few beats of water contact and becomes a second source. Place your Wall well -- every pool must fill, on both streams."
-grid_radius = 6
-water_sources = Array[Vector2i]([Vector2i(0, -6)])
-fire_cells = Array[Vector2i]([Vector2i(-3, -1)])
+grid_radius = 7
+water_sources = Array[Vector2i]([Vector2i(3, -6)])
+fire_cells = Array[Vector2i]([Vector2i(0, -1)])
 pool_targets = {
-Vector2i(-6, 6): 4,
-Vector2i(-3, -2): 4
+Vector2i(-3, 6): 4,
+Vector2i(0, -2): 4
 }
 lake_cells = {
-Vector2i(-6, 6): Array[Vector2i]([Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5)]),
-Vector2i(-3, -2): Array[Vector2i]([Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-3, -3)])
+Vector2i(-3, 6): Array[Vector2i]([Vector2i(-3, 3), Vector2i(-3, 4), Vector2i(-3, 5)]),
+Vector2i(0, -2): Array[Vector2i]([Vector2i(-1, -2), Vector2i(-1, -1), Vector2i(0, -3)])
 }
 starting_inventory = {
 "wall": 1
 }
-blocked_cells = Array[Vector2i]([])
+blocked_cells = Array[Vector2i]([Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 7), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 7), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 7), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 7), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, 7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, 7), Vector2i(0, -7), Vector2i(0, 6), Vector2i(0, 7), Vector2i(1, -7), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(2, -7), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(3, -7), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(4, -7), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(5, -7), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(6, -7), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0)])
 town_cells = Array[Vector2i]([])
-geyser_cells = Array[Vector2i]([Vector2i(-2, -3)])
+geyser_cells = Array[Vector2i]([Vector2i(1, -3)])
 total_block_budget = 0
-hydro_plant_cells = Array[Vector2i]([Vector2i(-5, 0)])
+hydro_plant_cells = Array[Vector2i]([Vector2i(-2, 0)])
 par_measures = 23

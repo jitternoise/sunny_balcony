@@ -7,17 +7,17 @@ script = ExtResource("1")
 level_id = 7
 display_name = "7. Splitter Branch"
 intro_text = "A Splitter sends water down both directions at once. Place it well and one placement can reach both the fire and the pool."
-grid_radius = 4
-water_sources = Array[Vector2i]([Vector2i(0, -4)])
-fire_cells = Array[Vector2i]([Vector2i(-1, -1)])
+grid_radius = 5
+water_sources = Array[Vector2i]([Vector2i(1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(0, -1)])
 pool_targets = {
-Vector2i(-3, 1): 4
+Vector2i(-2, 1): 4
 }
 lake_cells = {
-Vector2i(-3, 1): Array[Vector2i]([Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-3, 0)])
+Vector2i(-2, 1): Array[Vector2i]([Vector2i(-3, 0), Vector2i(-3, 1), Vector2i(-2, 0)])
 }
 starting_inventory = {
 "splitter": 1
 }
-blocked_cells = Array[Vector2i]([])
-hydro_plant_cells = Array[Vector2i]([Vector2i(-1, 2)])
+blocked_cells = Array[Vector2i]([Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 5), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 5), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 5), Vector2i(-2, -3), Vector2i(-2, 5), Vector2i(-1, 5), Vector2i(0, -5), Vector2i(0, 5), Vector2i(1, -5), Vector2i(1, 4), Vector2i(2, -5), Vector2i(2, 2), Vector2i(2, 3), Vector2i(3, -5), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(4, -5), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(5, -5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0)])
+hydro_plant_cells = Array[Vector2i]([Vector2i(0, 2)])

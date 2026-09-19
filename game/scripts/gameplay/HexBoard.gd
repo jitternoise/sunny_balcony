@@ -32,7 +32,6 @@ const CellState := {
 ## mechanic, an undug/partially-dug hex communicates its state purely
 ## through its fill color (see _draw_cell()'s DIRT branch).
 const ICON_FIRE := preload("res://assets/icons/icon_fire.svg")
-const ICON_POOL := preload("res://assets/icons/icon_pool.svg")
 const ICON_TOWN := preload("res://assets/icons/icon_town.svg")
 const ICON_SOURCE := preload("res://assets/icons/icon_source.svg")
 const ICON_HYDRO := preload("res://assets/icons/icon_hydro.svg")
@@ -118,6 +117,17 @@ const TILE_TRENCH := &"trench"
 ##   mode   -- TileMode
 ## A state with no sheet simply draws its icon, exactly as before, which is
 ## what lets tile types be converted to animation one at a time.
+## Basin (pool) palette. Dry lakebed is a pale, greyish tan so it sits
+## apart from the warm browns of dirt (DIRT_COLORS) and a town; the water
+## is the old "pool full" blue. The shoreline rims the lake's OUTER edges
+## only, so four cells read as one body.
+const BASIN_DRY_COLOR := Color(0.70, 0.64, 0.52)
+const BASIN_CRACK_COLOR := Color(0.42, 0.36, 0.28, 0.9)
+const BASIN_WATER_COLOR := Color(0.2, 0.5, 0.9) # table fill under the water art
+const BASIN_SURFACE_COLOR := Color(0.75, 0.9, 1.0, 0.95)
+const BASIN_SHORE_COLOR := Color(0.92, 0.86, 0.64, 0.95)
+const BASIN_SHORE_WIDTH := 3.0
+
 const TILE_VISUALS := {
 	TILE_EMPTY: {"fill": Color(0.15, 0.15, 0.18), "icon": null},
 	# The first terrain type converted to animation: the flame sways, and an
@@ -125,8 +135,13 @@ const TILE_VISUALS := {
 	# for anything that cannot resolve the sheet.
 	TILE_FIRE: {"fill": Color(0.9, 0.3, 0.1), "icon": ICON_FIRE,
 		"sheet": FIRE_SHEET, "frames": 6, "fps": 8.0},
-	TILE_POOL: {"fill": Color(0.25, 0.35, 0.45), "icon": ICON_POOL},
-	TILE_POOL_FULL: {"fill": Color(0.2, 0.5, 0.9), "icon": ICON_POOL},
+	# A pool is a dry, cracked lakebed that visibly fills as beats land --
+	# the fill level is per-lake state, so like a block it cannot be a
+	# static table entry: _draw_cell() hands both states to _draw_basin().
+	# The fills here are what the basin draws over (dry earth, then the
+	# full lake) and what anything that only reads the table gets.
+	TILE_POOL: {"fill": BASIN_DRY_COLOR, "icon": null},
+	TILE_POOL_FULL: {"fill": BASIN_WATER_COLOR, "icon": null},
 	# Flooded (water actually reached this town cell -- see _try_enter()'s
 	# TOWN branch) shows light blue instead of the usual earthy brown, so
 	# the board visibly marks exactly which cell the flood hit.
@@ -171,6 +186,9 @@ const ANIM_TICK_FPS := 12.0
 ## animated-glyph path so a converted tile type lands at exactly the size
 ## its static icon used to.
 const ICON_SCALE := 1.5
+## The source's waterfall ledge is full-cell art: its rock shelf runs the
+## width of the hex's flat middle band, so it draws bigger than a glyph.
+const SOURCE_ICON_SCALE := 1.75
 
 ## Every pool needs exactly this many beats of water connection to finish,
 ## visualized as a 4-box status bar above the pool. Fixed for every pool on
@@ -215,6 +233,15 @@ const DUG_TRENCH_COLOR := Color(0.30, 0.24, 0.18)
 ## the way out to the hex corners the inner ring sits at.
 const PRESET_OUTLINE_COLOR := Color(1.0, 0.95, 0.8, 0.85)
 const PRESET_OUTLINE_INSET := 0.72
+
+## Tutorial hint outline (LevelData.hint_cells): a dashed ring just inside
+## the cell edge, in the same amber as the flow-preview arrows so it reads
+## as "guidance" rather than as terrain. Hidden once anything is placed or
+## queued on the cell -- the hint has done its job.
+const HINT_OUTLINE_COLOR := Color(1.0, 0.82, 0.2, 0.95)
+const HINT_OUTLINE_INSET := 0.82
+const HINT_OUTLINE_WIDTH := 4.0
+const HINT_DASH_PX := 12.0
 
 ## A placement that's been queued but hasn't reached its PLACEMENT beat yet
 ## is drawn as a ghost of the block at this alpha, and a block queued for
@@ -434,6 +461,14 @@ var _has_animated_tiles: bool = false
 ## Harmless at one redraw per measure; not harmless now that the board
 ## repaints on an animation tick.
 var _playable_cells: Array[Vector2i] = []
+
+## The lowest playable row (largest r). On a plain hexagon this is
+## grid_radius; a level that blocks its bottom rows outright -- the 6-wide
+## column levels carve a radius-5 hexagon down to rows -4..4 -- ends here
+## instead, and falling past it is the edge loss. Set by
+## _cache_playable_cells(). Pointy grids only; a flat grid's loss test is
+## _cube_distance() against grid_radius (see _advance_water_flat()).
+var bottom_row: int = 0
 
 ## Vector2i -> true. Cells opened by a mudslide rather than by the player's
 ## digging -- drawn in MUDSLIDE_COLOR by _draw_cell() so slide damage stays
@@ -732,11 +767,13 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 func _cache_playable_cells() -> void:
 	_playable_cells.clear()
 	var radius: int = level_data.grid_radius
+	bottom_row = -radius
 	for q in range(-radius, radius + 1):
 		for r in range(-radius, radius + 1):
 			var coord := Vector2i(q, r)
 			if in_playable_area(coord):
 				_playable_cells.append(coord)
+				bottom_row = maxi(bottom_row, r)
 
 	_has_animated_tiles = false
 	for coord in _playable_cells:
@@ -1461,7 +1498,7 @@ func _advance_water(entry: Dictionary, next_water: Array[Dictionary]) -> void:
 func _try_natural_step(coord: Vector2i, dir: Vector2i, future_dir: Vector2i, next_water: Array[Dictionary]) -> bool:
 	var target := coord + dir
 
-	if target.y > level_data.grid_radius:
+	if target.y > bottom_row:
 		# Straight past the bottom edge is always a loss -- both diagonals
 		# increase r by 1, so the other diagonal would lose the same way.
 		# No point retrying it.
@@ -1899,7 +1936,7 @@ func _try_enter(coord: Vector2i) -> bool:
 		# Falling past the bottom edge of the grid is a loss. Exits off the
 		# sides/top (shouldn't normally happen given level design) just
 		# drop the water silently rather than crashing the sim.
-		if coord.y > level_data.grid_radius:
+		if coord.y > bottom_row:
 			_lose(LoseReason.EDGE)
 		return false
 
@@ -2094,7 +2131,7 @@ func _predict_branch(coord: Vector2i, next_dir: Vector2i, mode: String, is_flat:
 			if not level_data.blocked_cells.has(target) and _cube_distance(target) > level_data.grid_radius:
 				continue # exits the true boundary via this candidate -- try the next one
 		else:
-			if target.y > level_data.grid_radius:
+			if target.y > bottom_row:
 				continue # straight bottom-edge exit -- both diagonals would lose the same way, nothing to draw
 		if not in_playable_area(target) or _is_wall(target):
 			continue # blocked by a corridor carve-out, a Wall, an activated geyser, undug dirt, or an inactive Hydro Plant cell (see _is_wall()) -- try the next candidate
@@ -2346,6 +2383,11 @@ func _draw_cell(coord: Vector2i) -> void:
 			_draw_tile_art(fill_sheet, center, Hex.SIZE * 2.0, frames,
 				_anim_frame(visual.get("fps", ANIM_TICK_FPS), frames, _cell_stagger(coord, frames)))
 
+	# 1b. A pool draws its own lakebed, water level and shoreline on top of
+	#     the base fill -- the level is per-lake state (see _draw_basin()).
+	if terrain == CellState.POOL:
+		_draw_basin(coord, center, points)
+
 	# 2. Buffered placement/pickup that hasn't reached its PLACEMENT beat
 	#    yet (post-Start only -- pre-Start both commit immediately, see
 	#    HexBoard.started). Ghosting them is what makes a mid-measure tap
@@ -2357,10 +2399,12 @@ func _draw_cell(coord: Vector2i) -> void:
 	elif pending_removals.has(coord):
 		draw_colored_polygon(points, PENDING_REMOVAL_COLOR)
 
-	# 3. cell border
-	var outline := points.duplicate()
-	outline.append(points[0])
-	draw_polyline(outline, Color(0, 0, 0, 0.4), 1.0, true)
+	# 3. cell border. A lake cell skips it: its shoreline (_draw_basin())
+	#    is the basin's only edge, so four cells read as one body.
+	if terrain != CellState.POOL:
+		var outline := points.duplicate()
+		outline.append(points[0])
+		draw_polyline(outline, Color(0, 0, 0, 0.4), 1.0, true)
 
 	# 4. Fixed level furniture gets a second, inset outline -- see
 	#    PRESET_OUTLINE_COLOR and _is_preset_cell(). Both halves of a 2-wide
@@ -2371,6 +2415,13 @@ func _draw_cell(coord: Vector2i) -> void:
 			inner.append(center + (Hex.hex_corner(center, i) - center) * PRESET_OUTLINE_INSET)
 		inner.append(inner[0])
 		draw_polyline(inner, PRESET_OUTLINE_COLOR, 2.0, true)
+
+	# 4b. Tutorial hint -- see HINT_OUTLINE_COLOR. Drawn under the glyph so
+	#    a block placed here covers it naturally as well as by the has()
+	#    checks.
+	if level_data.hint_cells.has(coord) and not placed_blocks.has(coord) \
+			and not pending_placements.has(coord):
+		_draw_hint_outline(center)
 
 	# 5. glyph. A state with a sheet animates; one with only an icon draws
 	#    it statically, which is how a tile type gets converted to animation
@@ -2444,6 +2495,15 @@ func _tile_sheet(visual: Dictionary) -> Texture2D:
 ## _draw_cell(). Works from either half of a 2-wide preset (via
 ## block_anchor_at()), and goes false for a preset Bomb Catapult once it's
 ## been fired, since that cell is ordinary board again by then.
+## Dashed hexagonal ring for a LevelData.hint_cells entry, inset from the
+## cell edge so it never touches the cell border or a neighbour's hint.
+func _draw_hint_outline(center: Vector2) -> void:
+	for i in range(6):
+		var a := center + (Hex.hex_corner(center, i) - center) * HINT_OUTLINE_INSET
+		var b := center + (Hex.hex_corner(center, (i + 1) % 6) - center) * HINT_OUTLINE_INSET
+		draw_dashed_line(a, b, HINT_OUTLINE_COLOR, HINT_OUTLINE_WIDTH, HINT_DASH_PX, true, true)
+
+
 func _is_preset_cell(coord: Vector2i) -> bool:
 	if not placed_blocks.has(coord):
 		return false
@@ -2569,6 +2629,95 @@ func _draw_icon(center: Vector2, texture: Texture2D, scale_factor: float = ICON_
 	draw_texture_rect(texture, rect, false)
 
 
+## One cell of a lake: cracked dry earth, then water rising from the bottom
+## of the WHOLE lake's bounding box as pool_fill climbs, so the four cells
+## fill as one basin rather than four cups. At POOL_BEATS_REQUIRED the
+## waterline reaches the top of the lake and every cell is fully water. A
+## sand-coloured shoreline is drawn only on edges that do not face another
+## cell of the same lake.
+func _draw_basin(coord: Vector2i, center: Vector2, points: PackedVector2Array) -> void:
+	var anchor: Vector2i = lake_anchor.get(coord, coord)
+	var cells := lake_cells_of(anchor)
+	var beats: int = pool_fill.get(anchor, 0) as int
+	var level := clampf(float(beats) / float(POOL_BEATS_REQUIRED), 0.0, 1.0)
+
+	_draw_basin_cracks(coord, center)
+
+	if level > 0.0:
+		var top := INF
+		var bottom := -INF
+		for cell in cells:
+			var c := Hex.axial_to_pixel(cell)
+			for i in range(6):
+				var y := Hex.hex_corner(c, i).y
+				top = minf(top, y)
+				bottom = maxf(bottom, y)
+		var waterline := bottom - level * (bottom - top)
+
+		# The wet part is the stream's own animated water, cut off at the
+		# waterline: the sheet's frames fill the hex's bounding box edge to
+		# edge with transparent corners, so clipping the source rect to the
+		# band below the waterline is the whole clip -- no polygon needed.
+		var tile_top := center.y - Hex.SIZE
+		var wet_from := maxf(waterline, tile_top)
+		var frac := clampf((wet_from - tile_top) / (Hex.SIZE * 2.0), 0.0, 1.0)
+		if frac < 1.0:
+			var sheet: Texture2D = WATER_BODY_FLAT if level_data.grid_style == "flat" else WATER_BODY_POINTY
+			var frame := _anim_frame(WATER_FPS, WATER_FRAMES, _cell_stagger(coord, WATER_FRAMES))
+			var frame_px := float(sheet.get_width()) / float(WATER_FRAMES)
+			var tex_h := float(sheet.get_height())
+			var src := Rect2(frame * frame_px + SHEET_REGION_INSET, frac * tex_h + SHEET_REGION_INSET,
+				frame_px - SHEET_REGION_INSET * 2.0, tex_h * (1.0 - frac) - SHEET_REGION_INSET * 2.0)
+			var dest := Rect2(center.x - Hex.SIZE, wet_from, Hex.SIZE * 2.0, Hex.SIZE * 2.0 * (1.0 - frac))
+			draw_texture_rect_region(sheet, dest, src)
+
+		# Surface line where the waterline crosses this cell.
+		var surface := PackedVector2Array()
+		for i in range(6):
+			var a := points[i]
+			var b := points[(i + 1) % 6]
+			if (a.y >= waterline) != (b.y >= waterline):
+				surface.append(a.lerp(b, (waterline - a.y) / (b.y - a.y)))
+		if surface.size() == 2:
+			draw_line(surface[0], surface[1], BASIN_SURFACE_COLOR, 2.5, true)
+
+	for i in range(6):
+		var a := points[i]
+		var b := points[(i + 1) % 6]
+		var across := center + ((a + b) / 2.0 - center) * 2.0
+		var neighbour := coord
+		var best := INF
+		for offset in Hex.NEIGHBOR_OFFSETS:
+			var d: float = Hex.axial_to_pixel(coord + offset).distance_squared_to(across)
+			if d < best:
+				best = d
+				neighbour = coord + offset
+		if lake_anchor.get(neighbour, Vector2i(9999, 9999)) != anchor:
+			draw_line(a, b, BASIN_SHORE_COLOR, BASIN_SHORE_WIDTH, true)
+
+
+## Three short cracks per cell, seeded from the coordinate so they never
+## crawl between redraws. Kept inside ~0.7 of the hex radius so nothing
+## touches the shoreline.
+func _draw_basin_cracks(coord: Vector2i, center: Vector2) -> void:
+	var seed: int = (coord.x * 73856093) ^ (coord.y * 19349663)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	for n in range(3):
+		var angle := rng.randf_range(0.0, TAU)
+		var p := center + Vector2(cos(angle), sin(angle)) * rng.randf_range(0.0, Hex.SIZE * 0.35)
+		var heading := rng.randf_range(0.0, TAU)
+		var line := PackedVector2Array([p])
+		for k in range(3):
+			heading += rng.randf_range(-0.9, 0.9)
+			var q := line[line.size() - 1] + Vector2(cos(heading), sin(heading)) * Hex.SIZE * 0.22
+			if q.distance_to(center) > Hex.SIZE * 0.7:
+				break
+			line.append(q)
+		if line.size() >= 2:
+			draw_polyline(line, BASIN_CRACK_COLOR, 2.0, true)
+
+
 ## Draws the 4-box status bar above a pool cell once water has connected to
 ## it at least once (pool_fill > 0). Each box left-to-right represents one
 ## beat of connection; a box's color flips once that beat has been reached.
@@ -2673,11 +2822,11 @@ func _draw_geyser_icon(center: Vector2) -> void:
 ## still draw either way.
 func _draw_source_marker(coord: Vector2i) -> void:
 	var center := Hex.axial_to_pixel(coord)
-	_draw_icon(center, ICON_SOURCE)
+	# The waterfall ledge spans the cell, so it draws larger than a centred
+	# glyph and needs no ring to mark the cell out.
+	_draw_icon(center, ICON_SOURCE, SOURCE_ICON_SCALE)
 
 	var ring_color := Color(1.0, 1.0, 1.0, 0.9)
-
-	draw_arc(center, Hex.SIZE * 0.55, 0, TAU, 24, ring_color, 2.5, true)
 
 	if show_flow_preview:
 		return
@@ -2685,8 +2834,10 @@ func _draw_source_marker(coord: Vector2i) -> void:
 	var first_move := _first_move_direction(coord)
 	var target_center := Hex.axial_to_pixel(coord + first_move)
 	var dir_vec := (target_center - center).normalized()
-	var arrow_start := center + dir_vec * (Hex.SIZE * 0.15)
-	var arrow_end := center + dir_vec * (Hex.SIZE * 0.85)
+	# Starts below the foam at the base of the falls rather than at the
+	# centre, so the arrow does not cross the cascade.
+	var arrow_start := center + dir_vec * (Hex.SIZE * 0.55)
+	var arrow_end := center + dir_vec * (Hex.SIZE * 0.95)
 	draw_line(arrow_start, arrow_end, ring_color, 3.0, true)
 
 	# Arrowhead: two short strokes angled back from the tip.

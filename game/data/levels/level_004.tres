@@ -7,7 +7,7 @@ script = ExtResource("1")
 level_id = 4
 display_name = "4. Off-Center Flow"
 intro_text = "The source has moved off-center. The zigzag still finds the fire on its own -- but you'll need one block near the bottom to guide the stream into the pool."
-grid_radius = 4
+grid_radius = 5
 water_sources = Array[Vector2i]([Vector2i(1, -4)])
 fire_cells = Array[Vector2i]([Vector2i(0, -2)])
 pool_targets = {
@@ -19,7 +19,7 @@ Vector2i(-2, 4): Array[Vector2i]([Vector2i(-1, 3), Vector2i(-1, 4), Vector2i(0, 
 starting_inventory = {
 "divert_right": 1
 }
-blocked_cells = Array[Vector2i]([])
+blocked_cells = Array[Vector2i]([Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 5), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 5), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 5), Vector2i(-2, -3), Vector2i(-2, 5), Vector2i(-1, 5), Vector2i(0, -5), Vector2i(0, 5), Vector2i(1, -5), Vector2i(1, 4), Vector2i(2, -5), Vector2i(2, 2), Vector2i(2, 3), Vector2i(3, -5), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(4, -5), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(5, -5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0)])
 town_cells = Array[Vector2i]([])
 geyser_cells = Array[Vector2i]([])
 total_block_budget = 0

@@ -65,11 +65,13 @@ one try, without you already knowing the game?**
 
 ### Tutorial 1 — The River Runs
 
-`pointy r3 · 0 fires · pool (-3,3)x4 · source (0,-3)`
+`pointy r3, 4-wide column · 0 fires · pool (-2,3)x4 · source (2,-3)`
 
 - kit: *nothing to place — press play and watch*
 - teaches: water falls and zigzags on its own; the pool at the bottom is the goal
-- fastest known: **9 measures** (10.8 s), and there is no other way to play it
+- fastest known: **8 measures** (9.6 s), and there is no other way to play it
+- 2026-09-16: relaid as a 4-wide column with the source on a top-centre hex
+  and the lake on the bottom two rows (same for T2-T4)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -77,11 +79,11 @@ one try, without you already knowing the game?**
 
 ### Tutorial 2 — Out Goes the Fire
 
-`pointy r3 · 1 fire · pool (-3,3)x4 · source (0,-3)`
+`pointy r3, 4-wide column · 1 fire (0,0) · pool (-2,3)x4 · source (2,-3)`
 
 - kit: *nothing to place*
 - teaches: water puts a fire out simply by running over it
-- fastest known: **10 measures** (12.0 s)
+- fastest known: **9 measures** (10.8 s)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -89,11 +91,14 @@ one try, without you already knowing the game?**
 
 ### Tutorial 3 — Steer the Stream
 
-`pointy r3 · 0 fires · pool (-1,1)x4 · source (0,-3)`
+`pointy r3, 4-wide column · 0 fires · pool (-1,3)x4 · source (1,-3)`
 
 - kit: divert_right x1
 - teaches: blocks go down before Start, and a Diverter (R) pushes water down-right
-- solution: `divert_right (-1, -1)` | win 7 — the only placement that wins
+- solution: `divert_right (-1, 1)` | win 8 — the outlined hex, directly above the
+  lake. `(0, -1)` also wins; nothing else does.
+- 2026-09-16: the solution hex carries a dashed amber **hint outline**
+  (`LevelData.hint_cells`); the lake sits on the bottom two rows
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -101,12 +106,14 @@ one try, without you already knowing the game?**
 
 ### Tutorial 4 — Think Again
 
-`pointy r3 · 0 fires · pool (-3,0)x4 · source (0,-3)`
+`pointy r3, 4-wide column · 0 fires · pool (-3,3)x4 · source (2,-3)`
 
 - kit: divert_left x1, divert_right x1
-- teaches: tapping a placed block picks it back up — both diverters are offered
-  and only one, in one cell, wins, so a wrong first guess is the point
-- solution: `divert_left (-1, -2)` | win 6 — the only winning (type, cell) pair
+- teaches: tapping a placed block picks it back up — both diverters are offered,
+  the hex is outlined, and only the LEFT one wins there, so a wrong first guess
+  is the point
+- solution: `divert_left (0, 0)` | win 8 — the outlined hex. Diverter-R wins
+  nowhere on this board.
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -114,14 +121,17 @@ one try, without you already knowing the game?**
 
 ### Tutorial 5 — Two Cells Wide
 
-`pointy r4 · 0 fires · pool (-1,0)x4 · source (0,-4)`
+`pointy r4, 5-wide column (top row blocked) · 0 fires · pool (0,4)x4 · source (2,-3)`
 
 - kit: wall x1
 - teaches: **a Wall covers the tapped hex AND its right-hand neighbour.** The
-  stream runs through (-2,-1); the only wall that wins is anchored at (-3,-1),
-  one hex to the left. Walling (-2,-1) directly covers both exits and seals
-  the stream in — the instructive failure.
-- solution: `wall (-3, -1)` | win 7
+  stream runs through (0,0); the outlined hex is (-1,0), one to the left, so
+  the wall's right half lands in the path. Walling (0,0) directly covers both
+  exits and seals the stream in — the instructive failure (verified: stalls,
+  never wins).
+- solution: `wall (-1, 0)` | win 9. Bottom-row walls at (-3,4)/(-2,4) and
+  (-2,2)/(0,-2) also win by bouncing the stream sideways.
+- 2026-09-16: relaid 5 wide with the lake on the bottom two rows
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -130,14 +140,14 @@ one try, without you already knowing the game?**
 
 ## Riverbed Basics (levels 1–12)
 
-### 1. Drift Correction  —  ⚠️ solution broken · 📏 36dp
+### 1. Drift Correction  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-1,0)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (0,0)x4 · source (1,-4)`
 
 - kit: divert_right x2; divert_left x1; wall x1
 - intro says: *Water zigzags naturally as it falls, and drifts to the left over time. Use your blocks to guide it past the fire and into the pool before it drifts off the edge.*
 - fastest known: **8 measures** (9.6 s)  — *stale, measured before the Wall widened*
-- documented solution: `Wall (-1,-3)` | win 8  ⚠️ **no longer wins**
+- documented solution: `wall (-1, -3)` | win 7  (re-solved 2026-09-16 on the 6-wide column; the old Wall answer died with the 2-wide Wall)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -145,12 +155,12 @@ one try, without you already knowing the game?**
 
 ### 2. Pure Zigzag  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (1,-4)`
 
 - kit: wall x1
 - intro says: *Just watch the zigzag carry the stream through the fire -- then catch it: the pool sits off the natural path, and one block placed near the end steers the water home.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `wall (-4, 1)` | win 12
+- documented solution: `wall (-3, 1)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -158,12 +168,12 @@ one try, without you already knowing the game?**
 
 ### 3. New Corridor  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-2,1)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-1,1)x4 · source (1,-4)`
 
 - kit: divert_right x1
 - intro says: *Same idea as before, a new path to correct. Redirect the water so it reaches the fire and pool instead of drifting off the edge.*
 - fastest known: **9 measures** (10.8 s)
-- documented solution: `Diverter-Right (-1,-2)` | win 9
+- documented solution: `Diverter-Right (0,-2)` | win 9
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -171,7 +181,7 @@ one try, without you already knowing the game?**
 
 ### 4. Off-Center Flow  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-2,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_right x1
 - intro says: *The source has moved off-center. The zigzag still finds the fire on its own -- but you'll need one block near the bottom to guide the stream into the pool.*
@@ -184,25 +194,25 @@ one try, without you already knowing the game?**
 
 ### 5. Forced Redirect  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,0)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (0,0)x4 · source (3,-4)`
 
 - kit: wall x1
 - intro says: *A Wall doesn't let water pass through -- it bounces off onto the other diagonal instead. Use it to force the stream onto a new path toward the fire and pool.*
 - fastest known: **8 measures** (9.6 s)
-- documented solution: `Wall (-1,-2)` | win 8
+- documented solution: `Wall (2,-2)` | win 8
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
 |  |  |  |  |
 
-### 6. Hole in the Grid  —  ⚠️ solution broken · 📏 36dp
+### 6. Hole in the Grid  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (1,-4)`
 
 - kit: wall x1
 - intro says: *A hole in the grid bounces the water like a Wall would. Add a Wall of your own to finish the route to the fire and pool.*
 - fastest known: **12 measures** (14.4 s)  — *stale, measured before the Wall widened*
-- documented solution: `wall (-1, -3)` | win 12  ⚠️ **no longer wins**
+- documented solution: `wall (-1, -3)` | win 10  (re-solved 2026-09-16 on the 6-wide column; the old Wall answer died with the 2-wide Wall)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -210,12 +220,12 @@ one try, without you already knowing the game?**
 
 ### 7. Splitter Branch  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,1)x4 · 1 hydro plant · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,1)x4 · 1 hydro plant · source (1,-4)`
 
 - kit: splitter x1
 - intro says: *A Splitter sends water down both directions at once. Place it well and one placement can reach both the fire and the pool.*
 - fastest known: **8 measures** (9.6 s)
-- documented solution: `Splitter (-1,-2)` | win 8
+- documented solution: `Splitter (0,-2)` | win 8
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -223,12 +233,12 @@ one try, without you already knowing the game?**
 
 ### 8. Double Flames  —  ⏱ par 17 · 📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-4,4)x4 · source (0,-4)`
 
 - kit: wall x1
 - intro says: *Two fires and a pool, none of them on the natural path. One early Wall bounces the stream onto a route that finds all three.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `wall (-1, -2)` | win 13
+- documented solution: `wall (-2, 0)` | win 13  (re-solved 2026-09-16 on the 6-wide column)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -236,38 +246,38 @@ one try, without you already knowing the game?**
 
 ### 9. Twin Sources  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-3,4)x4; (-4,4)x4 · source (0,-4); (2,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-1,4)x4; (-2,4)x4 · source (2,-4); (4,-4)`
 
 - kit: divert_left x1
 - intro says: *Two independent streams, two fires, two pools. The fires are free -- the pools take one well-placed diverter.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-left (-1, 1)` | win 12
+- documented solution: `divert-left (1, 1)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
 |  |  |  |  |
 
-### 10. Twin Flames  —  ⚠️ solution broken · 📏 36dp
+### 10. Twin Flames  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-2,2)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-1,2)x4 · source (1,-4)`
 
 - kit: wall x1; divert_right x1
 - intro says: *Blocks can't be placed on the water source itself -- but a well-placed Wall on the stream's first landing bounces it onto a stable path through both fires and into the pool.*
 - fastest known: **11 measures** (13.2 s)  — *stale, measured before the Wall widened*
-- documented solution: `Wall (-1,-3)` | win 11  ⚠️ **no longer wins**
+- documented solution: `wall (-1, -3)` | win 10  (re-solved 2026-09-16 on the 6-wide column; the old Wall answer died with the 2-wide Wall)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
 |  |  |  |  |
 
-### 11. Grand Convergence  —  ⚠️ solution broken · 📏 36dp
+### 11. Grand Convergence  —  📏 36dp
 
-`pointy r4 · 4 fires · pool (-2,2)x4; (-1,1)x4; (0,1)x4 · source (0,-4); (2,-4)`
+`pointy r5, 6-wide column · 4 fires · pool (-4,4)x4; (-2,4)x4; (0,4)x4 · source (0,-4); (2,-4)`
 
 - kit: wall x1; splitter x1; divert_right x1
 - intro says: *Two sources, several fires and pools. Bounce one stream onto a stable path and branch the other to cover everything -- combine what you've learned.*
-- fastest known: **11 measures** (13.2 s)  — *stale, measured before the Wall widened*
-- documented solution: `Wall (-1,-3) + Splitter (1,-2)` | win 11  ⚠️ **no longer wins**
+- fastest known: **12 measures** (14.4 s)
+- documented solution: `wall (0, -3) + splitter (-1, -2) + divert-right (-2, 2)` | win 12 (relaid 2026-09-16 for the 6-wide column). Needs all three: no 1- or 2-block answer exists.
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -275,12 +285,12 @@ one try, without you already knowing the game?**
 
 ### 12. Town Alert  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-1,0)x4 · 4 towns · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (0,0)x4 · 4 towns · source (1,-4)`
 
 - kit: wall x1; divert_right x1
 - intro says: *A town sits on the water's natural path -- reaching it ends the level immediately. Bounce the stream onto a new path before it gets there, then let the corrected flow reach the fire and pool.*
 - fastest known: **8 measures** (9.6 s)
-- documented solution: `divert-right (-1, -2)` | win 8
+- documented solution: `divert-right (0, -2)` | win 8
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -359,12 +369,12 @@ one try, without you already knowing the game?**
 
 ### 18. Geyser Awakens  —  ⏱ par 23 · 📏 25dp
 
-`pointy r6 · 1 fire · pool (-2,-2)x4; (-6,6)x4 · 1 geyser · 1 hydro plant · source (0,-6)`
+`pointy r7, 6-wide column · 1 fire · pool (1,-2)x4; (-3,6)x4 · 1 geyser · 1 hydro plant · source (3,-6)`
 
 - kit: wall x1
 - intro says: *A dormant Geyser wakes after a few beats of water contact and becomes a second source. Place your Wall well -- every pool must fill, on both streams.*
 - fastest known: **18 measures** (21.6 s)
-- documented solution: `wall (-1, -2)` | win 18
+- documented solution: `wall (2, -2)` | win 18
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -385,12 +395,12 @@ one try, without you already knowing the game?**
 
 ### 20. Straight & Zigzag  —  📏 40dp
 
-`flat r4 · 2 fires · pool (3,0)x4; (0,4)x4 · source (0,-4); (2,-4)`
+`flat r4, columns -2..3 · 2 fires · pool (3,0)x4 (a q=3 strip); (0,4)x4 · source (0,-4); (2,-4)`
 
 - kit: divert_right x1
 - intro says: *The rotated flat grid: one stream falls straight down, the other zigzags. One diverter catches what the zigzag keeps missing.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `divert-right (2, 0)` | win 13
+- documented solution: `divert-right (2, 0)` | win 13 (relaid 2026-09-16 for the 6-wide column); (2,-2), (2,-1) and (2,1) also win
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -401,12 +411,12 @@ one try, without you already knowing the game?**
 
 ### 21. Dig the River  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-1,4)x4 · 41 dirt cells · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-1,4)x4 · 30 dirt cells · source (0,-4)`
 
 - kit: *nothing to place*
 - intro says: *The land below is packed dirt -- water can't flow through it, so the river backs up and waits. Tap a dirt hex 3 times to dig it open, and carve a channel that leads the river all the way down to the pool. But don't dawdle: water pressing on dirt too long triggers a mudslide -- 3 tiles collapse and the river carves its own path. And a channel dug to the bottom edge spills the river off the board!*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `dig (-1,-1),(-1,0),(-1,2),(-1,3)` | win 12
+- documented solution: `dig (-1,-1),(-1,0),(-1,2),(-1,3)` | win 12 (relaid 2026-09-16 for the 6-wide column)
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -431,12 +441,12 @@ one try, without you already knowing the game?**
 
 ### 23. Diverter Drills I  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_right x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-right (-2, 0)` | win 12
+- documented solution: `divert-right (-1, 0)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -444,12 +454,12 @@ one try, without you already knowing the game?**
 
 ### 24. Diverter Drills II  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-3,4)x4 · source (2,-4)`
 
 - kit: divert_left x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `divert-left (-1, -3)` | win 13
+- documented solution: `divert-left (1, -3)` | win 13 (relaid 2026-09-16 for the 6-wide column), the only placement that wins
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -457,7 +467,7 @@ one try, without you already knowing the game?**
 
 ### 25. Diverter Drills III  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · 1 hydro plant · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-4,4)x4 · 1 hydro plant · source (0,-4)`
 
 - kit: divert_left x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
@@ -470,7 +480,7 @@ one try, without you already knowing the game?**
 
 ### 26. Diverter Drills IV  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-2,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_right x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
@@ -483,25 +493,25 @@ one try, without you already knowing the game?**
 
 ### 27. Diverter Drills V  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-3,4)x4 · source (2,-4)`
 
 - kit: divert_right x1; divert_left x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-right (0, -2) + divert-left (0, -3)` | win 12
+- documented solution: `divert-right (1, -2) + divert-left (1, -3)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
 |  |  |  |  |
 
-### 28. Diverter Drills VI  —  ⏱ par 17 · 📏 36dp
+### 28. Diverter Drills VI  —  ⏱ par 15 · 📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-4,4)x4 · source (2,-4)`
 
 - kit: divert_left x2
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
-- fastest known: **13 measures** (15.6 s)
-- documented solution: `divert-left (-3, 2) + divert-left (-2, -1)` | win 13
+- fastest known: **12 measures** (14.4 s)
+- documented solution: `divert-left (0, -1) + divert-left (-2, 1)` | win 12 (relaid 2026-09-16 for the 6-wide column); the first diverter can also sit at (1,-3). One diverter alone fills the pool with a fire still lit.
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -509,12 +519,12 @@ one try, without you already knowing the game?**
 
 ### 29. Diverter Drills VII  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_left x1; divert_right x1
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-left (-4, 4) + divert-right (-1, -2)` | win 12
+- documented solution: `divert-left (-3, 4) + divert-right (0, -2)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -522,7 +532,7 @@ one try, without you already knowing the game?**
 
 ### 30. Diverter Drills VIII  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-2,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_right x2
 - intro says: *Steer the stream with diverters -- redirect it through every fire and into the pool.*
@@ -538,12 +548,12 @@ one try, without you already knowing the game?**
 
 ### 31. Wall Work I  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-2,4)x4 · source (3,-4)`
 
 - kit: wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `wall (-2, 2)` | win 12
+- documented solution: `wall (0, 2)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -551,7 +561,7 @@ one try, without you already knowing the game?**
 
 ### 32. Wall Work II  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-2,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-2,4)x4 · source (1,-4)`
 
 - kit: wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
@@ -564,12 +574,12 @@ one try, without you already knowing the game?**
 
 ### 33. Wall Work III  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-2,4)x4 · 1 hydro plant · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-1,4)x4 · 1 hydro plant · source (2,-4)`
 
 - kit: wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `wall (-4, 3)` | win 12
+- documented solution: `wall (-3, 3)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -577,12 +587,12 @@ one try, without you already knowing the game?**
 
 ### 34. Wall Work IV  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-3,4)x4 · source (2,-4)`
 
 - kit: wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `wall (-1, -2)` | win 13
+- documented solution: `wall (1, -2)` | win 13 (relaid 2026-09-16 for the 6-wide column), the only placement that wins
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -590,7 +600,7 @@ one try, without you already knowing the game?**
 
 ### 35. Wall Work V  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-3,4)x4 · source (1,-4)`
 
 - kit: divert_right x1; wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
@@ -603,7 +613,7 @@ one try, without you already knowing the game?**
 
 ### 36. Wall Work VI  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-4,4)x4 · source (1,-4)`
 
 - kit: divert_left x2
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
@@ -616,12 +626,12 @@ one try, without you already knowing the game?**
 
 ### 37. Wall Work VII  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-3,4)x4 · source (2,-4)`
 
 - kit: divert_left x1; wall x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-left (-3, 3) + wall (0, -2)` | win 12
+- documented solution: `divert-left (-2, 3) + wall (1, -2)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -629,12 +639,12 @@ one try, without you already knowing the game?**
 
 ### 38. Wall Work VIII  —  ⏱ par 17 · 📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-3,4)x4 · source (1,-4)`
 
 - kit: wall x1; divert_left x1
 - intro says: *A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `wall (-2, -1) + divert-left (-3, 3)` | win 13
+- documented solution: `wall (-1, -1) + divert-left (-2, 3)` | win 13
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -645,12 +655,12 @@ one try, without you already knowing the game?**
 
 ### 39. Split Networks I  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4; (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-1,4)x4; (-2,4)x4 · source (2,-4)`
 
 - kit: splitter x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `splitter (-2, 0)` | win 12
+- documented solution: `splitter (0, 0)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -658,12 +668,12 @@ one try, without you already knowing the game?**
 
 ### 40. Split Networks II  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-3,4)x4; (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-2,4)x4; (-3,4)x4 · source (2,-4)`
 
 - kit: splitter x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `splitter (-3, 3)` | win 13
+- documented solution: `splitter (-2, 3)` | win 13
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -671,12 +681,12 @@ one try, without you already knowing the game?**
 
 ### 41. Split Networks III  —  📏 36dp
 
-`pointy r4 · 3 fires · pool (-3,4)x4; (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 3 fires · pool (-1,4)x4; (-2,4)x4 · source (3,-4)`
 
 - kit: splitter x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `splitter (-1, -1)` | win 13
+- documented solution: `splitter (1, -1)` | win 13
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -684,12 +694,12 @@ one try, without you already knowing the game?**
 
 ### 42. Split Networks IV  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4; (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-1,4)x4; (-2,4)x4 · source (2,-4)`
 
 - kit: splitter x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `splitter (-2, 0)` | win 12
+- documented solution: `splitter (0, 0)` | win 12
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -697,7 +707,7 @@ one try, without you already knowing the game?**
 
 ### 43. Split Networks V  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-4,4)x4 · source (0,-4)`
 
 - kit: divert_left x2
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
@@ -710,12 +720,12 @@ one try, without you already knowing the game?**
 
 ### 44. Split Networks VI  —  📏 36dp
 
-`pointy r4 · 3 fires · pool (-3,4)x4; (-4,4)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 3 fires · pool (-2,4)x4; (-3,4)x4 · source (2,-4)`
 
 - kit: splitter x1; divert_left x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **14 measures** (16.8 s)
-- documented solution: `splitter (-2, 1) + divert-left (-2, 2)` | win 14
+- documented solution: `splitter (-1, 1) + divert-left (-1, 2)` | win 14
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -723,7 +733,7 @@ one try, without you already knowing the game?**
 
 ### 45. Split Networks VII  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-3,4)x4; (-2,3)x4 · source (1,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-3,4)x4; (-2,3)x4 · source (1,-4)`
 
 - kit: splitter x1; divert_left x1
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
@@ -736,12 +746,12 @@ one try, without you already knowing the game?**
 
 ### 46. Split Networks VIII  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-3,4)x4 · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-2,4)x4 · source (1,-4)`
 
 - kit: divert_right x2
 - intro says: *One stream isn't enough here. Split it and serve every pool at once.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `divert-right (-4, 3) + divert-right (-1, -2)` | win 13
+- documented solution: `divert-right (-3, 3) + divert-right (0, -2)` | win 13
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -752,7 +762,7 @@ one try, without you already knowing the game?**
 
 ### 47. Town Defense I  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · 4 towns · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-4,4)x4 · 4 towns · source (0,-4)`
 
 - kit: divert_left x1
 - intro says: *A town sits in harm's way -- reroute the water before it gets there, then finish the job.*
@@ -765,12 +775,12 @@ one try, without you already knowing the game?**
 
 ### 48. Town Defense II  —  ⏱ par 17 · 📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · 4 towns · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-3,4)x4 · 4 towns · source (2,-4)`
 
 - kit: divert_left x1
 - intro says: *A town sits in harm's way -- reroute the water before it gets there, then finish the job.*
 - fastest known: **13 measures** (15.6 s)
-- documented solution: `divert-left (-1, -3)` | win 13
+- documented solution: `divert-left (1, -3)` | win 13 (relaid 2026-09-16 for the 6-wide column), the only placement that wins
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -778,12 +788,12 @@ one try, without you already knowing the game?**
 
 ### 49. Town Defense III  —  📏 36dp
 
-`pointy r4 · 1 fire · pool (-4,4)x4 · 4 towns · source (0,-4)`
+`pointy r5, 6-wide column · 1 fire · pool (-3,4)x4 · 4 towns · source (2,-4)`
 
 - kit: divert_left x1
 - intro says: *A town sits in harm's way -- reroute the water before it gets there, then finish the job.*
 - fastest known: **12 measures** (14.4 s)
-- documented solution: `divert-left (-1, -3)` | win 12
+- documented solution: `divert-left (1, -3)` | win 12 (relaid 2026-09-16 for the 6-wide column), the only placement that wins
 
 | verdict | difficulty | measures | notes |
 |---|---|---|---|
@@ -791,7 +801,7 @@ one try, without you already knowing the game?**
 
 ### 50. Town Defense IV  —  📏 36dp
 
-`pointy r4 · 2 fires · pool (-4,4)x4 · 4 towns · source (0,-4)`
+`pointy r5, 6-wide column · 2 fires · pool (-4,4)x4 · 4 towns · source (0,-4)`
 
 - kit: divert_left x1
 - intro says: *A town sits in harm's way -- reroute the water before it gets there, then finish the job.*

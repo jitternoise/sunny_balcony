@@ -7,20 +7,20 @@ script = ExtResource("1")
 level_id = 38
 display_name = "38. Wall Work VIII"
 intro_text = "A Wall bounces water onto its other diagonal. Use the bounce to reach what the drift would miss."
-grid_radius = 4
-water_sources = Array[Vector2i]([Vector2i(0, -4)])
-fire_cells = Array[Vector2i]([Vector2i(-1, -1), Vector2i(-2, 2)])
+grid_radius = 5
+water_sources = Array[Vector2i]([Vector2i(1, -4)])
+fire_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(-1, 2)])
 pool_targets = {
-Vector2i(-4, 4): 4
+Vector2i(-3, 4): 4
 }
 lake_cells = {
-Vector2i(-4, 4): Array[Vector2i]([Vector2i(-3, 4), Vector2i(-2, 3), Vector2i(-2, 4)])
+Vector2i(-3, 4): Array[Vector2i]([Vector2i(-2, 4), Vector2i(-1, 3), Vector2i(-1, 4)])
 }
 starting_inventory = {
 "wall": 1,
 "divert_left": 1
 }
-blocked_cells = Array[Vector2i]([])
+blocked_cells = Array[Vector2i]([Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 5), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 5), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 5), Vector2i(-2, -3), Vector2i(-2, 5), Vector2i(-1, 5), Vector2i(0, -5), Vector2i(0, 5), Vector2i(1, -5), Vector2i(1, 4), Vector2i(2, -5), Vector2i(2, 2), Vector2i(2, 3), Vector2i(3, -5), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(4, -5), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(5, -5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0)])
 town_cells = Array[Vector2i]([])
 geyser_cells = Array[Vector2i]([])
 total_block_budget = 0

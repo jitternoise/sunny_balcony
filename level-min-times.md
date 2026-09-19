@@ -9,17 +9,17 @@ Placement/dig time before Start is excluded (it's untimed).
 
 | Level | Measures | Min time |
 |---|---|---|
-| 1 | 8 | 9.6 s |
+| 1 | 7 | 8.4 s |
 | 2 | 12 | 14.4 s |
 | 3 | 9 | 10.8 s |
 | 4 | 12 | 14.4 s |
 | 5 | 8 | 9.6 s |
-| 6 | 12 | 14.4 s |
+| 6 | 10 | 12.0 s |
 | 7 | 8 | 9.6 s |
 | 8 | 13 | 15.6 s |
 | 9 | 11 | 13.2 s |
-| 10 | 11 | 13.2 s |
-| 11 | 11 | 13.2 s |
+| 10 | 10 | 12.0 s |
+| 11 | 12 | 14.4 s |
 | 12 | 8 | 9.6 s |
 
 ## Long Corridors (levels 13-17) — 25.2 s to 34.8 s
@@ -56,7 +56,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 25 | 12 | 14.4 s |
 | 26 | 13 | 15.6 s |
 | 27 | 12 | 14.4 s |
-| 28 | 13 | 15.6 s |
+| 28 | 12 | 14.4 s |
 | 29 | 12 | 14.4 s |
 | 30 | 13 | 15.6 s |
 

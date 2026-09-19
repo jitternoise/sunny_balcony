@@ -6,18 +6,18 @@ Start with the solution applied before pressing Start.
 
 ## Riverbed Basics (levels 1-12)
 
-- **Level 1** — Wall (-1,-3) | win 8
-- **Level 2** (retrofitted) — wall (-4, 1) | win 12
-- **Level 3** — Diverter-Right (-1,-2) | win 9
+- **Level 1** — wall (-1, -3) | win 7
+- **Level 2** (retrofitted) — wall (-3, 1) | win 12
+- **Level 3** — Diverter-Right (0,-2) | win 9
 - **Level 4** (retrofitted) — divert-right (-2, 2) | win 12
-- **Level 5** — Wall (-1,-2) | win 8
-- **Level 6** (retrofitted) — wall (-1, -3) | win 12
-- **Level 7** — Splitter (-1,-2) | win 8
-- **Level 8** (retrofitted) — wall (-1, -2) | win 13
-- **Level 9** (retrofitted) — divert-left (-1, 1) | win 11
-- **Level 10** — Wall (-1,-3) | win 11
-- **Level 11** — Wall (-1,-3) + Splitter (1,-2) | win 11
-- **Level 12** — divert-right (-1, -2) | win 8
+- **Level 5** — Wall (2,-2) | win 8
+- **Level 6** (retrofitted) — wall (-1, -3) | win 10
+- **Level 7** — Splitter (0,-2) | win 8
+- **Level 8** (retrofitted) — wall (-2, 0) | win 13
+- **Level 9** (retrofitted) — divert-left (1, 1) | win 11
+- **Level 10** — wall (-1, -3) | win 10
+- **Level 11** — wall (0, -3) + splitter (-1, -2) + divert-right (-2, 2) | win 12
+- **Level 12** — divert-right (0, -2) | win 8
 
 ## Long Corridors (levels 13-17)
 
@@ -29,7 +29,7 @@ Start with the solution applied before pressing Start.
 
 ## Special Waters (levels 18-20)
 
-- **Level 18** (retrofitted) — wall (-1, -2) | win 18
+- **Level 18** (retrofitted) — wall (2, -2) | win 18
 - **Level 19** — Diverter-Left (-1,1) | win 25
 - **Level 20** (retrofitted) — divert-right (2, 0) | win 13
 
@@ -40,42 +40,42 @@ Start with the solution applied before pressing Start.
 
 ## Diverter Drills (levels 23-30)
 
-- **23. Diverter Drills I** — divert-right (-2, 0) | win 12
-- **24. Diverter Drills II** — divert-left (-1, -3) | win 13
+- **23. Diverter Drills I** — divert-right (-1, 0) | win 12
+- **24. Diverter Drills II** — divert-left (1, -3) | win 13
 - **25. Diverter Drills III** — divert-left (-2, -1) | win 12
 - **26. Diverter Drills IV** — divert-right (0, -2) | win 13
-- **27. Diverter Drills V** — divert-right (0, -2) + divert-left (0, -3) | win 12
-- **28. Diverter Drills VI** — divert-left (-3, 2) + divert-left (-2, -1) | win 13
-- **29. Diverter Drills VII** — divert-left (-4, 4) + divert-right (-1, -2) | win 12
+- **27. Diverter Drills V** — divert-right (1, -2) + divert-left (1, -3) | win 12
+- **28. Diverter Drills VI** — divert-left (0, -1) + divert-left (-2, 1) | win 12
+- **29. Diverter Drills VII** — divert-left (-3, 4) + divert-right (0, -2) | win 12
 - **30. Diverter Drills VIII** — divert-right (-1, -1) + divert-right (-1, 0) | win 13
 
 ## Wall Work (levels 31-38)
 
-- **31. Wall Work I** — wall (-2, 2) | win 11
+- **31. Wall Work I** — wall (0, 2) | win 11
 - **32. Wall Work II** — wall (-3, 1) | win 13
-- **33. Wall Work III** — wall (-4, 3) | win 12
-- **34. Wall Work IV** — wall (-1, -2) | win 13
+- **33. Wall Work III** — wall (-3, 3) | win 12
+- **34. Wall Work IV** — wall (1, -2) | win 13
 - **35. Wall Work V** — divert-right (-1, 0) + wall (-1, 2) | win 12
 - **36. Wall Work VI** — divert-left (0, -3) + divert-left (-3, 1) | win 13
-- **37. Wall Work VII** — divert-left (-3, 3) + wall (0, -2) | win 12
-- **38. Wall Work VIII** — wall (-2, -1) + divert-left (-3, 3) | win 13
+- **37. Wall Work VII** — divert-left (-2, 3) + wall (1, -2) | win 12
+- **38. Wall Work VIII** — wall (-1, -1) + divert-left (-2, 3) | win 13
 
 ## Split Networks (levels 39-46)
 
-- **39. Split Networks I** — splitter (-2, 0) | win 12
-- **40. Split Networks II** — splitter (-3, 3) | win 13
-- **41. Split Networks III** — splitter (-1, -1) | win 13
-- **42. Split Networks IV** — splitter (-2, 0) | win 12
+- **39. Split Networks I** — splitter (0, 0) | win 12
+- **40. Split Networks II** — splitter (-2, 3) | win 13
+- **41. Split Networks III** — splitter (1, -1) | win 13
+- **42. Split Networks IV** — splitter (0, 0) | win 12
 - **43. Split Networks V** — divert-left (-2, 0) + divert-left (-3, 1) | win 13
-- **44. Split Networks VI** — splitter (-1, 0) + divert-left (-2, 1) | win 12
+- **44. Split Networks VI** — splitter (0, 0) + divert-left (-1, 1) | win 12
 - **45. Split Networks VII** — splitter (-1, 0) + divert-left (-2, 4) | win 12
-- **46. Split Networks VIII** — divert-right (-4, 3) + divert-right (-1, -2) | win 13
+- **46. Split Networks VIII** — divert-right (-3, 3) + divert-right (0, -2) | win 13
 
 ## Town Defense (levels 47-54)
 
 - **47. Town Defense I** — divert-left (-3, 1) | win 12
-- **48. Town Defense II** — divert-left (-1, -3) | win 13
-- **49. Town Defense III** — divert-left (-1, -3) | win 12
+- **48. Town Defense II** — divert-left (1, -3) | win 13
+- **49. Town Defense III** — divert-left (1, -3) | win 12
 - **50. Town Defense IV** — divert-left (-3, 1) | win 13
 - **51. Town Defense V** — divert-left (-2, -1) + divert-left (0, -3) | win 10
 - **52. Town Defense VI** — divert-right (-3, 1) + wall (-2, 0) | win 13

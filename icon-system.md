@@ -44,14 +44,20 @@ any hex fill.
   one.
 - **Fire** — warm gradient flame on a dark ember tile, the hottest-looking cell on the
   board on purpose.
-- **Pool** — basin + 4 corner tabs that echo the in-HUD 4-box status bar, so the cell
-  previews its own win condition before the bar even appears.
+- **Pool** — no glyph since 2026-09-16. A lake is drawn procedurally by
+  `HexBoard._draw_basin()`: a cracked, dry, pale-tan lakebed with a sand shoreline
+  around the lake's outer edge, filling with the stream's own animated water from
+  the bottom of the lake up as beats land (one quarter per beat), so the four cells
+  read as one basin that fills. `icon_pool.svg` is no longer imported by the game;
+  the copy here is kept as a design record only.
 - **Town** — earthy brown house glyph, deliberately the *calmest*-looking hazard. The
   danger is what it means (instant loss), not how it looks — the loss-screen sting is
   what should carry the emotional weight, not the tile art.
-- **Water Source** — a river glyph: three converging wavy strands flowing into a
-  baked-in down-left arrow, teaching "first move is always down-left" every level
-  without a tutorial popup.
+- **Water Source** — a waterfall: a grey rock ledge across the cell's flat middle
+  band with a cascade pouring over its lip into foam at the base. Drawn at
+  `SOURCE_ICON_SCALE` (1.75, larger than a glyph) with no ring; the first-move
+  arrow is drawn by the engine below the foam, not baked into the art (replaced the
+  three-strand river glyph on 2026-09-16).
 
 ## Files delivered this session
 - `icon-sheet.html` — visual reference sheet (palette, all glyphs on hex tiles, one

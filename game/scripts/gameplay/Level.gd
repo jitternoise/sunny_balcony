@@ -45,6 +45,9 @@ var measures_elapsed: int = 0
 ## The Control every HUD element is anchored inside. Inset by _apply_safe_area().
 @onready var hud: Control = $UI/HUD
 @onready var status_label: Label = $UI/HUD/StatusLabel
+## "Level 12" / "Tutorial 3", top-left, above the status text -- the one
+## place in play that says which level this is.
+@onready var level_label: Label = $UI/HUD/LevelLabel
 @onready var budget_label: Label = $UI/HUD/BudgetLabel
 @onready var inventory_bar: HBoxContainer = $UI/HUD/InventoryBar
 @onready var back_button: Button = $UI/HUD/BackButton
@@ -173,7 +176,7 @@ const BLOCK_ORDER: Array[String] = [
 const BAR_SPACER_NAME := "bar_spacer"
 
 const TILE_SYMBOL_NAME := "tile_symbol"
-const TILE_SYMBOL_WIDTH := 64.0
+const TILE_SYMBOL_WIDTH := 64.0 # for a one-hex block; see HexTileIcon.width_scale()
 const TILE_SYMBOL_MARGIN := 8.0
 
 ## The res://data/levels/*.tres path this scene was loaded with (captured
@@ -370,6 +373,8 @@ func _cancel_catapult_aim() -> void:
 func _set_pre_start_status() -> void:
 	var has_blocks: bool = (board.use_block_budget
 		or not level_data.starting_inventory.is_empty())
+	level_label.text = ("Tutorial %d" % (level_data.level_id - GameState.TUTORIAL_ID_FIRST + 1)
+		if GameState.is_tutorial_level(level_data.level_id) else "Level %d" % level_data.level_id)
 	status_label.text = ("Place your blocks, then press play" if has_blocks
 		else "Press play and watch")
 
@@ -632,9 +637,13 @@ func _build_inventory_bar() -> void:
 		# arrangement the icon-plus-text button had.
 		button.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		inventory_bar.add_child(button)
-		_style_inventory_button(button)
+		# A multi-hex block gets a wider symbol -- and a wider button to
+		# hold it -- so each of its hexes stays the one-hex size.
+		var symbol_width: float = TILE_SYMBOL_WIDTH * HexTileIcon.width_scale(
+			block, level_data.grid_style == "flat")
+		_style_inventory_button(button, INVENTORY_BUTTON_WIDTH + symbol_width - TILE_SYMBOL_WIDTH)
 		_strip_button_background(button)
-		_add_tile_symbol(button, block)
+		_add_tile_symbol(button, block, symbol_width)
 		inventory_bar.add_child(_make_bar_spacer())
 
 	budget_label.visible = board.use_block_budget
@@ -689,7 +698,7 @@ func _make_bar_spacer() -> Control:
 ## of the button so the remaining-count text keeps the right, and
 ## mouse-transparent so the whole button is still one tap target -- the
 ## symbol must never eat a press meant for the button under it.
-func _add_tile_symbol(button: Button, block: BlockData) -> void:
+func _add_tile_symbol(button: Button, block: BlockData, width: float = TILE_SYMBOL_WIDTH) -> void:
 	var symbol := HexTileIcon.new()
 	symbol.name = TILE_SYMBOL_NAME
 	symbol.block = block
@@ -697,7 +706,7 @@ func _add_tile_symbol(button: Button, block: BlockData) -> void:
 	symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	symbol.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	symbol.offset_left = INVENTORY_BUTTON_PADDING
-	symbol.offset_right = INVENTORY_BUTTON_PADDING + TILE_SYMBOL_WIDTH
+	symbol.offset_right = INVENTORY_BUTTON_PADDING + width
 	symbol.offset_top = TILE_SYMBOL_MARGIN
 	symbol.offset_bottom = -TILE_SYMBOL_MARGIN
 	button.add_child(symbol)

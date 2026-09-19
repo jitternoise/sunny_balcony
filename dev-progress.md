@@ -1,5 +1,114 @@
 # Flash Flood — Dev Progress
 
+## Status: Tutorial relaid, basin-that-fills pool, waterfall source, hint outlines (2026-09-16)
+
+First session on a Mac (Godot 4.7.2, `~/Applications/Godot.app`; the
+project's `config/features` already said 4.7). Window sizes on a Retina Mac
+are physical pixels, so the 540x960 override opens a 270x480-point window;
+run it with `--resolution 950x1690` on a 1440x900 desktop.
+
+**Tutorial boards** (`data/levels/tutorial_1..5.tres`), from the owner's
+review of each level:
+- T1-T4 are a **4-wide column** carved from the radius-3 hexagon with nine
+  `blocked_cells` (offset columns -2..1), source on a top-centre hex, seven
+  rows so nothing scrolls. T5 is **5 wide** on a radius-4 grid with the top
+  row blocked (8 rows; 9 would scroll 14 px). Rows are only ever blocked at
+  the TOP: blocking the bottom row would turn the edge loss into a stall.
+- Lakes moved to the bottom two rows everywhere. T5's lake is the
+  non-rhombus shape {(0,3),(1,3),(-1,4),(0,4)} because the rhombus's fourth
+  cell fell outside the hexagon (caught by `tools/smoke_test.gd`).
+- New solutions: T3 `divert_right (-1,1)` win 8, T4 `divert_left (0,0)` win 8
+  (Diverter-R wins nowhere), T5 `wall (-1,0)` win 9 with `wall (0,0)` still
+  the sealed-in failure. Every candidate was enumerated through `FFSim`
+  before writing the files. `VerifyTutorial` updated: 160 checks.
+
+**Hint outline.** `LevelData.hint_cells` + `HexBoard._draw_hint_outline()`:
+a dashed amber ring inset in the cell, hidden once a block is placed or
+queued there. T3/T4/T5 set it on their solution cell (the Wall's anchor);
+the intro texts say "the outlined hex". `VerifyTutorial` asserts the hint
+matches the solution.
+
+**Pool = basin that fills.** `_draw_basin()` replaces the bowl glyph on
+every level: pale cracked lakebed (three seeded cracks per cell), sand
+shoreline on the lake's OUTER edges only, no per-cell border inside a lake,
+and the stream's own `WATER_BODY_*` sheet drawn clipped at a waterline that
+rises one quarter of the lake's bounding box per beat of `pool_fill`. The
+4-box status bar is unchanged. `icon_pool.svg` removed from `assets/`.
+
+**Source = waterfall ledge.** New `icon_source.svg` (rock shelf, cascade,
+foam), drawn at `SOURCE_ICON_SCALE` 1.75 with the white ring dropped and the
+first-move arrow starting below the foam.
+
+**Findings while reviewing** (not fixed here): levels 1 and 6 have NO
+winning placement one or two blocks deep (`tools/solve_broken.gd`), so the
+campaign opens on an unwinnable level; `VerifyHydroBonus` fails on level 18
+on a clean tree (plant never reached).
+
+**Level number in the HUD.** `UI/HUD/LevelLabel` ("Level 12" / "Tutorial
+3", 34 px, outlined) sits top-left above the status text, which moved down
+to y 80-136. Set in `_set_pre_start_status()`.
+
+**Levels 1-50 narrowed to 6 hexes wide.** 43 of the first 50 were plain
+radius-4 hexagons (9 wide; level 18 was 13). Each is now a radius-(R+1)
+grid with rows +-(R+1) and every offset column outside -3..2 blocked -- a
+clean 6 x 9 column (18: 6 x 13) -- with the whole level slid sideways
+(`q += dq`, r untouched, so the zigzag parity is preserved) to put its
+terrain in the band. The band position was chosen to contain all terrain
+and the documented solution, centred where possible; six levels (18, 25,
+36, 43, 47, 50) needed the band pushed to one side to keep their route,
+and level 8 needed both that and a re-solve. Engine: the edge loss now
+fires past `HexBoard.bottom_row` (largest playable r) instead of
+`grid_radius`, in the three pointy-grid places that tested it; on a plain
+hexagon the two are equal. `level-solutions.md` and the playtest log's
+spec/solution lines were shifted by the same dq per level.
+
+Verifier: 88/11/1 -> **92 exact / 7 broken / 1 prose**; every level in
+1-50 now has a verified solution. Levels 1, 6, 8 and 10 -- unwinnable
+before today -- are winnable again for free (the new side wall gives a Wall
+something to bounce the stream off): `wall (-1,-3)` on 1/6/10, `wall
+(-2,0)` on 8. Eight levels needed a hand relayout, each verified with a
+scratch trace/search harness over `HexBoard` (bare run must not win;
+every 1- and 2-placement enumerated):
+- **24, 34, 48, 49** -- their answer shifted the stream one column left
+  and relied on the old hexagon's slanted edge to bounce it back into the
+  pool. The lake moved one column left instead (anchor (-3,4), cells
+  (-2,3),(-1,3),(-2,4)); the documented placements are unchanged and are
+  each the ONLY winning placement.
+- **28** -- same lake problem, but it ships two Diverter-Lefts, so it now
+  needs both: fires (-1,0) and (-3,2), lake anchored (-4,4) on the far
+  left; `divert-left (0,-1) + (-2,1)` win 12 (first can also be (1,-3)).
+  One diverter fills the pool with a fire still lit. Par 17 -> 15.
+- **11 Grand Convergence** -- relaid: the Wall-at-first-landing bounce now
+  goes on the RIGHT source (`wall (0,-3)`, the left source's bounce anchor
+  would sit outside the column), the Splitter on the left one
+  (`(-1,-2)`), and the Diverter-Right (`(-2,2)`) turns the split's inner
+  branch into the middle lake. Fires (2,-2),(1,-1),(-1,0),(-2,0); lakes
+  anchored (-4,4), (-2,4), (0,4). Needs all three blocks; win 12.
+- **20 Straight & Zigzag** (flat) -- kept as a radius-4 hexagon with
+  columns q=-4,-3,4 blocked (six columns); the right lake became a q=3
+  strip (3,-2)..(3,1) so the zigzag never touches it. Any Diverter-Right
+  on the zigzag's q=2 cells wins; documented (2,0) win 13 unchanged.
+- **21 Dig the River** -- plain narrow: radius 5, rows +-5 and columns
+  outside -3..2 blocked, the 11 dirt cells outside the column dropped.
+  Channel and solution unchanged, win 12.
+Rules kept on every relaid level: no preplaced tile within 2 rows of a
+source; lakes are four playable cells (`tools/smoke_test.gd` passes).
+`level-difficulty.md` still quotes pre-shift coordinates and placement
+counts for levels 1-50. `level-min-times.md` updated for 1, 6, 8, 10, 11,
+28. `VerifyHydroBonus`'s plant table was updated for 7, 18 and 33; its
+level-18 failure predates today.
+
+**Tray symbol at true size.** A Wall's two hexes were squeezed into the
+same 64 px a Diverter's one hex gets, so the boulder was too small to pick
+out. `HexTileIcon.width_scale()` reports how much wider a footprint draws
+at the one-hex radius (1.5 for the Wall) and `Level._build_inventory_bar()`
+widens both the symbol and its button by that; the five-block Jamboree bar
+still fits 720 px. `VerifyTouchTargets` passes.
+
+**Review aids** (untracked, in `tests/`): `AllLevelShots.tscn` renders every
+level pre-Start (`ONLY=level_001,level_047` to filter), `FillShots.tscn`
+snapshots one level at successive pool-fill states.
+
 ## Status: Options menu, slot progress lines, side-path sticker (2026-09-15)
 
 **Options menu.** One scene, `scenes/OptionsMenu.tscn` (`OptionsMenu.gd`),
