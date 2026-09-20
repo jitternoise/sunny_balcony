@@ -110,12 +110,12 @@ func _ready() -> void:
 		await get_tree().process_frame
 	_measure(level, "Paused")
 
-	print("The Options popup over it -- toggles, the two sliders, Close")
+	print("The Options popup over it -- toggles, the three sliders, Close")
 	level.options_menu.open()
 	for i in range(4):
 		await get_tree().process_frame
 	_measure(level.options_menu, "Options")
-	_check(_sliders(level.options_menu).size() == 2, "Options: found the music volume and grid opacity sliders to measure")
+	_check(_sliders(level.options_menu).size() == 3, "Options: found the music, effects and grid opacity sliders to measure")
 	level.options_menu.close()
 	for i in range(2):
 		await get_tree().process_frame

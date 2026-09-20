@@ -13,7 +13,11 @@ extends Node
 ##
 ##   godot --headless res://tests/VerifySfx.tscn
 ##
-## Uses save slot 99. Restores Settings.sfx_muted to what it found.
+## Then the Options menu's effects volume slider: the SFX bus gain,
+## persistence, and the slider mirroring the setting.
+##
+## Uses save slot 99. Restores Settings.sfx_muted and sfx_volume to what
+## it found.
 
 var _failures := 0
 
@@ -108,7 +112,9 @@ func _gd_files(dir: String) -> Array[String]:
 func _ready() -> void:
 	GameState.current_slot = 99
 	var muted_before: bool = Settings.sfx_muted
+	var volume_before: float = Settings.sfx_volume
 	Settings.sfx_muted = false
+	Settings.sfx_volume = 1.0
 
 	print("The catalogue, the files and the recipes agree")
 	var catalogue: Array[String] = []
@@ -321,6 +327,57 @@ func _ready() -> void:
 	_check(heard == [&"invalid"], "a tap on the running plant -- a water source now -- buzzes like any source")
 	level.free()
 
+	print("The volume dial")
+	var bus := AudioServer.get_bus_index(Sfx.BUS)
+	_check(absf(AudioServer.get_bus_volume_db(bus)) < 0.01, "at volume 1.0 the SFX bus sits at 0 dB")
+	Settings.sfx_volume = 0.5
+	_check(absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.5)) < 0.01,
+		"0.5 is -6 dB on the bus (%.2f)" % AudioServer.get_bus_volume_db(bus))
+	Settings.sfx_volume = 0.0
+	_check(absf(AudioServer.get_bus_volume_db(bus) - Settings.SILENT_VOLUME_DB) < 0.01, "0 is the silent floor, not -inf")
+	Settings.sfx_volume = 1.4
+	_check(Settings.sfx_volume == 1.0, "clamped from above")
+	Settings.sfx_volume = 0.4
+	Settings.sfx_muted = true
+	_check(AudioServer.is_bus_mute(bus) and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.4)) < 0.01,
+		"the mute is separate: muting keeps the dial where it was")
+	Settings.sfx_muted = false
+	var music_bus := AudioServer.get_bus_index(Settings.BUS_MUSIC)
+	_check(absf(AudioServer.get_bus_volume_db(music_bus) - linear_to_db(Settings.music_volume)) < 0.01,
+		"the effects dial leaves the music bus at the music dial")
+	var cfg := ConfigFile.new()
+	_check(cfg.load(Settings.SETTINGS_PATH) == OK and is_equal_approx(float(cfg.get_value(Settings.SECTION, "sfx_volume", -1.0)), 0.4),
+		"sfx_volume is persisted under [%s]" % Settings.SECTION)
+	Settings.sfx_volume = 1.0
+	cfg.set_value(Settings.SECTION, "sfx_volume", 0.25)
+	cfg.save(Settings.SETTINGS_PATH)
+	Settings._load()
+	_check(is_equal_approx(Settings.sfx_volume, 0.25) and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.25)) < 0.01,
+		"_load() reads it back and applies it to the bus")
+	cfg.erase_section_key(Settings.SECTION, "sfx_volume")
+	cfg.save(Settings.SETTINGS_PATH)
+	Settings._load()
+	_check(Settings.sfx_volume == 1.0, "a file from before the dial means full volume")
+
+	print("The Options menu's slider")
+	Settings.sfx_volume = 0.4
+	var options: OptionsMenu = load("res://scenes/OptionsMenu.tscn").instantiate()
+	add_child(options)
+	await _frames(2)
+	options.open()
+	_check(options.sfx_volume_slider.value == 40.0 and options.sfx_volume_value.text == "40%", "open() shows the dial at 40%")
+	_check(options.sfx_volume_slider.min_value == 0.0 and options.sfx_volume_slider.max_value == 100.0
+		and options.sfx_volume_slider.step == 5.0, "the slider runs 0-100 in steps of 5")
+	await _past_throttle()
+	heard.clear()
+	options.sfx_volume_slider.value = 70.0
+	_check(is_equal_approx(Settings.sfx_volume, 0.7) and options.sfx_volume_value.text == "70%"
+		and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.7)) < 0.01,
+		"moving it writes Settings, the label and the bus at once")
+	_check(heard.is_empty(), "and dragging a slider is not a button tap")
+	options.free()
+
+	Settings.sfx_volume = volume_before
 	Settings.sfx_muted = muted_before
 	if _failures == 0:
 		print("SFX PASS")

@@ -1,15 +1,15 @@
 extends Node
 # Autoload singleton (see [autoload] in project.godot).
 # Player preferences that belong to the DEVICE rather than to a save slot:
-# muting the music, its volume, muting the sound effects, and how opaque
-# the hex grid is drawn. Kept out of GameState on purpose -- a player who
-# mutes the game wants it muted in every slot, and these must survive a
-# slot being deleted.
+# a mute and a volume each for the music and the sound effects, and how
+# opaque the hex grid is drawn. Kept out of GameState on purpose -- a
+# player who mutes the game wants it muted in every slot, and these must
+# survive a slot being deleted.
 #
 # The audio settings act on the "Music" and "SFX" buses in
 # default_bus_layout.tres, never on a player: the Music and Sfx autoloads
-# only have to name their bus. A mute is the bus's mute flag; the music
-# volume is the bus's gain, on top of whatever level Music.gd mixes at.
+# only have to name their bus. A mute is the bus's mute flag; a volume is
+# the bus's gain, on top of whatever level each player mixes at.
 
 const SETTINGS_PATH := "user://settings.cfg"
 const SECTION := "audio"
@@ -48,6 +48,14 @@ var music_volume: float = 1.0:
 		_apply_volume(BUS_MUSIC, music_volume)
 		_save()
 
+## The same dial for the sound effects: the SFX bus's gain on top of the
+## level each clip was synthesised at (tools/gen_sfx.py's PEAKS).
+var sfx_volume: float = 1.0:
+	set(value):
+		sfx_volume = clampf(value, 0.0, 1.0)
+		_apply_volume(BUS_SFX, sfx_volume)
+		_save()
+
 ## Alpha of an EMPTY cell's dark fill, 0..1. Terrain, blocks and water keep
 ## their own colours whatever this says -- they carry information -- and so
 ## does the cell border, so at 0 the grid is still there as an outline on
@@ -67,6 +75,7 @@ func _ready() -> void:
 	_apply_bus(BUS_MUSIC, music_muted)
 	_apply_bus(BUS_SFX, sfx_muted)
 	_apply_volume(BUS_MUSIC, music_volume)
+	_apply_volume(BUS_SFX, sfx_volume)
 
 
 ## Mutes or unmutes one bus. A missing bus -- the layout not loaded, or a
@@ -100,6 +109,7 @@ func _load() -> void:
 	music_muted = bool(config.get_value(SECTION, "music_muted", false))
 	sfx_muted = bool(config.get_value(SECTION, "sfx_muted", false))
 	music_volume = clampf(float(config.get_value(SECTION, "music_volume", 1.0)), 0.0, 1.0)
+	sfx_volume = clampf(float(config.get_value(SECTION, "sfx_volume", 1.0)), 0.0, 1.0)
 	grid_opacity = clampf(float(config.get_value(SECTION_DISPLAY, "grid_opacity", 1.0)), 0.0, 1.0)
 
 
@@ -111,5 +121,6 @@ func _save() -> void:
 	config.set_value(SECTION, "music_muted", music_muted)
 	config.set_value(SECTION, "sfx_muted", sfx_muted)
 	config.set_value(SECTION, "music_volume", music_volume)
+	config.set_value(SECTION, "sfx_volume", sfx_volume)
 	config.set_value(SECTION_DISPLAY, "grid_opacity", grid_opacity)
 	config.save(SETTINGS_PATH)

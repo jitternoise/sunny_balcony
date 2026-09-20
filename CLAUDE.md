@@ -38,11 +38,11 @@ godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a re
 godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
 godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
-godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, 141 checks
+godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
-  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 43 checks
+  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 44 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyMapScroll.tscn # map opens on your level, 14 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
@@ -323,11 +323,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   `tools/gen_sfx.py` and `tools/gen_music.py` are where to re-tune one;
   `story-bible.md` argues music becomes load-bearing once the story layer
   goes wordless, so expect these loops to be replaced or reworked. The
-  Options menu holds the two mute toggles, a music volume slider
-  (`Settings.music_volume`, the `Music` bus's gain, `[audio]` in
+  Options menu holds a mute toggle and a volume slider for each
+  (`Settings.music_volume` / `sfx_volume`, the bus gains, `[audio]` in
   `user://settings.cfg`) and the hex grid opacity slider
   (`Settings.grid_opacity`, `[display]`), which thins an EMPTY cell's fill
-  only. Every audio setting acts on a bus, never on a player.
+  only. Every audio setting acts on a bus, never on a player. A new
+  percent slider is one row in `OptionsMenu._sliders`: the slider, its
+  label and the Settings property it dials.
 - **Music WAVs must keep `edit/loop_mode=2` in their `.import`.** 2 is
   Forward; 1 is Disabled, and the default 0 ("detect") is Disabled too for
   a WAV without loop markers -- so a fresh import plays once and stops.

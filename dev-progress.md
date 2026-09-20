@@ -1,5 +1,29 @@
 # Flash Flood — Dev Progress
 
+## Status: sound effects volume slider (2026-09-20)
+
+**`Settings.sfx_volume`**, the `SFX` bus's gain, exactly as
+`music_volume` is the `Music` bus's: 0..1, `linear_to_db`, a -60 dB floor
+at 0, `[audio] sfx_volume`, independent of the mute. A "Sound effects
+volume" row and slider under the Sound effects toggle.
+
+**One table for the dials.** `OptionsMenu` no longer has a handler per
+slider: `_sliders` lists `[slider, percentage label, Settings property]`
+for the three percent dials, `_ready()` binds each with a lambda that
+does `Settings.set(property, value / 100)` and refreshes the label, and
+`open()` mirrors each from `Settings.get(property)`. The next dial is one
+row. The panel still fits at 720x1280 under a simulated 110/80 inset
+(rendered).
+
+**Verified.** `VerifySfx` +13 checks (154): the bus at 0 / -6 / -60 dB,
+clamping, the mute keeping the dial, the effects dial leaving the music
+bus alone, persistence, reload, a pre-dial file, the slider mirroring and
+writing the setting, and a slider drag not being a button tap.
+`VerifyTouchTargets` measures three sliders (44); `VerifyMusic` and
+`VerifyGridOpacity` exercise the other two dials through the same
+binding. All suites pass except the pre-existing hydro level 18; no leak
+warnings.
+
 ## Status: music volume slider in the Options menu (2026-09-20)
 
 **`Settings.music_volume`** (0..1, default 1, clamped; `[audio]

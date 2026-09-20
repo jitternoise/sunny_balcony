@@ -68,6 +68,25 @@ custom_minimum_size = Vector2(0, 96)
 button_pressed = true
 text = "Sound effects"
 
+[node name="SfxVolumeRow" type="HBoxContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="SfxVolumeLabel" type="Label" parent="Center/Panel/VBox/SfxVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sound effects volume"
+
+[node name="SfxVolumeValue" type="Label" parent="Center/Panel/VBox/SfxVolumeRow"]
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="SfxVolumeSlider" type="HSlider" parent="Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+step = 5.0
+value = 100.0
+
 [node name="GridOpacityRow" type="HBoxContainer" parent="Center/Panel/VBox"]
 layout_mode = 2
 
