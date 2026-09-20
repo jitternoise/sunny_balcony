@@ -36,9 +36,10 @@ godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13
 godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only when visible, 14 checks
 godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
 godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
+godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
-  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 30 checks
+  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 42 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyMapScroll.tscn # map opens on your level, 14 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
@@ -248,6 +249,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   board. Every press/drag/release path must keep that check: without it a
   second finger overwrites the press origin, and an unmatched touch-up runs
   the full tap path and places a block wherever it lifted.
+- **`HexBoard.gd` must never name an autoload.** `tools/verify_solutions.gd`
+  compiles it under `--script`, where there are no autoloads, so a bare
+  `Settings` or `GameState` is "Identifier not found" -- a compile error,
+  which hangs the verifier instead of failing it. Look the node up at
+  runtime (`get_node_or_null("/root/Settings")`, see `_settings`) and cope
+  with null. The grid opacity slider is the one thing the board reads from
+  Settings today.
 - **Check `git branch -r` before choosing a base.** Two sessions once
   branched from the same commit and built the same feature independently.
 - **Never write a save file in place.** `GameState.save_current_slot()` builds
@@ -272,6 +280,8 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **No audio at all.** `story-bible.md` argues it becomes load-bearing once
   the story layer goes wordless. The plumbing exists: `default_bus_layout.tres`
   has `Music` and `SFX` buses and the Options menu (`Settings` autoload)
-  mutes them, so a new player only has to name its bus.
+  mutes them, so a new player only has to name its bus. The same menu holds
+  the hex grid opacity slider (`Settings.grid_opacity`, `[display]` in
+  `user://settings.cfg`), which thins an EMPTY cell's fill only.
 - **Exclude `tests/` and `tools/` from any export.** They are inert but ship
   otherwise, and they read files outside `res://`.

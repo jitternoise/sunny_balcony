@@ -109,7 +109,8 @@ const TILE_TRENCH := &"trench"
 ## What each state looks like. Keys per entry:
 ##   fill   -- Color of the hex underneath (always drawn, even under FILL
 ##             art, so a sheet with transparency still sits on the right
-##             ground)
+##             ground). TILE_EMPTY's is the one the player can thin with
+##             the Options menu's grid opacity slider -- see empty_fill().
 ##   icon   -- static Texture2D, or null for states that draw no glyph
 ##   sheet / sheet_flat -- optional animation strip, replacing `icon`. Two
 ##             entries only where mode is FILL; a GLYPH sheet needs one.
@@ -645,6 +646,41 @@ const LoseReason := {
 	TOWN = "town",
 }
 var lose_reason: String = ""
+
+
+## The Settings autoload, found at runtime rather than named. This script
+## must never spell out an autoload: the solution verifier
+## (tools/verify_solutions.gd) compiles it under --script, where there are
+## no autoloads and a bare `Settings` is "Identifier not found" -- which,
+## being a compile error, hangs the run instead of failing it. Null there,
+## and in any harness that builds a board outside the tree; the grid then
+## draws fully opaque.
+var _settings: Node = null
+
+
+func _ready() -> void:
+	# The Options menu opens over a paused level, so the grid opacity
+	# slider has to show on the board behind it as it moves. The heartbeat
+	# is off while a popup covers the board (Level._update_board_animation),
+	# so nothing else would repaint it until the menu closed.
+	_settings = get_node_or_null("/root/Settings")
+	if _settings != null:
+		_settings.grid_opacity_changed.connect(_on_grid_opacity_changed)
+
+
+func _on_grid_opacity_changed(_value: float) -> void:
+	queue_redraw()
+
+
+## The base colour of a cell with nothing on it, with the player's grid
+## opacity (Settings.grid_opacity) applied. Only the EMPTY state fades:
+## terrain, blocks and water keep their table colours whatever the slider
+## says, since those are what the player reads the level from.
+func empty_fill() -> Color:
+	var fill: Color = TILE_VISUALS[TILE_EMPTY]["fill"]
+	if _settings != null:
+		fill.a *= _settings.grid_opacity
+	return fill
 
 
 func setup(data: LevelData, blocks: Dictionary) -> void:
@@ -2416,8 +2452,13 @@ func _draw_cell(coord: Vector2i) -> void:
 	var terrain: String = cell_terrain.get(coord, CellState.EMPTY)
 
 	# 1. base fill. Drawn even under FILL art, so a sheet with transparent
-	#    pixels still sits on the right ground rather than on the sky.
-	draw_colored_polygon(points, visual["fill"])
+	#    pixels still sits on the right ground rather than on the sky. An
+	#    empty cell's fill is the one the Options menu's opacity slider
+	#    thins -- see empty_fill() -- down to nothing at 0, leaving the
+	#    border below as the grid.
+	var fill: Color = empty_fill() if state == TILE_EMPTY else visual["fill"]
+	if fill.a > 0.0:
+		draw_colored_polygon(points, fill)
 	if visual.get("mode", TileMode.GLYPH) == TileMode.FILL:
 		var fill_sheet: Texture2D = _tile_sheet(visual)
 		if fill_sheet != null:

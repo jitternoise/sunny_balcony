@@ -1,9 +1,9 @@
 extends Node
 # Autoload singleton (see [autoload] in project.godot).
 # Player preferences that belong to the DEVICE rather than to a save slot:
-# muting the music and muting the sound effects. Kept out of GameState on
-# purpose -- a player who mutes the game wants it muted in every slot, and
-# these must survive a slot being deleted.
+# muting the music, muting the sound effects, and how opaque the hex grid
+# is drawn. Kept out of GameState on purpose -- a player who mutes the game
+# wants it muted in every slot, and these must survive a slot being deleted.
 #
 # There is no audio in the project yet. The two flags drive the "Music" and
 # "SFX" buses in default_bus_layout.tres, so when audio arrives every
@@ -12,9 +12,14 @@ extends Node
 
 const SETTINGS_PATH := "user://settings.cfg"
 const SECTION := "audio"
+const SECTION_DISPLAY := "display"
 
 const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
+
+## Fired whenever grid_opacity is set, so a board on screen can repaint with
+## the new value while the player is still dragging the slider.
+signal grid_opacity_changed(value: float)
 
 var music_muted: bool = false:
 	set(value):
@@ -26,6 +31,16 @@ var sfx_muted: bool = false:
 	set(value):
 		sfx_muted = value
 		_apply_bus(BUS_SFX, value)
+		_save()
+
+## Alpha of an EMPTY cell's dark fill, 0..1. Terrain, blocks and water keep
+## their own colours whatever this says -- they carry information -- and so
+## does the cell border, so at 0 the grid is still there as an outline on
+## the grass and the level stays playable. Read by HexBoard.empty_fill().
+var grid_opacity: float = 1.0:
+	set(value):
+		grid_opacity = clampf(value, 0.0, 1.0)
+		grid_opacity_changed.emit(grid_opacity)
 		_save()
 
 
@@ -53,6 +68,7 @@ func _load() -> void:
 	# write the file back or touch the buses before _ready() applies them.
 	music_muted = bool(config.get_value(SECTION, "music_muted", false))
 	sfx_muted = bool(config.get_value(SECTION, "sfx_muted", false))
+	grid_opacity = clampf(float(config.get_value(SECTION_DISPLAY, "grid_opacity", 1.0)), 0.0, 1.0)
 
 
 ## Small and rewritten whole. Unlike a save there is nothing here that
@@ -62,4 +78,5 @@ func _save() -> void:
 	var config := ConfigFile.new()
 	config.set_value(SECTION, "music_muted", music_muted)
 	config.set_value(SECTION, "sfx_muted", sfx_muted)
+	config.set_value(SECTION_DISPLAY, "grid_opacity", grid_opacity)
 	config.save(SETTINGS_PATH)

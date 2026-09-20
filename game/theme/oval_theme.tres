@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=6 format=3]
+[gd_resource type="Theme" load_steps=9 format=3]
+
+[ext_resource type="Texture2D" uid="uid://c11cg1vx7k12b" path="res://assets/icons/ui_slider_grabber.svg" id="1"]
 
 [sub_resource type="StyleBoxFlat" id="ButtonNormal"]
 bg_color = Color(0.2, 0.55, 0.85, 1)
@@ -56,6 +58,24 @@ corner_radius_top_right = 999
 corner_radius_bottom_left = 999
 corner_radius_bottom_right = 999
 
+[sub_resource type="StyleBoxFlat" id="SliderTrack"]
+bg_color = Color(1, 1, 1, 0.3)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="SliderFilled"]
+bg_color = Color(0.2, 0.55, 0.85, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
 [resource]
 Button/styles/normal = SubResource("ButtonNormal")
 Button/styles/hover = SubResource("ButtonHover")
@@ -67,3 +87,9 @@ Button/colors/font_hover_color = Color(1, 1, 1, 1)
 Button/colors/font_pressed_color = Color(1, 1, 1, 1)
 Button/colors/font_disabled_color = Color(0.9, 0.9, 0.9, 0.8)
 Button/constants/icon_max_width = 32
+HSlider/styles/slider = SubResource("SliderTrack")
+HSlider/styles/grabber_area = SubResource("SliderFilled")
+HSlider/styles/grabber_area_highlight = SubResource("SliderFilled")
+HSlider/icons/grabber = ExtResource("1")
+HSlider/icons/grabber_highlight = ExtResource("1")
+HSlider/icons/grabber_disabled = ExtResource("1")

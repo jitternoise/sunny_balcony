@@ -45,9 +45,19 @@ func _buttons(root: Node) -> Array:
 	return out
 
 
+## Every visible Slider too: a slider takes the tap anywhere in its rect,
+## so the rect is the target, and it has to be as tall as a button.
+func _sliders(root: Node) -> Array:
+	var out := []
+	for s in root.find_children("*", "Slider", true, false):
+		if s.is_visible_in_tree() and s.editable:
+			out.append(s)
+	return out
+
+
 func _measure(root: Node, label: String, skip: Array = []) -> void:
 	var checked := 0
-	for b in _buttons(root):
+	for b in _buttons(root) + _sliders(root):
 		if skip.has(b.name):
 			continue
 		checked += 1
@@ -99,6 +109,16 @@ func _ready() -> void:
 	for i in range(4):
 		await get_tree().process_frame
 	_measure(level, "Paused")
+
+	print("The Options popup over it -- toggles, the grid opacity slider, Close")
+	level.options_menu.open()
+	for i in range(4):
+		await get_tree().process_frame
+	_measure(level.options_menu, "Options")
+	_check(_sliders(level.options_menu).size() == 1, "Options: found the grid opacity slider to measure")
+	level.options_menu.close()
+	for i in range(2):
+		await get_tree().process_frame
 
 	print("The inventory bar still fits its row")
 	# Widening the Delete toggle to a real touch target eats into a row that

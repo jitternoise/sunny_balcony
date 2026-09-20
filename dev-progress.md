@@ -1,5 +1,50 @@
 # Flash Flood — Dev Progress
 
+## Status: hex grid opacity slider in the Options menu (2026-09-20)
+
+**Settings.** `Settings.grid_opacity` (0..1, default 1, clamped) joins the
+two mute flags, persisted under a new `[display]` section of
+`user://settings.cfg`; a file from before the slider reads as 1.0. The
+setter emits `grid_opacity_changed` so a board on screen can repaint.
+
+**Board.** `HexBoard.empty_fill()` is the TILE_EMPTY table colour with the
+opacity multiplied into its alpha, and `_draw_cell()` uses it for the base
+fill of an EMPTY cell only. Terrain, blocks, water and the ghost overlays
+keep their colours, and so does the 0.4-alpha cell border, so at 0% the
+grid is still an outline on the grass and every level stays playable. The
+board connects to the signal in `_ready()` and `queue_redraw()`s: the
+Options popup sits over a paused level whose heartbeat is off
+(`_update_board_animation`), so nothing else would repaint it while the
+thumb moves.
+
+⚠️ **HexBoard must not name an autoload.** The first draft wrote
+`Settings.grid_opacity` and `verify_solutions.gd` -- which compiles the
+board under `--script`, with no autoloads -- died with "Identifier not
+found: Settings" and then hung for the full timeout, exactly as CLAUDE.md
+warns a compile error does. The board now finds the node at runtime
+(`get_node_or_null("/root/Settings")`, null in the harness) and draws
+opaque without it. Added to CLAUDE.md's conventions.
+
+**Options menu.** A "Hex grid opacity" row with a live percentage and an
+`HSlider` (0-100, step 5, 96 px tall so the whole row is a touch target)
+between the sound toggles and Close. Written to Settings on every
+`value_changed` like the toggles are: the 5% step bounds a full sweep to at
+most twenty small writes, so no debounce. `open()` uses
+`set_value_no_signal` so showing the menu does not write the file back.
+The theme gains `HSlider` styles -- a rounded 16 px track, the button blue
+for the filled part, and a 48 px grabber (`ui_slider_grabber.svg`, same
+blue with a white rim).
+
+**Verified.** New `VerifyGridOpacity` (headless, 28 checks): clamping,
+persistence and reload (including out-of-range and pre-slider files),
+`empty_fill()` at 40/0/100%, the slider mirroring and writing the setting,
+and the covered board repainting exactly once per change (the `draw`
+signal fires headless). `VerifyTouchTargets` now opens the Options popup
+from the pause menu and measures sliders as well as buttons: 42 checks.
+`BoardSnapshots` at 100% is pixel-identical to the previous baseline;
+screenshots at 100/40/0% eyeballed over the paused level and in play on
+level 7. All suites pass except the pre-existing hydro level 18.
+
 ## Status: a cutout or gesture bar shrinks a fitting board instead of scrolling it (2026-09-20)
 
 Merged `six-wide-columns` (c753d5d) to main as a fast-forward and ran every

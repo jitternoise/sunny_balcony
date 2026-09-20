@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- Options menu: the grabber of the hex grid opacity slider. The same
+       blue as the oval buttons with a white rim, and 48 px so a thumb can
+       find it; the slider's whole 96 px row takes the tap either way. -->
+  <circle cx="24" cy="24" r="20" fill="#338cd9" stroke="#ffffff" stroke-width="3"/>
+</svg>
