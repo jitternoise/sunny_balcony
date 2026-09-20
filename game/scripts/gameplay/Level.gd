@@ -311,6 +311,7 @@ func _ready() -> void:
 	GameState.last_played_level_path = _level_path
 	level_data = load(_level_path)
 	_apply_backdrop()
+	Music.play_for_level(level_data.level_id)
 
 	board.setup(level_data, block_catalog)
 	board.level_won.connect(_on_level_won)

@@ -493,6 +493,11 @@ func _build_map() -> void:
 	var last_slot := campaign_paths().find(GameState.last_played_level_path)
 	if last_slot != -1:
 		target_slot = last_slot + 1
+	# The music of the band the map opens on -- the level just left, or the
+	# furthest reached -- so coming back from a level does not change the
+	# tune, and going into one of the same band does not restart it. A
+	# tutorial slot has no level number and gets the meadow.
+	Music.play_for_level(level_of_slot(target_slot - 1))
 	_scroll_to_reached(points[target_slot - 1].y)
 
 

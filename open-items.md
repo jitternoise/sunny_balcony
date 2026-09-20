@@ -85,10 +85,11 @@ has exactly one occurrence in the codebase — its own definition. Nothing calls
 it.
 
 **Never built at all** (each confirmed by grep returning zero hits): scoring;
-music (sound effects arrived 2026-09-20 -- the `Sfx` autoload -- but nothing
-plays on the `Music` bus); an accessibility pass; level-complete visual
-polish; any level curriculum beyond `GameState.is_level_unlocked()`'s linear
-gate. (The settings menu was built 2026-09-15.)
+an accessibility pass; level-complete visual polish; any level curriculum
+beyond `GameState.is_level_unlocked()`'s linear gate. (The settings menu was
+built 2026-09-15; sound effects and one synthesised music loop per ten
+levels arrived 2026-09-20 -- the `Sfx` and `Music` autoloads -- none of it
+yet heard on a device.)
 
 ✅ **A five-level tutorial was added 2026-09-10** (ids 901-905, the first five
 slots of the map trail — see `dev-progress.md`). It teaches the fall, fire,

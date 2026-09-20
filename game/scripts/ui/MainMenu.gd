@@ -24,6 +24,7 @@ func _ready() -> void:
 
 	continue_button.disabled = not _any_save_exists()
 	Sfx.hook_buttons(self)
+	Music.play_track(0)
 
 
 func _any_save_exists() -> bool:

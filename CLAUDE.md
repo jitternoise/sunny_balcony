@@ -39,6 +39,7 @@ godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + tr
 godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, 141 checks
+godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, 102 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 42 checks
@@ -174,6 +175,14 @@ any viewport-dependent measurement, and sanity-check by printing
   `Level.BOARD_SOUNDS` says how each kind sounds. `VerifySfx` fails the
   moment the catalogue, the directory, the recipes and the `play()` calls
   disagree, so a sound cannot be half-added or half-removed.
+- **`scripts/autoload/Music.gd`** — one background loop per ten levels, the
+  same bands as `Backdrop.PALETTES`; `Music.TRACKS[i]` is
+  `assets/music/<name>.wav`, composed by `tools/gen_music.py` (8 bars at
+  100 BPM = 19.2 s, two of the sim's beats per music beat, seamless
+  loop). `play_for_level()` is a no-op for the band already playing and
+  crossfades otherwise; a level plays its band, the map plays the band it
+  opens on, the main menu the meadow. `VerifyMusic` holds the catalogue,
+  the directory, the generator's songs and the palettes together.
 - **`scripts/gameplay/Backdrop.gd`** — the sky/ground colour pair behind a
   level, one per ten levels (`PALETTES`, `for_level()`), plus the HUD text
   outline derived from the ground. `Level._apply_backdrop()` paints it.
@@ -307,15 +316,20 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   neither export has been configured. See the pre-export checklist in
   `open-items.md` — the iOS Compatibility renderer reaching Metal through
   ANGLE is the open question.
-- **No music.** Sound effects exist since 2026-09-20 (`Sfx` autoload, 18
-  synthesised clips on the `SFX` bus, which the Options menu mutes), but
-  nothing plays on the `Music` bus, and `story-bible.md` argues music
-  becomes load-bearing once the story layer goes wordless. A music player
-  only has to name its bus. The same Options menu holds the hex grid
-  opacity slider (`Settings.grid_opacity`, `[display]` in
-  `user://settings.cfg`), which thins an EMPTY cell's fill only.
-- **Nothing has ever been *heard*.** The clips were designed by waveform
-  and by their numbers (peak, RMS, DC, fade) on a machine with no audio
-  out; `tools/gen_sfx.py` is where to re-tune one.
+- **All the audio is synthesised, and none of it has been *heard*.** The
+  18 effects (`Sfx`, `SFX` bus) and the 10 music loops (`Music`, `Music`
+  bus; the Options menu mutes each) were composed in numpy and judged by
+  waveform, spectrogram and numbers on a machine with no audio out.
+  `tools/gen_sfx.py` and `tools/gen_music.py` are where to re-tune one;
+  `story-bible.md` argues music becomes load-bearing once the story layer
+  goes wordless, so expect these loops to be replaced or reworked. The
+  Options menu also holds the hex grid opacity slider
+  (`Settings.grid_opacity`, `[display]` in `user://settings.cfg`), which
+  thins an EMPTY cell's fill only.
+- **Music WAVs must keep `edit/loop_mode=2` in their `.import`.** 2 is
+  Forward; 1 is Disabled, and the default 0 ("detect") is Disabled too for
+  a WAV without loop markers -- so a fresh import plays once and stops.
+  `Music._ready()` forces a forward loop on any stream that arrives without
+  one as a fallback, and `VerifyMusic` checks the `.import` text itself.
 - **Exclude `tests/` and `tools/` from any export.** They are inert but ship
   otherwise, and they read files outside `res://`.

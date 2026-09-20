@@ -1,5 +1,90 @@
 # Flash Flood — Dev Progress
 
+## Status: background music, one loop per ten levels (2026-09-20)
+
+Ten composed loops, one per backdrop band, played by a `Music` autoload
+that never restarts a loop the player is already in.
+
+**`tools/gen_music.py`** (new; numpy). A tiny sequencer over additive
+instruments -- pluck, bell, pad, bass, kick, hat, shaker -- renders ten
+SONG specs (key, mode, a chord degree per bar, an arpeggio pattern, bass
+hits, bells, a percussion style, gains) to 16-bit mono 22.05 kHz WAVs of
+exactly 8 bars at 100 BPM: 19.2 s, sixteen of the sim's measures, a beat
+being two of its 0.3 s beats (tempo agrees; phase does not -- a loop
+starts when a screen does). Note tails wrap to the start, so every file
+loops seamlessly; the generator prints each loop's seam step against its
+own typical step and flags anything over 2x. Every instrument is
+band-limited (partials past Nyquist are dropped) and has an onset and a
+half-cosine release; the bass's release rides 30 ms past the note. Levels
+are set by RMS to -16 dBFS under a 0.9 peak ceiling. Seeded noise, so
+re-running is byte-identical. The songs are named for the backdrops:
+Spring Meadow (C major, plucks, shaker), Deep Valley (A dorian, bells),
+Morning Riverbank (G, triplet arpeggios), Dry Season (D mixolydian,
+sparse), Evening Pines (E minor, bells over pads), Golden Plains (F, open
+fifths, kick), Geyser Country (Bb lydian, sixteenth plucks up an octave),
+Badger Dusk (C# minor, low pad, sparse bells), Jamboree Sunset (A major,
+syncopated bass, full kit), The Pan (D pentatonic, airy). 8.1 MB of WAV in
+the repo; QOA in the export.
+
+**`scripts/autoload/Music.gd`** (new autoload, after Sfx). `TRACKS` is
+indexed by `Backdrop.index_for_level()`, so the music changes where the
+sky does. Two `AudioStreamPlayer` voices on the `Music` bus (which
+`Settings.music_muted` already mutes) at -8 dB. `play_for_level()` is a
+no-op for the band already playing, so map -> level -> next level ->
+map never restarts a loop within a band; a change crossfades over 1.5 s
+in linear amplitude (a dB-linear tween left a 23 dB hole in the middle).
+A second switch inside the fade takes the silent or quieter voice, never
+the loud one, and switching back to a track still fading out fades that
+voice back up rather than restarting it. `stop()` fades out. A level
+plays its band (`Level._ready`), the map the band of the level it opens
+on (`LevelSelect._build_map` -- the level just left, else the furthest
+reached, a tutorial slot being the meadow), the main menu the meadow.
+
+⚠️ **`edit/loop_mode=2`, not 1.** Godot's WAV importer enum is Detect /
+Disabled / Forward / Ping-pong / Backward = 0..4, and a fresh import
+writes 0, which for a WAV without loop markers is Disabled: the loops
+played once and stopped. The first draft set 1, which is ALSO Disabled,
+and only looped at all because `Music._ready()` forces a forward loop on
+a stream that arrives without one -- and the test's loop check could not
+fail, because `load()` returned the cached instance `_ready()` had
+already patched. All ten `.import` files now say 2; the test loads a
+fresh instance (`CACHE_MODE_IGNORE`) and reads the `.import` text; the
+`_ready()` patch stays as a fallback. Recorded in CLAUDE.md.
+
+**Exit drain.** With music playing on every screen, eight suites reported
+leaked playbacks at quit. `Sfx`'s 80 ms drain was marginal: the headless
+Dummy driver mixes in ~93 ms steps, and `VerifyBackdrops` (four band
+switches, then quit) leaked 3/3. Both autoloads now wait 250 ms at
+`_exit_tree()` when a sound or track was live -- one process exit, not
+felt.
+
+**Review.** Four reviewers (music engineering, wiring, ergonomics, the
+test) and two skeptics per finding: 24 findings, 10 confirmed, all fixed
+-- the note-end clicks (every bass hit was cut at half amplitude: -16 dBFS
+steps at the bar lines), the aliasing on the high tracks, the loop flag,
+the vacuous loop check, the dB crossfade hole, the double-switch cut, the
+3 dB loudness spread, an inert `bright` knob, the 'unrestarted' check
+that a restart would have passed, and this entry. Rejected: two
+diminished-chord complaints (the pads are what the modes give and the
+verifiers judged them fine), pad re-trigger phase at bar lines, the .ogg
+replacement path (the test asserts these are the generator's WAVs on
+purpose; a real-music replacement is a deliberate change to both), the
+palette-name coupling in the test.
+
+**Verified.** `VerifyMusic` (headless, 102 checks): catalogue == files ==
+songs == palettes, every loop a forward-looping 19.2 s 22.05 kHz WAV as
+imported and as its `.import` says, the level-to-track mapping at every
+decade edge, both voices on the bus, play/no-restart/crossfade/stop/
+mute, the double switch, and the main menu, level 47, the map after it
+(unrestarted: no track change announced, one voice, the same object), a
+fresh save's map and a tutorial. All suites pass except the pre-existing
+hydro level 18; no leak warnings; verifier 92 / 7 / 1; the generator
+byte-identical on a second run. CLAUDE.md, open-items and the release
+checklist updated.
+
+⚠️ Still nothing has been heard. Ten 19.2 s loops will wear; the
+release checklist asks whether they ship as placeholders or as the music.
+
 ## Status: sound effects, organised so the next one is a recipe and a name (2026-09-20)
 
 The game's first audio: 18 synthesised effects, an `Sfx` autoload that is

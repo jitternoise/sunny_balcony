@@ -103,8 +103,11 @@ func stop_all() -> void:
 ## the time this runs -- a child leaves the tree before its parent, and an
 ## AudioStreamPlayer stops on the way out -- so this only has to wait, and
 ## only when a sound could still be fading: within the longest clip of the
-## last start. EXIT_DRAIN_MSEC is a few mixer steps; nothing is drawn in it.
-const EXIT_DRAIN_MSEC := 80
+## last start. EXIT_DRAIN_MSEC is a couple of mixer steps at the largest
+## buffer the game meets -- the headless Dummy driver's, ~93 ms; 80 ms was
+## not enough for VerifyBackdrops, which switches music four times and
+## quits -- and nothing is drawn in it.
+const EXIT_DRAIN_MSEC := 250
 const LONGEST_CLIP_MSEC := 3000
 
 var _last_any_started: int = -LONGEST_CLIP_MSEC
