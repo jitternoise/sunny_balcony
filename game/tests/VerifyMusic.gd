@@ -6,12 +6,15 @@ extends Node
 ## loop is a forward-looping 19.2 s WAV; the level-to-track mapping is
 ## the backdrop's; two voices on the Music bus crossfade, the same track
 ## asked for again is never restarted, stop() fades out, the bus mute
-## works; and the main menu, a level and the map each start the right
-## track -- the map the band of the level it opens on.
+## works; the main menu, a level and the map each start the right
+## track -- the map the band of the level it opens on; and the Options
+## menu's volume slider drives the bus gain, persists, and mirrors the
+## setting on open.
 ##
 ##   godot --headless res://tests/VerifyMusic.tscn
 ##
-## Uses save slot 99. Restores Settings.music_muted to what it found.
+## Uses save slot 99. Restores Settings.music_muted and music_volume to
+## what it found.
 
 var _failures := 0
 
@@ -59,7 +62,9 @@ func _slug(palette_name: String) -> String:
 func _ready() -> void:
 	GameState.current_slot = 99
 	var muted_before: bool = Settings.music_muted
+	var volume_before: float = Settings.music_volume
 	Settings.music_muted = false
+	Settings.music_volume = 1.0
 
 	print("The catalogue, the files, the songs and the palettes agree")
 	var files: Array[String] = []
@@ -206,6 +211,55 @@ func _ready() -> void:
 	Music.stop()
 	await _after_fade()
 
+	print("The volume dial")
+	var bus := AudioServer.get_bus_index(Music.BUS)
+	_check(absf(AudioServer.get_bus_volume_db(bus)) < 0.01, "at volume 1.0 the Music bus sits at 0 dB")
+	Settings.music_volume = 0.5
+	_check(absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.5)) < 0.01,
+		"0.5 is -6 dB on the bus (%.2f)" % AudioServer.get_bus_volume_db(bus))
+	Settings.music_volume = 0.0
+	_check(absf(AudioServer.get_bus_volume_db(bus) - Settings.SILENT_VOLUME_DB) < 0.01,
+		"0 is the silent floor, not -inf")
+	Settings.music_volume = 1.7
+	_check(Settings.music_volume == 1.0, "clamped from above")
+	Settings.music_volume = -0.2
+	_check(Settings.music_volume == 0.0, "clamped from below")
+	Settings.music_volume = 0.4
+	Settings.music_muted = true
+	_check(AudioServer.is_bus_mute(bus) and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.4)) < 0.01,
+		"the mute is separate: muting keeps the dial where it was")
+	Settings.music_muted = false
+	var cfg := ConfigFile.new()
+	_check(cfg.load(Settings.SETTINGS_PATH) == OK and is_equal_approx(float(cfg.get_value(Settings.SECTION, "music_volume", -1.0)), 0.4),
+		"music_volume is persisted under [%s]" % Settings.SECTION)
+	Settings.music_volume = 1.0
+	cfg.set_value(Settings.SECTION, "music_volume", 0.25)
+	cfg.save(Settings.SETTINGS_PATH)
+	Settings._load()
+	_check(is_equal_approx(Settings.music_volume, 0.25) and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.25)) < 0.01,
+		"_load() reads it back and the setter applies it to the bus")
+	cfg.erase_section_key(Settings.SECTION, "music_volume")
+	cfg.save(Settings.SETTINGS_PATH)
+	Settings._load()
+	_check(Settings.music_volume == 1.0, "a file from before the dial means full volume")
+
+	print("The Options menu's slider")
+	Settings.music_volume = 0.4
+	var options: OptionsMenu = load("res://scenes/OptionsMenu.tscn").instantiate()
+	add_child(options)
+	await _frames(2)
+	options.open()
+	_check(options.music_volume_slider.value == 40.0 and options.music_volume_value.text == "40%",
+		"open() shows the dial at 40%")
+	_check(options.music_volume_slider.min_value == 0.0 and options.music_volume_slider.max_value == 100.0
+		and options.music_volume_slider.step == 5.0, "the slider runs 0-100 in steps of 5")
+	options.music_volume_slider.value = 70.0
+	_check(is_equal_approx(Settings.music_volume, 0.7) and options.music_volume_value.text == "70%"
+		and absf(AudioServer.get_bus_volume_db(bus) - linear_to_db(0.7)) < 0.01,
+		"moving it writes Settings, the label and the bus at once")
+	options.free()
+
+	Settings.music_volume = volume_before
 	Settings.music_muted = muted_before
 	if _failures == 0:
 		print("MUSIC PASS")

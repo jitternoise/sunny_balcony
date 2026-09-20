@@ -1,5 +1,46 @@
 # Flash Flood — Dev Progress
 
+## Status: music volume slider in the Options menu (2026-09-20)
+
+**`Settings.music_volume`** (0..1, default 1, clamped; `[audio]
+music_volume` in `user://settings.cfg`, a file from before it reading as
+full) is the `Music` bus's gain -- `linear_to_db`, so 50% is -6 dB, and 0
+is a -60 dB floor rather than `-inf` -- on top of `Music.VOLUME_DB`, which
+stays the mix. Independent of the mute: muting keeps the dial where it
+was and unmuting comes back at that level. Every audio setting now acts
+on a bus, never on a player, so `Music.gd`'s per-voice crossfade in
+`volume_linear` and the dial never fight.
+
+**Options menu.** A "Music volume" row with a live percentage and a 96 px
+`HSlider` (0-100, step 5) directly under the Music toggle; same pattern as
+the grid opacity slider -- `set_value_no_signal` on `open()`, written to
+Settings on every step, the 5% step bounding a sweep to twenty writes.
+`_show_percent()` now serves both sliders; `OPACITY_SLIDER_MAX` became
+`SLIDER_MAX`. The taller panel still clears a simulated 110/80 inset
+(the reviewer rendered it).
+
+**A false comment, corrected.** `Settings._load()` claimed to write the
+fields "not through the setters". In Godot 4 an in-class assignment runs
+the setter (only the setter's own body writes the field), so a load
+applies each value to its bus and rewrites the file once per field --
+which is exactly what the new test asserts and how an old file gains a
+new key. The comment now says so; behaviour unchanged.
+
+**Review.** Three reviewers (semantics, UX, tests), two skeptics per
+finding: 12 findings, 4 confirmed -- the comment above and three
+"stage/document it" items. Rejected: a perceptual (log) taper for the
+slider and a bus mute at 0%, both judged not worth the coupling until
+someone has listened; greying the slider while Music is muted; an SFX
+volume slider for symmetry -- a follow-up the same pattern would give in
+a few lines (`Settings.sfx_volume` on the `SFX` bus), not asked for.
+
+**Verified.** `VerifyMusic` +12 checks (114): the bus at 0 / -6 / -60 dB
+for 1.0 / 0.5 / 0, clamping, the mute keeping the dial, persistence and
+reload, the pre-dial file, the slider mirroring the setting on `open()`,
+its range, and one move writing Settings, the label and the bus at once.
+`VerifyTouchTargets` measures both sliders (43). All suites pass except
+the pre-existing hydro level 18; no leak warnings.
+
 ## Status: background music, one loop per ten levels (2026-09-20)
 
 Ten composed loops, one per backdrop band, played by a `Music` autoload

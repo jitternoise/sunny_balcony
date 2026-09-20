@@ -43,6 +43,25 @@ custom_minimum_size = Vector2(0, 96)
 button_pressed = true
 text = "Music"
 
+[node name="MusicVolumeRow" type="HBoxContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="MusicVolumeLabel" type="Label" parent="Center/Panel/VBox/MusicVolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Music volume"
+
+[node name="MusicVolumeValue" type="Label" parent="Center/Panel/VBox/MusicVolumeRow"]
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="MusicVolumeSlider" type="HSlider" parent="Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+step = 5.0
+value = 100.0
+
 [node name="SfxToggle" type="CheckButton" parent="Center/Panel/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 96)
