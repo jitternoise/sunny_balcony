@@ -22,3 +22,6 @@ Thumbs.db
 # transient tool output
 .solve_remaining.log
 .solution_space.log
+
+# Python bytecode from tools/gen_sfx.py
+__pycache__/

@@ -85,9 +85,10 @@ has exactly one occurrence in the codebase — its own definition. Nothing calls
 it.
 
 **Never built at all** (each confirmed by grep returning zero hits): scoring;
-sound and music (no `AudioStreamPlayer` anywhere); a settings
-menu; an accessibility pass; level-complete visual polish; any level curriculum
-beyond `GameState.is_level_unlocked()`'s linear gate.
+music (sound effects arrived 2026-09-20 -- the `Sfx` autoload -- but nothing
+plays on the `Music` bus); an accessibility pass; level-complete visual
+polish; any level curriculum beyond `GameState.is_level_unlocked()`'s linear
+gate. (The settings menu was built 2026-09-15.)
 
 ✅ **A five-level tutorial was added 2026-09-10** (ids 901-905, the first five
 slots of the map trail — see `dev-progress.md`). It teaches the fall, fire,

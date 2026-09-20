@@ -11,6 +11,29 @@ class_name HexBoard
 signal level_won
 signal level_lost
 
+## Something happened on the board that the presentation layer may want
+## to show or sound: `kind` is one of the EVENT_* names below, `coord` the
+## cell it happened at (or Vector2i.ZERO where there is no single cell).
+## The board itself never plays a sound -- it is compiled by
+## tools/verify_solutions.gd under --script where no autoload exists, so it
+## must not name Sfx (see CLAUDE.md); Level.gd listens and does.
+##
+## Terrain events (fire out, pool fill/full, geyser) are held back to the
+## STATUS beat, when the change is also first drawn (see
+## resolve_status_phase()), so what is heard lands with what is seen.
+## Water and mudslides draw on the WATER beat and emit there.
+signal board_event(kind: StringName, coord: Vector2i)
+
+const EVENT_WATER_ADVANCED := &"water_advanced" # a WATER beat on which some drop moved; coord is ZERO
+const EVENT_MUDSLIDE := &"mudslide"             # dirt collapsed into the channel
+const EVENT_FIRE_OUT := &"fire_out"
+const EVENT_POOL_FILL := &"pool_fill"           # a beat of connection credited to a lake
+const EVENT_POOL_FULL := &"pool_full"           # the beat that filled it
+const EVENT_GEYSER := &"geyser"                 # a geyser waking into a source
+
+## Terrain events waiting for the STATUS beat -- [kind, coord] pairs.
+var _events_to_reveal: Array = []
+
 const CellState := {
 	EMPTY = "empty",
 	FIRE = "fire",
@@ -714,6 +737,7 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 	mudslide_cells.clear()
 	active_geysers.clear()
 	_playable_cells.clear()
+	_events_to_reveal.clear()
 	hydro_plants.clear()
 	hydro_cell_to_anchor.clear()
 	hydro_source_cells.clear()
@@ -1398,8 +1422,21 @@ func resolve_water_phase() -> void:
 
 	_stalled_this_beat.clear()
 	var next_water: Array[Dictionary] = []
+	# Did anything actually go anywhere this beat? A drop that advances
+	# lands its successors on OTHER cells; one that is absorbed by terrain
+	# or lost leaves none; only a parked drop (held by a Wall, dirt, a full
+	# lake's edge) re-adds itself where it was. So the flood moved unless
+	# every drop came back in place -- which is what EVENT_WATER_ADVANCED
+	# promises, and a fully stalled flood stays silent.
+	var moved := false
 	for entry in water_cells:
+		var before: int = next_water.size()
 		_advance_water(entry, next_water)
+		if next_water.size() == before:
+			moved = true
+		for i in range(before, next_water.size()):
+			if next_water[i]["coord"] != entry["coord"]:
+				moved = true
 
 	water_cells = next_water
 	# Mudslides resolve after every drop has moved for this beat, so a
@@ -1407,6 +1444,8 @@ func resolve_water_phase() -> void:
 	# _process_mudslides().
 	_process_mudslides()
 	queue_redraw()
+	if moved:
+		board_event.emit(EVENT_WATER_ADVANCED, Vector2i.ZERO)
 
 
 ## Beat 3 -- TERRAIN. Applies the fire/pool/geyser contact effects flagged
@@ -1436,6 +1475,12 @@ func resolve_status_phase() -> void:
 		return
 	_check_end_conditions()
 	queue_redraw()
+	# Revealed after the win/loss check so a listener can tell a pool that
+	# filled on the winning beat from one that did not.
+	var revealed: Array = _events_to_reveal
+	_events_to_reveal = []
+	for pair in revealed:
+		board_event.emit(pair[0], pair[1])
 
 
 ## Applies the actual contact effect for a cell flagged into
@@ -1450,6 +1495,7 @@ func _resolve_terrain_contact(coord: Vector2i) -> void:
 	if terrain == CellState.FIRE:
 		cell_terrain[coord] = CellState.EMPTY
 		fires_remaining -= 1
+		_events_to_reveal.append([EVENT_FIRE_OUT, coord])
 		return
 
 	if terrain == CellState.POOL:
@@ -1462,7 +1508,10 @@ func _resolve_terrain_contact(coord: Vector2i) -> void:
 		if _lakes_credited_this_beat.has(anchor):
 			return
 		_lakes_credited_this_beat[anchor] = true
-		pool_fill[anchor] = mini(pool_fill.get(anchor, 0) + 1, POOL_BEATS_REQUIRED)
+		var before: int = pool_fill.get(anchor, 0)
+		pool_fill[anchor] = mini(before + 1, POOL_BEATS_REQUIRED)
+		if before < POOL_BEATS_REQUIRED:
+			_events_to_reveal.append([EVENT_POOL_FULL if pool_fill[anchor] == POOL_BEATS_REQUIRED else EVENT_POOL_FILL, anchor])
 		return
 
 	if terrain == CellState.GEYSER:
@@ -1477,6 +1526,7 @@ func _resolve_terrain_contact(coord: Vector2i) -> void:
 		if geyser_fill[coord] >= GEYSER_BEATS_REQUIRED:
 			cell_terrain[coord] = CellState.EMPTY
 			active_geysers.append(coord)
+			_events_to_reveal.append([EVENT_GEYSER, coord])
 		return
 
 
@@ -1761,6 +1811,7 @@ func _trigger_mudslide(from_coord: Vector2i, dir: Vector2i) -> void:
 		cell_terrain[next_cell] = CellState.EMPTY
 		dig_progress[next_cell] = DIG_TAPS_REQUIRED
 		mudslide_cells[next_cell] = true
+		board_event.emit(EVENT_MUDSLIDE, next_cell)
 		cur = next_cell
 
 

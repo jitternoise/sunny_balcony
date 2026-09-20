@@ -38,6 +38,7 @@ godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a re
 godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
 godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
+godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, 141 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 42 checks
@@ -165,6 +166,14 @@ any viewport-dependent measurement, and sanity-check by printing
 - **`scripts/autoload/GameState.gd`** — save slots, progress, and the two
   optional-reward records (`hydro_bonus_levels`, `par_levels`).
 - **`scripts/ui/LevelSelect.gd`** + **`LevelMap.gd`** — the campaign map.
+- **`scripts/autoload/Sfx.gd`** — every sound effect, by name, and the one
+  place that plays them. `Sfx.SOUNDS` is the catalogue; the files are
+  `assets/sfx/<name>.wav`, all synthesised by `tools/gen_sfx.py` (nothing
+  is recorded); `Sfx.play(&"name")` from presentation code only. The board
+  reports what happened through `HexBoard.board_event(kind, coord)` and
+  `Level.BOARD_SOUNDS` says how each kind sounds. `VerifySfx` fails the
+  moment the catalogue, the directory, the recipes and the `play()` calls
+  disagree, so a sound cannot be half-added or half-removed.
 - **`scripts/gameplay/Backdrop.gd`** — the sky/ground colour pair behind a
   level, one per ten levels (`PALETTES`, `for_level()`), plus the HUD text
   outline derived from the ground. `Level._apply_backdrop()` paints it.
@@ -263,11 +272,20 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   the full tap path and places a block wherever it lifted.
 - **`HexBoard.gd` must never name an autoload.** `tools/verify_solutions.gd`
   compiles it under `--script`, where there are no autoloads, so a bare
-  `Settings` or `GameState` is "Identifier not found" -- a compile error,
-  which hangs the verifier instead of failing it. Look the node up at
-  runtime (`get_node_or_null("/root/Settings")`, see `_settings`) and cope
-  with null. The grid opacity slider is the one thing the board reads from
-  Settings today.
+  `Settings`, `GameState` or `Sfx` is "Identifier not found" -- a compile
+  error, which hangs the verifier instead of failing it. Look the node up
+  at runtime (`get_node_or_null("/root/Settings")`, see `_settings`) and
+  cope with null. The grid opacity slider is the one thing the board reads
+  from Settings today. **Sounds never go in the board at all:** it emits
+  `board_event(kind, coord)` (terrain events held to the STATUS beat, when
+  the change is first drawn) and `Level.gd` plays them.
+- **Adding or removing a sound touches four places, and `VerifySfx` checks
+  all four:** a recipe in `tools/gen_sfx.py` (run it, then
+  `godot --headless --import --path game`), the `.wav` + `.import` it
+  writes, an entry in `Sfx.SOUNDS`, and the `Sfx.play(&"name")` /
+  `Level.BOARD_SOUNDS` sites. Buttons need nothing: `Sfx.hook_buttons()`
+  gives every button under a screen the tap, and a button with a sound of
+  its own is named in the `except` list (Start, Pause, Resume).
 - **Check `git branch -r` before choosing a base.** Two sessions once
   branched from the same commit and built the same feature independently.
 - **Never write a save file in place.** `GameState.save_current_slot()` builds
@@ -289,11 +307,15 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   neither export has been configured. See the pre-export checklist in
   `open-items.md` — the iOS Compatibility renderer reaching Metal through
   ANGLE is the open question.
-- **No audio at all.** `story-bible.md` argues it becomes load-bearing once
-  the story layer goes wordless. The plumbing exists: `default_bus_layout.tres`
-  has `Music` and `SFX` buses and the Options menu (`Settings` autoload)
-  mutes them, so a new player only has to name its bus. The same menu holds
-  the hex grid opacity slider (`Settings.grid_opacity`, `[display]` in
+- **No music.** Sound effects exist since 2026-09-20 (`Sfx` autoload, 18
+  synthesised clips on the `SFX` bus, which the Options menu mutes), but
+  nothing plays on the `Music` bus, and `story-bible.md` argues music
+  becomes load-bearing once the story layer goes wordless. A music player
+  only has to name its bus. The same Options menu holds the hex grid
+  opacity slider (`Settings.grid_opacity`, `[display]` in
   `user://settings.cfg`), which thins an EMPTY cell's fill only.
+- **Nothing has ever been *heard*.** The clips were designed by waveform
+  and by their numbers (peak, RMS, DC, fade) on a machine with no audio
+  out; `tools/gen_sfx.py` is where to re-tune one.
 - **Exclude `tests/` and `tools/` from any export.** They are inert but ship
   otherwise, and they read files outside `res://`.

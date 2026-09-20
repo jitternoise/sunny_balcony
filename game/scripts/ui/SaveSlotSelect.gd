@@ -27,6 +27,7 @@ func _ready() -> void:
 		vp.size_changed.connect(_apply_safe_area)
 	_apply_safe_area()
 	_build_slot_buttons()
+	Sfx.hook_buttons(self)
 
 
 ## Keeps the Back button clear of a notch or a status bar. The slot buttons

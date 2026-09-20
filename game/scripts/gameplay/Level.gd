@@ -173,6 +173,34 @@ const BLOCK_ORDER: Array[String] = [
 	"wall", "divert_left", "divert_right", "splitter", "bomb_catapult",
 ]
 
+## Which sound each board event makes (HexBoard.board_event -> Sfx.SOUNDS).
+## The board reports what happened; this is the one place that decides how
+## it sounds. An event missing here is simply silent, so a new board event
+## needs a line here to be heard -- and a sound removed from Sfx.SOUNDS
+## must be removed here too (VerifySfx checks every name).
+const BOARD_SOUNDS: Dictionary = {
+	HexBoard.EVENT_WATER_ADVANCED: &"drop",
+	HexBoard.EVENT_MUDSLIDE: &"dig",
+	HexBoard.EVENT_FIRE_OUT: &"fire_out",
+	HexBoard.EVENT_POOL_FILL: &"pool_fill",
+	HexBoard.EVENT_POOL_FULL: &"pool_full",
+	HexBoard.EVENT_GEYSER: &"geyser",
+}
+
+## HUD buttons with a sound of their own, left out of the generic tap.
+const OWN_SOUND_BUTTONS: Array[StringName] = [&"StartButton", &"PauseButton", &"ResumeButton"]
+
+## How long after the edge splash the lose jingle follows it.
+const LOSE_AFTER_SPLASH_SEC := 0.35
+
+## A level is won on the STATUS beat that reveals its last fire out or lake
+## full, so that chime is heard first and the jingle follows it -- "the
+## lake is full; the level is done" rather than both at once.
+const WIN_AFTER_LAST_CHIME_SEC := 0.3
+const EVENTS_HEARD_ON_THE_WINNING_BEAT: Array[StringName] = [
+	HexBoard.EVENT_FIRE_OUT, HexBoard.EVENT_POOL_FULL, HexBoard.EVENT_GEYSER,
+]
+
 ## Name given to the flexible gaps that spread the bar's buttons evenly
 ## across its width -- see _build_inventory_bar().
 const BAR_SPACER_NAME := "bar_spacer"
@@ -287,6 +315,7 @@ func _ready() -> void:
 	board.setup(level_data, block_catalog)
 	board.level_won.connect(_on_level_won)
 	board.level_lost.connect(_on_level_lost)
+	board.board_event.connect(_on_board_event)
 
 	tick_timer.wait_time = SUBTICK_INTERVAL
 	tick_timer.timeout.connect(_on_subtick)
@@ -318,6 +347,12 @@ func _ready() -> void:
 	_set_pre_start_status()
 	_apply_safe_area()
 	_show_intro_popup_if_needed()
+
+	# The pause sound is tied to the BUTTON, not to _on_pause_pressed(): that
+	# also runs when the app is backgrounded, where a pop would play into a
+	# phone that has just been put down (or already suspended audio).
+	pause_button.pressed.connect(Sfx.play.bind(&"pause"))
+	Sfx.hook_buttons(self, OWN_SOUND_BUTTONS)
 
 
 ## Paints the sky and ground for this level's ten-level band (Backdrop) and
@@ -418,6 +453,7 @@ func _on_start_pressed() -> void:
 		return
 	started = true
 	start_button.disabled = true
+	Sfx.play(&"start")
 	# From here on, block placements/removals buffer to the next
 	# PLACEMENT beat instead of landing immediately -- see HexBoard.started.
 	board.started = true
@@ -531,6 +567,7 @@ func _on_go_back_request() -> void:
 	elif paused:
 		_on_resume_pressed()                 # back closes the menu it opened
 	else:
+		Sfx.play(&"pause")                   # a tap's worth of pause, like the button
 		_on_pause_pressed()
 
 
@@ -559,6 +596,7 @@ func _on_resume_pressed() -> void:
 	tick_timer.paused = false
 	pause_button.disabled = false
 	pause_panel.visible = false
+	Sfx.play(&"resume")
 
 
 ## Loads every BlockData .tres under res://data/blocks/ so adding a new
@@ -664,6 +702,8 @@ func _build_inventory_bar() -> void:
 
 	budget_label.visible = board.use_block_budget
 	_refresh_inventory_labels()
+	# Rebuilt on every Retry, so hooked here rather than once in _ready().
+	Sfx.hook_buttons(inventory_bar)
 
 
 ## Gives one inventory-bar button its fixed width and tightened padding --
@@ -974,7 +1014,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_catapult_press_active = false
 
 		if was_aiming:
-			board.fire_catapult(_catapult_press_coord, _catapult_direction, _catapult_last_distance)
+			if board.fire_catapult(_catapult_press_coord, _catapult_direction, _catapult_last_distance):
+				Sfx.play(&"blast")
 			return
 
 		if was_drag:
@@ -1110,6 +1151,13 @@ func _scroll_by(delta: float) -> void:
 
 
 func _handle_tap(screen_pos: Vector2) -> void:
+	# A finger already down when the winning or losing beat lands still
+	# owns its press, and the release arrives here after the panel is up.
+	# Every board call below would refuse on game_over, which the sound
+	# code would then read as a refused placement and buzz over the
+	# splash or the chime.
+	if board.game_over:
+		return
 	var local_pos: Vector2 = board.to_local(screen_pos)
 	var coord := board.screen_to_hex(local_pos)
 
@@ -1131,6 +1179,7 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	_last_tap_msec = now
 	if is_double_tap and board.try_activate_hydro(coord):
 		_last_tap_coord = Vector2i(99999, 99999) # consume -- a 3rd quick tap shouldn't chain into another activation attempt
+		Sfx.play(&"hydro")
 		return
 
 	# "Dig the River": tapping a packed-dirt cell digs it -- 3 taps opens
@@ -1144,6 +1193,7 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	# phase. A dirt tap during planning falls through everything below and
 	# does nothing at all (place_block() rejects DIRT terrain too).
 	if board.dig(coord):
+		Sfx.play(&"dig")
 		return
 
 	# Tapping a cell that already has a block picks it up (refunding it to
@@ -1170,6 +1220,9 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	if board.placed_blocks.has(coord) or board.block_anchors.has(coord):
 		if board.remove_block(coord):
 			_refresh_inventory_labels()
+			Sfx.play(&"pickup")
+		else:
+			Sfx.play(&"invalid")             # a preset -- bolted down
 		return
 
 	# Delete mode (see delete_mode): also lets a tap cancel a block that is
@@ -1179,6 +1232,7 @@ func _handle_tap(screen_pos: Vector2) -> void:
 	if delete_mode:
 		if board.remove_block(coord):
 			_refresh_inventory_labels()
+			Sfx.play(&"pickup")
 		return
 
 	if board.selected_block_id == "":
@@ -1186,6 +1240,14 @@ func _handle_tap(screen_pos: Vector2) -> void:
 
 	if board.place_block(coord, board.selected_block_id):
 		_refresh_inventory_labels()
+		Sfx.play(&"place")
+	elif board.in_playable_area(coord) and not board.hydro_ready_at(coord):
+		# Occupied, wrong terrain, no stock. A tap off the grid is just a
+		# miss, and the first tap on a READY plant is the start of the
+		# double-tap that switches it on, not a refused placement -- an
+		# untouched or already-running plant still buzzes like any other
+		# cell a block cannot go on.
+		Sfx.play(&"invalid")
 
 
 ## Fires every constant SUBTICK_INTERVAL -- purely a heartbeat. Only every
@@ -1236,6 +1298,8 @@ func _update_status_label() -> void:
 func _on_level_won() -> void:
 	tick_timer.stop()
 	pause_button.disabled = true
+	_drop_press_in_flight()
+	Sfx.play_after(&"win", WIN_AFTER_LAST_CHIME_SEC)
 	status_label.text = "Level complete!"
 	GameState.mark_level_complete(level_data.level_id)
 
@@ -1316,14 +1380,44 @@ func _on_win_next_pressed() -> void:
 func _on_level_lost() -> void:
 	tick_timer.stop()
 	pause_button.disabled = true
+	_drop_press_in_flight()
 	match board.lose_reason:
 		HexBoard.LoseReason.TOWN:
 			status_label.text = "The town flooded!"
 			lose_reason_label.text = "The town flooded!"
+			Sfx.play(&"lose")
 		HexBoard.LoseReason.EDGE:
 			status_label.text = "Water overflowed the bottom edge!"
 			lose_reason_label.text = "Water overflowed the bottom edge!"
+			# The water goes over first; the jingle follows it down.
+			Sfx.play(&"splash")
+			Sfx.play_after(&"lose", LOSE_AFTER_SPLASH_SEC)
 		_:
 			status_label.text = "Flooded!"
 			lose_reason_label.text = "Flooded!"
+			Sfx.play(&"lose")
 	lose_panel.visible = true
+
+
+## Forgets a press, drag or catapult aim that was in progress when the run
+## ended, exactly as pausing does: its release would otherwise reach
+## _handle_tap() under the win/lose panel, and a half-charged aim would keep
+## drawing its overlay there.
+func _drop_press_in_flight() -> void:
+	_press_active = false
+	_drag_active = false
+	_catapult_press_active = false
+	_catapult_aiming = false
+	board.clear_catapult_aim()
+
+
+## The board's presentation events (HexBoard.board_event), each mapped to
+## a sound by BOARD_SOUNDS. Terrain events arrive on the STATUS beat after
+## the win check, so on the winning beat the completing chime (fire out,
+## lake full) still plays -- the jingle waits for it -- while the ordinary
+## per-beat sounds (a drop, a fill, a mudslide) stop with the game.
+func _on_board_event(kind: StringName, _coord: Vector2i) -> void:
+	if board.game_over and not EVENTS_HEARD_ON_THE_WINNING_BEAT.has(kind):
+		return
+	if BOARD_SOUNDS.has(kind):
+		Sfx.play(BOARD_SOUNDS[kind])

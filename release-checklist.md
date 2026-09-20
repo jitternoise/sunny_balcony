@@ -89,8 +89,9 @@ the build work.
       *Paid Apps* agreement and set up Play's merchant account if the game
       will ever be paid or sell IAP; tax forms and banking details come with
       those.
-- [ ] **Asset licensing audit.** For every font, sprite, sound (there is
-      none yet) and the 15 character concepts in `characters/`: who owns it,
+- [ ] **Asset licensing audit.** For every font, sprite, sound (the 18
+      effects are synthesised in-repo by `tools/gen_sfx.py`, so nothing to
+      license there) and the 15 character concepts in `characters/`: who owns it,
       under what licence, and does the licence allow commercial distribution
       and require attribution. Write a `THIRD_PARTY_NOTICES` file and
       surface it in an in-game credits screen if any licence requires it.
@@ -122,9 +123,12 @@ Settle these before the first build; each is a scope decision, not a bug.
       engine. Either ship without them and say nothing about them in the
       listing, or schedule them for a later update. Do not screenshot art
       that is not in the build; Apple rejects for misleading metadata.
-- [ ] **Audio.** There is none. A silent game passes review, but reviewers
-      and players notice. At minimum decide; if you ship silent, make sure
-      nothing in the UI implies a mute toggle.
+- [ ] **Audio.** Sound effects exist (2026-09-20) and the Options menu's
+      mute toggle is real; there is still no music. Listen to the effects
+      on a device before shipping -- they have only ever been checked by
+      waveform on a machine with no audio out (`tools/gen_sfx.py` re-tunes
+      one). Decide on music, or ship without and make sure the Music toggle
+      does not imply there is some.
 - [ ] **A way out of every screen.** Reviewers try Back on Android and swipe
       gestures on iOS. Confirm the system Back button never closes the app
       from a popup or from Level Select, and that iOS gesture-bar swipes

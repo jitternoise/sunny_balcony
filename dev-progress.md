@@ -1,5 +1,93 @@
 # Flash Flood — Dev Progress
 
+## Status: sound effects, organised so the next one is a recipe and a name (2026-09-20)
+
+The game's first audio: 18 synthesised effects, an `Sfx` autoload that is
+the only thing that plays them, board events for the simulation to report
+through, and a test that fails the moment any of it drifts.
+
+**`scripts/autoload/Sfx.gd`** (new autoload, after Settings). `SOUNDS` is
+the catalogue -- name -> {when, vary} -- and the single source of truth: a
+sound is a name here, `assets/sfx/<name>.wav`, and the `play()` calls that
+use it. Eight `AudioStreamPlayer` voices on the `SFX` bus (which
+`Settings.sfx_muted` already mutes), round-robin. `play(name)` returns
+false and warns once for a name not in the catalogue; the same name asked
+for twice inside 60 ms plays once, so three fires out on one beat are one
+hiss, not a chord; `vary` is a random pitch spread so a sound heard fifty
+times a level is not a loop. `play_after(name, seconds)` for a jingle that
+should follow a splash. `hook_buttons(root, except)` gives every button
+under a screen the tap and skips ones already hooked, so a screen calls it
+from `_ready()` and again wherever it builds buttons (the map's nodes, the
+inventory bar on every Retry). `_exit_tree()` waits 80 ms if a sound was
+started in the last three seconds: a stop is not immediate -- the mixer
+fades the playback out over its next step -- and `AudioServer.finish()`
+leaves what is still there, so a quit mid-sound (Quit after its click,
+every test ending on a win jingle) reported leaked objects at exit.
+
+**`tools/gen_sfx.py`** (new; numpy). Every clip is a recipe function --
+oscillator sweeps, seeded noise, an ADSR, a one-pole filter, a mix -- so a
+sound is re-tuned by editing a few lines and re-running, never by hand in
+a wave editor; noise is seeded per sound, so re-running writes byte-
+identical files. 16-bit mono 44.1 kHz, imported as `AudioStreamWAV` (QOA,
+no loop). It reports each sound's loudness above 400 Hz -- what a phone
+speaker can reproduce -- and warns if anything but the two quiet-by-design
+sounds is no louder than the per-beat drop there, after the review found
+`place`, `blast` and `geyser` were 90% sub-bass and would vanish on the
+device: they now carry an audible partial, the knock, the crack, the
+spray. It also reports a stale `PEAKS` entry and an orphaned `.wav`.
+
+**`HexBoard.board_event(kind, coord)`** (new signal). The board never
+plays a sound -- it is compiled by `verify_solutions.gd` under `--script`,
+where naming `Sfx` would be a compile error and a hang -- it reports:
+`water_advanced` (a WATER beat on which some drop actually went somewhere,
+not merely a beat with water on the board) and `mudslide` as they happen;
+`fire_out`, `pool_fill`, `pool_full` (the one beat that fills a lake) and
+`geyser` held in `_events_to_reveal` until `resolve_status_phase()`, when
+the change is first drawn, so what is heard lands with what is seen.
+Emitted after the win check, so a listener can tell the completing chime
+from the rest. Verifier unchanged at 92 / 7 / 1.
+
+**`Level.gd`.** `BOARD_SOUNDS` maps event kind -> sound; `_on_board_event`
+plays it, dropping the per-beat sounds once the game is over but letting
+the completing chime (fire out, lake full, geyser) through, and the win
+jingle waits `WIN_AFTER_LAST_CHIME_SEC` (0.3 s) for it -- "the lake is
+full; the level is done". An edge loss splashes first and the sting
+follows 0.35 s later. Start/pause/resume, place/pickup/invalid (a refused
+placement on a playable cell; a miss off the grid is silent, and so is
+the first tap of a ready Hydro Plant's double-tap, which the review
+caught buzzing before the `hydro` whirr), dig, hydro, blast. The pause
+sound hangs off the button and the Back gesture, not `_on_pause_pressed()`,
+which also runs when the app is backgrounded. `_handle_tap()` now returns
+on `game_over` and a win or loss drops a press in flight, as pausing does,
+so a finger already down when the last beat lands cannot buzz under the
+panel. Every other screen: `Sfx.hook_buttons(self)`.
+
+**Review.** Five reviewers (wiring, the sim rule, add/remove ergonomics,
+audio engineering, the test) and two skeptics per finding: 24 findings,
+9 confirmed, all fixed above -- the hydro double-tap buzz, the post-game
+press, the sub-bass clips, a softer and quieter drop, three vacuous or
+blind test checks (the name regexes rejected digits and plain strings;
+'no drop after the game ended' could not fail; the lose path was
+untested). Rejected, for the record: a limiter on the bus, cancelling
+`play_after` on Retry, a loudness-normalised mix -- each judged not worth
+its weight until someone has listened on a device.
+
+**Verified.** `VerifySfx` (headless, 141 checks): catalogue == files ==
+recipes, names are snake_case, every `play()` argument is a literal in the
+catalogue or the one known lookup, every sound is used; the voices, the
+throttle, `play_after`, the once-only warning, the bus mute; level 1's
+buttons and taps, played through to its win (drop / fire_out / three
+pool_fill / pool_full, then win alone 0.3 s later), retried and lost off
+the edge (splash, no drop after it, lose 0.35 s later, the rebuilt bar
+hooked exactly once), and level 7's plant double-tapped without a buzz.
+Every other suite passes except the pre-existing hydro level 18; no leak
+warnings anywhere. CLAUDE.md, open-items and the release checklist updated.
+
+⚠️ **Nothing has been heard.** This machine has no audio out; the clips
+were judged by waveform and by the numbers. Listen on a device before
+trusting the mix -- `tools/gen_sfx.py` is where to fix one. Still no
+music.
+
 ## Status: the Level Select map walks through the same ten backdrops (2026-09-20)
 
 **Ground bands.** `LevelSelect._backdrop_stops()` turns the trail into

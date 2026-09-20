@@ -477,6 +477,12 @@ func _build_map() -> void:
 	map_root.reached_count = reached
 	map_root.queue_redraw()
 
+	# Every level node is a fresh Button on each rebuild, so hook the whole
+	# screen here rather than once in _ready(); already-hooked buttons (Back,
+	# Options, the toggle) are skipped. Locked nodes are disabled and never
+	# press, so they stay silent without a special case.
+	Sfx.hook_buttons(self)
+
 	# Where the view opens, in order of preference: the level the player
 	# just left, if any; else the tutorial on a brand-new save; else their
 	# furthest progress. The first is what makes Back from level 24 land on

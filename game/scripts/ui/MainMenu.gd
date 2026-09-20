@@ -23,6 +23,7 @@ func _ready() -> void:
 	quit_button.visible = not OS.has_feature("ios")
 
 	continue_button.disabled = not _any_save_exists()
+	Sfx.hook_buttons(self)
 
 
 func _any_save_exists() -> bool:

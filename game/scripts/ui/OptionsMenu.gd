@@ -35,6 +35,10 @@ func _ready() -> void:
 	sfx_toggle.toggled.connect(func(on: bool): Settings.sfx_muted = not on)
 	grid_opacity_slider.value_changed.connect(_on_grid_opacity_slider_changed)
 	close_button.pressed.connect(close)
+	# The toggles and Close click like every other button. The SFX toggle's
+	# own click lands after the write, so switching sound off is silent and
+	# switching it on is the first thing heard -- the conventional feel.
+	Sfx.hook_buttons(self)
 
 
 func _on_grid_opacity_slider_changed(value: float) -> void:
