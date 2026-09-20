@@ -44,6 +44,8 @@ var measures_elapsed: int = 0
 
 ## The Control every HUD element is anchored inside. Inset by _apply_safe_area().
 @onready var hud: Control = $UI/HUD
+@onready var sky: ColorRect = $Background/Sky
+@onready var grass: ColorRect = $Background/Grass
 @onready var status_label: Label = $UI/HUD/StatusLabel
 ## "Level 12" / "Tutorial 3", top-left, above the status text -- the one
 ## place in play that says which level this is.
@@ -280,6 +282,7 @@ func _ready() -> void:
 	# So the map comes back centred on this level, whichever way we leave.
 	GameState.last_played_level_path = _level_path
 	level_data = load(_level_path)
+	_apply_backdrop()
 
 	board.setup(level_data, block_catalog)
 	board.level_won.connect(_on_level_won)
@@ -315,6 +318,19 @@ func _ready() -> void:
 	_set_pre_start_status()
 	_apply_safe_area()
 	_show_intro_popup_if_needed()
+
+
+## Paints the sky and ground for this level's ten-level band (Backdrop) and
+## re-tints the HUD's text outlines to match, so the same white labels
+## read on every sky. The scene file's colours are the first palette, so a
+## level that somehow skipped this would still look like level 1.
+func _apply_backdrop() -> void:
+	var palette := Backdrop.for_level(level_data.level_id)
+	sky.color = palette["sky"]
+	grass.color = palette["ground"]
+	var outline := Backdrop.outline_for(palette["ground"])
+	for label in [level_label, status_label, budget_label]:
+		label.add_theme_color_override("font_outline_color", outline)
 
 
 ## Keeps the HUD clear of notches, cutouts and the gesture bar. The board

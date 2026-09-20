@@ -1,5 +1,53 @@
 # Flash Flood — Dev Progress
 
+## Status: a different sky and ground every ten levels (2026-09-20)
+
+**`scripts/gameplay/Backdrop.gd`** (new, `class_name Backdrop`): ten
+named sky/ground pairs, one per ten levels -- `index_for_level()` is
+`(id - 1) / 10` for 1-100 and 0 for anything else, so the tutorials
+(901-905) and the reserved bonus ids get the meadow. `Level._apply_backdrop()`
+paints `Background/Sky` and `Background/Grass` from it in `_ready()` and
+re-tints the three outlined HUD labels (Level, Status, Budget). The first
+pair is the spring meadow every screen used to share, and `Level.tscn` is
+still authored in it, so decade 1 looks as it did.
+
+**Choosing the pairs.** The sky carries the mood (only the HUD sits on
+it). The ground is constrained: it frames the board and shows through
+every EMPTY cell once the grid opacity slider is turned down, so its hue
+has to stay clear of fire's orange-red, the lakebed's tan, dirt and town
+browns, geyser purple, water blue and the amber preview arrows. That
+leaves greens, sages, teals and slates, and the pale salt of the finale:
+Spring meadow / Deep valley / Morning riverbank / Dry season / Evening
+pines / Golden plains / Geyser country / Badger dusk / Jamboree sunset /
+The Pan -- named loosely after the story bible's chapters, which are not
+ten levels each, so the names are a mood, not a map. Every ground is at
+least 0.2 luminance above an empty cell (the tightest, Badger dusk's
+slate, is 0.40 vs 0.15).
+
+**HUD outline.** The labels' fixed deep-green outline is now the ground's
+hue scaled to luminance 0.22 (`Backdrop.outline_for()`): a fixed 55%
+darkening left a mid-grey outline on The Pan's pale ground, which read
+soft on its pale sky. Scaling to a luminance keeps it as dark on the salt
+as on the meadow. The authored value in `Level.tscn` moved from
+(0.14, 0.30, 0.13) to the derived (0.1139, 0.2619, 0.1177) -- a delta of
+10/255 on outline pixels only, invisible, so the scene file and palette 0
+agree exactly.
+
+**Verified.** `VerifyBackdrops` (headless, 119 checks): the mapping at
+every decade edge and for the tutorial/bonus ids; ten distinct pairs;
+every ground clearly lighter than an empty cell; every outline at the
+target luminance, alpha 0.9, and the ground's hue; Level.tscn authored
+in palette 0; and tutorial 1, levels 1, 11, 47 and 100 painting their
+band with the outlines following. `BoardSnapshots`: all ten changed, the
+eight outside decade 1 by their backgrounds and levels 1 and 7 only by
+the outline delta. Contact sheet of one level per decade eyeballed at
+720x1280, plus HUD crops on the palest (97), darkest (75) and warmest
+(82) skies. All suites pass except the pre-existing hydro level 18.
+
+Not touched: the main menu, save-slot and Level Select screens keep the
+meadow pair. If the map should shift colour along the trail, that is a
+separate change.
+
 ## Status: hex grid opacity slider in the Options menu (2026-09-20)
 
 **Settings.** `Settings.grid_opacity` (0..1, default 1, clamped) joins the

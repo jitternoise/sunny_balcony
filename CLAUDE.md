@@ -37,6 +37,7 @@ godot --headless res://tests/VerifyBoardHeartbeat.tscn # board animates only whe
 godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a redirect, 15 checks
 godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
 godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
+godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 42 checks
@@ -164,6 +165,13 @@ any viewport-dependent measurement, and sanity-check by printing
 - **`scripts/autoload/GameState.gd`** — save slots, progress, and the two
   optional-reward records (`hydro_bonus_levels`, `par_levels`).
 - **`scripts/ui/LevelSelect.gd`** + **`LevelMap.gd`** — the campaign map.
+- **`scripts/gameplay/Backdrop.gd`** — the sky/ground colour pair behind a
+  level, one per ten levels (`PALETTES`, `for_level()`), plus the HUD text
+  outline derived from the ground. `Level._apply_backdrop()` paints it.
+  `Level.tscn` is authored in the first pair; the tutorials use it too. A
+  ground hue must stay clear of the tile palette (fire, lakebed, dirt,
+  geyser, water, the amber preview) and clearly lighter than an empty cell
+  -- `VerifyBackdrops` holds every pair to that.
 
 **Beat cycle.** One measure = 4 beats = 1.2 s (`SUBTICK_INTERVAL` 0.15 ×
 `ticks_per_beat` 2 × 4). Beats are PLACEMENT → WATER → TERRAIN → STATUS. The
