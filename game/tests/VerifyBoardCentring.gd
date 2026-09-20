@@ -2,9 +2,12 @@ extends Node
 
 ## A grid that fits on screen is centred in the band between the HUD and
 ## the inventory bar; one that does not is pinned to the top of that band
-## and scrolls. Checked at the real portrait viewport, because the whole
-## question is about vertical SIZE and --headless reports a square
-## 1280x1280 where every board overflows and nothing is ever centred.
+## and scrolls. A cutout and a gesture bar never turn a fitting grid into a
+## scrolling one: it shrinks to fit the inset band instead, while a grid
+## that scrolls anyway keeps its full-size tiles. Checked at the real
+## portrait viewport, because the whole question is about vertical SIZE
+## and --headless reports a square 1280x1280 where every board overflows
+## and nothing is ever centred.
 ##
 ##   xvfb-run -a --server-args="-screen 0 720x1280x24" \
 ##     godot --resolution 720x1280 res://tests/VerifyBoardCentring.tscn
@@ -12,6 +15,18 @@ extends Node
 ## Uses no save slot.
 
 var _failures := 0
+
+## Every board authored to fit a plain 720x1280 screen without scrolling:
+## the five tutorials (4- and 5-wide columns, the largest tiles in the
+## game) and one of the 6-wide campaign columns.
+const FITTING_LEVELS: Array[String] = [
+	"res://data/levels/tutorial_1.tres",
+	"res://data/levels/tutorial_2.tres",
+	"res://data/levels/tutorial_3.tres",
+	"res://data/levels/tutorial_4.tres",
+	"res://data/levels/tutorial_5.tres",
+	"res://data/levels/level_001.tres",
+]
 
 
 func _check(cond: bool, what: String) -> void:
@@ -48,8 +63,8 @@ func _ready() -> void:
 
 	print("A grid that fits is centred in the band")
 	for spec in [
-		{"path": "res://data/levels/tutorial_1.tres", "label": "tutorial 1 (radius 3)"},
-		{"path": "res://data/levels/level_001.tres", "label": "level 1 (radius 4)"},
+		{"path": "res://data/levels/tutorial_1.tres", "label": "tutorial 1 (4-wide column)"},
+		{"path": "res://data/levels/level_001.tres", "label": "level 1 (6-wide column)"},
 		{"path": "res://data/levels/level_055.tres", "label": "level 55 (flat, radius 4)"},
 	]:
 		var level := await _open(spec["path"])
@@ -70,24 +85,54 @@ func _ready() -> void:
 	var tall_board = tall.get_node("Board")
 	var tall_band := _band(tall_board, 0.0, 0.0)
 	var tall_top: float = tall_board.position.y + tall_board.grid_bounds.position.y
+	var tall_plain_size: float = Hex.SIZE
 	_check(tall_board.max_scroll_down > 0.0, "level 22 needs to scroll")
 	_check(absf(tall_top - tall_band.x) <= 0.5,
 		"level 22 starts at the top of the band (%.1f vs %.1f)" % [tall_top, tall_band.x])
 	tall.free()
 
-	print("Centring respects a cutout and a gesture bar")
+	# The tile size each fitting board gets on a plain screen, to compare
+	# against under insets: a shrunk board must be smaller, never larger.
+	var plain_sizes := {}
+	for path in FITTING_LEVELS:
+		var plain := await _open(path)
+		plain_sizes[path] = Hex.SIZE
+		plain.free()
+
+	print("A cutout and a gesture bar shrink a fitting grid rather than scrolling it")
 	OS.set_environment(SafeArea.SIMULATE_ENV, "0,96,0,72")
-	var inset := await _open("res://data/levels/tutorial_1.tres")
-	var inset_board = inset.get_node("Board")
-	var inset_band := _band(inset_board, 96.0, 72.0)
-	var i_top: float = inset_board.position.y + inset_board.grid_bounds.position.y
-	var i_bottom: float = inset_board.position.y + inset_board.grid_bounds.end.y
-	var i_above: float = i_top - inset_band.x
-	var i_below: float = inset_band.y - i_bottom
-	_check(i_above >= -0.5, "inset board clears the cutout")
-	_check(absf(i_above - i_below) <= 1.0,
-		"inset board is centred in the INSET band: %.1f above, %.1f below" % [i_above, i_below])
-	inset.free()
+	for path in FITTING_LEVELS:
+		var label: String = path.get_file().get_basename().replace("_", " ")
+		var inset := await _open(path)
+		var inset_board = inset.get_node("Board")
+		var inset_band := _band(inset_board, 96.0, 72.0)
+		var i_top: float = inset_board.position.y + inset_board.grid_bounds.position.y
+		var i_bottom: float = inset_board.position.y + inset_board.grid_bounds.end.y
+		var i_above: float = i_top - inset_band.x
+		var i_below: float = inset_band.y - i_bottom
+		_check(inset_board.max_scroll_down == 0.0, "%s fits the inset band without scrolling" % label)
+		_check(i_above >= -0.5, "%s clears the cutout" % label)
+		_check(i_below >= -0.5, "%s clears the gesture bar" % label)
+		_check(absf(i_above - i_below) <= 1.0,
+			"%s is centred in the INSET band: %.1f above, %.1f below" % [label, i_above, i_below])
+		_check(Hex.SIZE < plain_sizes[path] and Hex.SIZE > plain_sizes[path] * 0.75,
+			"%s shrank to fit, and by less than a quarter (%.1f from %.1f)" % [label, Hex.SIZE, plain_sizes[path]])
+		var centre_x: float = inset_board.position.x + inset_board.grid_bounds.get_center().x
+		_check(absf(centre_x - vp.x / 2.0) <= 0.5,
+			"%s stays horizontally centred once narrower than the width band (%.1f)" % [label, centre_x])
+		inset.free()
+
+	print("A grid that scrolls anyway keeps its full-size tiles under the same insets")
+	var tall_inset := await _open("res://data/levels/level_022.tres")
+	var tall_inset_board = tall_inset.get_node("Board")
+	var tall_inset_band := _band(tall_inset_board, 96.0, 72.0)
+	var tall_inset_top: float = tall_inset_board.position.y + tall_inset_board.grid_bounds.position.y
+	_check(absf(Hex.SIZE - tall_plain_size) <= 0.01,
+		"level 22's tiles are the plain-screen size under insets (%.1f vs %.1f)" % [Hex.SIZE, tall_plain_size])
+	_check(tall_inset_board.max_scroll_down > 0.0, "level 22 still scrolls under insets")
+	_check(absf(tall_inset_top - tall_inset_band.x) <= 0.5,
+		"level 22 starts at the top of the INSET band (%.1f vs %.1f)" % [tall_inset_top, tall_inset_band.x])
+	tall_inset.free()
 	OS.set_environment(SafeArea.SIMULATE_ENV, "")
 
 	if _failures == 0:

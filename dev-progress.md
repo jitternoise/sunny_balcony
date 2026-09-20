@@ -1,5 +1,54 @@
 # Flash Flood — Dev Progress
 
+## Status: a cutout or gesture bar shrinks a fitting board instead of scrolling it (2026-09-20)
+
+Merged `six-wide-columns` (c753d5d) to main as a fast-forward and ran every
+suite on Linux. Twelve of fourteen passed; `VerifyHydroBonus` still fails
+on level 18 (plant never reached -- pre-existing, from the 09-15 lake
+migration, reproduced on the previous main). `VerifyBoardCentring` was a
+NEW failure: "inset board is centred in the INSET band: -0.0 above, -144.5
+below". The 09-16 session was on a Mac, which cannot run the xvfb suites.
+
+**Cause.** `_fit_hex_layout()` solves the tile size from the grid's WIDTH
+alone, so narrowing tutorial 1 from a 7-wide hexagon to a 4-wide column
+grew its tiles from 53.5 to 83.1 px and its seven rows from 589 to 915 px
+in a 938 px band -- 11.7 px of slack each side (it passed the plain
+centring check on exactly that). Behind a 96 px cutout and a 72 px gesture
+bar the band is 770 px and the board overflowed by 145 px and scrolled.
+Measured over all 105 boards at 720x1280 with `FLASH_FLOOD_SAFE_INSETS=
+"0,96,0,72"`: every tutorial (145 / 80 px) and all 41 six-wide campaign
+columns (36 px) scrolled.
+
+**Fix** (`HexBoard._fit_hex_layout()`): a board that fits the plain band
+(no insets) but not the inset band has its tiles shrunk until it fits
+again, and is re-centred from its own width rather than the 90% target.
+Side insets already shrank the board rather than sliding it under the
+cutout; this is the same rule for the top and bottom. A board that scrolls
+even without insets keeps the width-solved size and scrolls a little
+further -- a corridor's tiles are what the player taps. `max_scroll_down`
+snaps sub-0.01 px values to 0 so a shrunk board never reads as
+overflowing. Nothing changes on a plain screen: the layout harness printed
+identical numbers for all 105 boards, and `CompareSnapshots` found 0 of 10
+snapshots changed; under the 96/72 inset the tutorials shrink to 70.0 /
+61.6 px tiles and the six-wide columns to 55.0 px, all with scroll 0, and
+the four fitting snapshot levels (1, 7, 21, 47) are the only ones that
+differ.
+
+**Not covered, on purpose:** a screen shorter than 16:9 or a 4:3 tablet
+still scrolls the tutorials without any inset (tutorial 1 needs 915 px of
+band; a 720x1152 viewport has 810), because the rule is keyed on fitting
+the plain band. Levels 18 (6x13, scrolls 213 px) and 20 (flat, 125 px)
+scroll on a plain screen today and were left alone; that is the owner's
+call.
+
+`VerifyBoardCentring`: 15 -> 51 checks. All five tutorials and level 1 must
+fit the inset band without scrolling, clear both insets, be centred in it,
+shrink by less than a quarter and stay horizontally centred; level 22 must
+keep its plain-screen tile size, still scroll and start at the inset band's
+top. Stale labels ("level 1 (radius 4)") updated. Also tracked the
+`FillShots.gd.uid` Godot generated on import, and pointed two comments at
+`_fit_hex_layout()` instead of the long-gone `_fit_hex_size()`.
+
 ## Status: Tutorial relaid, basin-that-fills pool, waterfall source, hint outlines (2026-09-16)
 
 First session on a Mac (Godot 4.7.2, `~/Applications/Godot.app`; the

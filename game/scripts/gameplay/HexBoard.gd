@@ -298,11 +298,15 @@ const PREVIEW_ARROW_COLOR := Color(1.0, 0.82, 0.2)
 const BLOCK_ARROW_WHITEN := 0.6
 const BLOCK_ARROW_ALPHA := 0.9
 
-## Screen-layout rules (see _fit_hex_layout()): the hex grid always fills
-## this fraction of the screen's width, leaving an equal margin on each
-## side. Grid tile size is solved for per level so this holds regardless
-## of grid_radius -- a small level and a big level both fill 90% of the
-## width, just with different tile sizes.
+## Screen-layout rules (see _fit_hex_layout()): the hex grid fills this
+## fraction of the screen's width, leaving an equal margin on each side.
+## Grid tile size is solved for per level so this holds regardless of
+## grid_radius -- a small level and a big level both fill 90% of the
+## width, just with different tile sizes. The one exception is a board
+## that fits the band between the HUD and the inventory bar on a plain
+## screen but not once a cutout and a gesture bar have eaten into that
+## band: it shrinks to fit the inset band instead of scrolling, and is
+## then narrower than this (see _fit_hex_layout()).
 const GRID_WIDTH_FRACTION := 0.9
 
 ## Where the grid's top edge sits. This clears the HUD's top button row,
@@ -329,7 +333,10 @@ const MAX_GRID_WIDTH_HEXES := 9
 ## target) + 16px breathing room.
 ##
 ## Note this only changes how far a grid can SCROLL, never how big its tiles
-## are: _fit_hex_layout() solves tile size from the viewport's WIDTH alone.
+## are: _fit_hex_layout() solves tile size from the viewport's WIDTH. (The
+## single exception is the inset shrink described at GRID_WIDTH_FRACTION,
+## and even that only ever makes a tile smaller than the width-solved
+## size, never larger.)
 const BOTTOM_UI_RESERVED_PX := 190.0
 
 ## position.y when the grid is scrolled all the way to the top (its natural
@@ -825,6 +832,14 @@ func _on_viewport_resized() -> void:
 ## or, for a grid taller than that band, GRID_TOP_MARGIN_PX down with
 ## max_scroll_down telling Level.gd how far the player can drag it up to
 ## see its bottom.
+##
+## A cutout or gesture bar never turns a fitting board into a scrolling
+## one: a grid that fits the band on a plain screen but overflows the
+## inset band gets its tiles shrunk until it fits again. Side insets
+## already shrink the board rather than sliding it under the cutout; this
+## is the same rule for the top and bottom. A grid that scrolls even
+## without insets (a corridor level) is left at full size and scrolls a
+## little further.
 func _fit_hex_layout() -> void:
 	var viewport_size := _viewport_size()
 
@@ -866,26 +881,53 @@ func _fit_hex_layout() -> void:
 			max_y = maxf(max_y, corner.y)
 
 	var width_at_size_1 := max_x - min_x
+	var height_at_size_1 := max_y - min_y
 	var computed_size := target_width / width_at_size_1 if width_at_size_1 > 0.0 else 1.0
+
+	# The band the grid can occupy: below the HUD's top row, above the
+	# inventory bar, inside any cutout or gesture-bar inset. plain_band is
+	# the same band on a screen with neither -- what the level was authored
+	# against, since every tutorial and every level in 1-50 was sized to
+	# fit it without scrolling.
+	var top_margin: float = safe.y + GRID_TOP_MARGIN_PX
+	var plain_band: float = viewport_size.y - GRID_TOP_MARGIN_PX - BOTTOM_UI_RESERVED_PX
+	var available_height: float = plain_band - safe.y - safe.w
+
+	# A board that fits the plain band but not the inset one shrinks to
+	# fit rather than scrolling: a tutorial with its lake pushed under the
+	# gesture bar reads as a layout bug, and its tiles are the largest in
+	# the game (a 4-wide column gets ~1.5x the tile of a 6-wide one), so
+	# they have room to give. A board that scrolls anyway keeps the width-
+	# solved size -- a corridor's tiles are what the player taps -- and
+	# scrolls a little further.
+	var width_solved_height := height_at_size_1 * computed_size
+	var fits_plain_band := width_solved_height <= plain_band
+	var overflows_inset_band := width_solved_height > available_height and available_height > 0.0
+	if fits_plain_band and overflows_inset_band:
+		computed_size = available_height / height_at_size_1
 	Hex.SIZE = computed_size
 
 	var grid_left := min_x * computed_size
 	var grid_top := min_y * computed_size
 	var grid_bottom := max_y * computed_size
+	var grid_width := width_at_size_1 * computed_size
 	var grid_height := grid_bottom - grid_top
-	grid_bounds = Rect2(grid_left, grid_top, (max_x - min_x) * computed_size, grid_height)
+	grid_bounds = Rect2(grid_left, grid_top, grid_width, grid_height)
 
-	# Centred in the safe area: the same 5%-a-side breathing room at every
-	# viewport width, measured from the cutout rather than the screen edge.
-	var left_margin: float = safe.x + (usable_width - target_width) / 2.0
-	var top_margin: float = safe.y + GRID_TOP_MARGIN_PX
+	# Centred in the safe area: the same breathing room either side at
+	# every viewport width, measured from the cutout rather than the screen
+	# edge. Measured from the grid's own width, not target_width, so a
+	# board the inset shrink narrowed stays centred too.
+	var left_margin: float = safe.x + (usable_width - grid_width) / 2.0
 
 	position.x = left_margin - grid_left
 
-	# The band the grid can occupy: below the HUD's top row, above the
-	# inventory bar, inside any cutout or gesture-bar inset.
-	var available_height: float = viewport_size.y - top_margin - BOTTOM_UI_RESERVED_PX - safe.w
+	# A shrunk board fits exactly, give or take a floating-point ulp; snap
+	# that to zero so nothing downstream sees a sub-pixel scroll and treats
+	# the board as an overflowing one.
 	max_scroll_down = maxf(0.0, grid_height - available_height)
+	if max_scroll_down < 0.01:
+		max_scroll_down = 0.0
 
 	# A grid that fits is centred in that band rather than pinned to its
 	# top. Pinned, a radius-3 tutorial board sat under the HUD with the
@@ -2938,7 +2980,7 @@ func _draw_catapult_aim() -> void:
 ## Draws one water cell as a full-tile animated sprite. The destination is
 ## 2 x Hex.SIZE square, which is exactly the hex's own bounding box on both
 ## orientations, so the art lines up with the cell at every level's tile
-## size (Hex.SIZE is solved per level -- see _fit_hex_size()).
+## size (Hex.SIZE is solved per level -- see _fit_hex_layout()).
 func _draw_water(coord: Vector2i, is_lead: bool) -> void:
 	var center := Hex.axial_to_pixel(coord)
 

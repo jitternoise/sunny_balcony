@@ -44,7 +44,7 @@ xvfb-run -a --server-args="-screen 0 720x1280x24" \
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyUndoAndHeader.tscn # cancel a queued placement, 14 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
-  godot --resolution 720x1280 res://tests/VerifyBoardCentring.tscn # fitting grids centred, tall ones pinned, 15 checks
+  godot --resolution 720x1280 res://tests/VerifyBoardCentring.tscn # fitting grids centred, tall ones pinned, insets shrink not scroll, 51 checks
 ```
 
 ⚠️ **Most test scenes write to real save slot 0** (they set
@@ -94,6 +94,15 @@ Insets are applied per screen, not project-wide: backgrounds stay full-bleed
 and only the content moves, so an inset never reads as a dark band down the
 edge. **Do not inset a scene root** that has a ColorRect background under
 it -- that is the letterboxing this project spent four commits removing.
+
+**An inset shrinks a board that fits; it never makes it scroll.** Tile size
+is solved from the grid's width, so a narrow column gets big tiles and a
+tall board: the 4-wide tutorials have 12 px of slack at 720x1280 and would
+scroll 145 px behind a 96 px cutout + 72 px gesture bar. `_fit_hex_layout()`
+shrinks any board that fits the plain band but not the inset one until it
+fits again; a board that scrolls anyway (level 18, 20, the corridors) keeps
+its full-size tiles. `VerifyBoardCentring` pins both halves -- it needs
+xvfb, so a Mac session cannot run it; run it here after any layout change.
 
 ### Drawing changes need the snapshot net
 

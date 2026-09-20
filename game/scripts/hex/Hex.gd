@@ -9,7 +9,7 @@ class_name Hex
 
 ## Hex radius in pixels. Mutable (not a const) because HexBoard.setup()
 ## rescales it per level so every level's grid fills the same fraction of
-## screen width regardless of grid_radius -- see HexBoard._fit_hex_size().
+## screen width regardless of grid_radius -- see HexBoard._fit_hex_layout().
 ## Safe as a single shared value because only one HexBoard is ever on
 ## screen at a time (one Level scene, one board).
 static var SIZE := 32.0
