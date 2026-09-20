@@ -1,9 +1,17 @@
 extends Control
 class_name LevelMap
 
-## The winding trail behind the Level Select map. Level nodes are added as
-## this Control's children, so they draw ON TOP of the path this node draws
-## in _draw() -- a Control paints itself before its children.
+## The ground and the winding trail behind the Level Select map. Level
+## nodes are added as this Control's children, so they draw ON TOP of what
+## this node draws in _draw() -- a Control paints itself before its
+## children.
+##
+## The ground is banded: each ten levels of trail sit on their decade's
+## ground colour (Backdrop), faded into the next across the gap between
+## the last level of one decade and the first of the next, so scrolling
+## the map is the same journey through the same ten backdrops the levels
+## make. The bands scroll with the trail because they are drawn here, in
+## the content, not on the fixed Grass rect behind the ScrollContainer.
 ##
 ## The trail is split at the furthest level the player has reached: the
 ## stretch they have already travelled is drawn solid and bright, the rest
@@ -12,6 +20,12 @@ class_name LevelMap
 
 ## One point per level, in level order (level 1 first). Set by LevelSelect.
 var points: PackedVector2Array = PackedVector2Array()
+
+## Colour stops down the map, top first, as {"y": float, "palette": int}
+## -- an index into Backdrop.PALETTES. Between two stops of the same
+## palette the ground is solid; between two that differ it fades linearly.
+## Set by LevelSelect._build_map(), which knows where the levels are.
+var bands: Array[Dictionary] = []
 
 ## How many leading points count as "reached" -- the trail up to this many
 ## levels is drawn bright. 1 means only level 1 has been reached.
@@ -35,6 +49,7 @@ const SPUR_LOCKED := Color(0.86, 0.86, 0.82, 0.22)
 
 
 func _draw() -> void:
+	_draw_bands()
 	if points.size() < 2:
 		return
 	# Casing first, as one pass under the whole trail, so the lighter core
@@ -53,3 +68,44 @@ func _draw() -> void:
 	for spur in spurs:
 		draw_line(spur["from"], spur["to"],
 			SPUR_OPEN if spur["open"] else SPUR_LOCKED, SPUR_WIDTH, true)
+
+
+## One quad per pair of neighbouring stops, the full width of the map,
+## with the stop colours on its vertices so the renderer does the fade.
+## Twenty stops for a hundred levels: the cost is nothing, whatever the
+## scroll position.
+func _draw_bands() -> void:
+	if bands.size() < 2:
+		return
+	var right: float = size.x
+	for i in range(bands.size() - 1):
+		var top: float = bands[i]["y"]
+		var bottom: float = bands[i + 1]["y"]
+		if bottom <= top:
+			continue
+		var above: Color = Backdrop.PALETTES[bands[i]["palette"]]["ground"]
+		var below: Color = Backdrop.PALETTES[bands[i + 1]["palette"]]["ground"]
+		draw_polygon(
+			PackedVector2Array([Vector2(0.0, top), Vector2(right, top), Vector2(right, bottom), Vector2(0.0, bottom)]),
+			PackedColorArray([above, above, below, below]))
+
+
+## The band colour at content height `y`; `key` is "ground" or "sky".
+## Solid inside a band, a linear fade across a boundary -- the same fade
+## _draw_bands() paints, so the header's sky and the ground under a chapter
+## label both agree with what is drawn. The meadow when no bands are set.
+func colour_at(y: float, key: String) -> Color:
+	if bands.is_empty():
+		return Backdrop.PALETTES[0][key]
+	if y <= bands[0]["y"]:
+		return Backdrop.PALETTES[bands[0]["palette"]][key]
+	for i in range(bands.size() - 1):
+		var top: float = bands[i]["y"]
+		var bottom: float = bands[i + 1]["y"]
+		if y <= bottom:
+			var above: Color = Backdrop.PALETTES[bands[i]["palette"]][key]
+			var below: Color = Backdrop.PALETTES[bands[i + 1]["palette"]][key]
+			if bottom <= top:
+				return below
+			return above.lerp(below, (y - top) / (bottom - top))
+	return Backdrop.PALETTES[bands.back()["palette"]][key]

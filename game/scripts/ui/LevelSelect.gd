@@ -202,6 +202,14 @@ const MAP_MARGIN_TOP := 148.0
 const MAP_MARGIN_BOTTOM := 110.0
 const HEADER_HEIGHT := 40.0 # height of a chapter-name marker
 
+## The ground behind the trail changes every ten levels (Backdrop), and the
+## header bar's sky follows whichever band is in the middle of the screen.
+## The change is faded over this much trail, centred midway between the
+## last level of one decade and the first of the next -- one node spacing,
+## so the fade runs from the one node to the other and neither sits on a
+## hard edge. See _backdrop_stops().
+const BAND_BLEND := NODE_SPACING
+
 ## Side paths. Every set of ten levels forks at its 8th -- 8, 18, 28 ... 98
 ## -- into a spur holding a bonus level. Those levels are not authored yet,
 ## so each spur ends in a placeholder node that cannot be entered; what is
@@ -290,8 +298,25 @@ func _ready() -> void:
 		_base_offsets[control] = Vector4(
 			control.offset_left, control.offset_top,
 			control.offset_right, control.offset_bottom)
+	# The header's sky tracks the scroll. The scrollbar's own signal covers
+	# every way the view can move -- a drag, a fling, the wheel, and
+	# _scroll_to_reached() setting it outright.
+	scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
 	_apply_safe_area()
 	_build_map()
+
+
+func _on_scrolled(_value: float) -> void:
+	_update_header_sky()
+
+
+## Paints the header bar in the sky of whichever backdrop band sits at the
+## middle of the screen, fading across a boundary exactly as the ground
+## does (LevelMap.colour_at). A screen shows about one decade of trail, so
+## the middle is the band the player is looking at.
+func _update_header_sky() -> void:
+	var centre_y: float = float(scroll.scroll_vertical) + scroll.size.y * 0.5
+	header_bar.color = map_root.colour_at(centre_y, "sky")
 
 
 func _on_viewport_resized() -> void:
@@ -399,6 +424,10 @@ func _build_map() -> void:
 			_map_left + _map_width * 0.5 + amplitude * sin(i * NODE_PHASE),
 			content_height - offsets[i]))
 
+	# The ground bands go in before the chapter labels, whose outline is
+	# derived from the ground they sit on.
+	map_root.bands = _backdrop_stops(points, content_height)
+
 	for entry in label_offsets:
 		map_root.add_child(_build_group_label(
 			entry["name"], content_height - entry["offset"]))
@@ -472,6 +501,27 @@ func _spur_end(anchor: Vector2) -> Vector2:
 	return Vector2(anchor.x + direction * reach, anchor.y)
 
 
+## Where the ground changes colour down the map, top first, for
+## LevelMap.bands. Each decade owns the stretch of trail its ten levels sit
+## on; the change to the next decade is faded over BAND_BLEND centred
+## midway between its last level and the next decade's first, so the map
+## is one journey rather than ten stripes. The tutorial sits below level 1
+## and shares its meadow, so the first band runs to the bottom of the map
+## and the last to the top.
+func _backdrop_stops(points: PackedVector2Array, content_height: float) -> Array[Dictionary]:
+	var stops: Array[Dictionary] = []
+	var last := Backdrop.PALETTES.size() - 1
+	stops.append({"y": 0.0, "palette": last})
+	for k in range(last, 0, -1):
+		var last_below: int = k * Backdrop.DECADE          # the decade below's last level
+		var first_above: int = last_below + 1             # this decade's first
+		var mid: float = (points[slot_of_level(last_below)].y + points[slot_of_level(first_above)].y) * 0.5
+		stops.append({"y": mid - BAND_BLEND * 0.5, "palette": k})
+		stops.append({"y": mid + BAND_BLEND * 0.5, "palette": k - 1})
+	stops.append({"y": content_height, "palette": 0})
+	return stops
+
+
 ## The node at the end of a side path. Always disabled: these levels do not
 ## exist yet, so the node advertises the side path rather than entering it.
 ## Amber once its gate is met, grey and padlocked until then.
@@ -511,7 +561,10 @@ func _build_group_label(group_name: String, y: float) -> Label:
 	label.position = Vector2(_map_left, y - HEADER_HEIGHT * 0.5)
 	label.size = Vector2(_map_width, HEADER_HEIGHT)
 	label.add_theme_color_override("font_color", Color(1, 1, 1, 0.92))
-	label.add_theme_color_override("font_outline_color", Color(0.14, 0.3, 0.13, 0.9))
+	# Outlined in the ground it sits on, darkened, like the level HUD's
+	# labels -- the fixed deep green read wrong on the paler bands.
+	label.add_theme_color_override("font_outline_color",
+		Backdrop.outline_for(map_root.colour_at(y, "ground")))
 	label.add_theme_constant_override("outline_size", 6)
 	return label
 
@@ -635,6 +688,9 @@ func _add_badge(button: Button, texture: Texture2D, offset: Vector2,
 func _scroll_to_reached(node_y: float) -> void:
 	await get_tree().process_frame
 	scroll.scroll_vertical = int(node_y - scroll.size.y * 0.5)
+	# The scrollbar only signals a CHANGE; a rebuild that lands on the same
+	# scroll (the debug toggle, a resize) still has new bands to show.
+	_update_header_sky()
 
 
 func _on_level_selected(path: String) -> void:

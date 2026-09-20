@@ -1,5 +1,43 @@
 # Flash Flood — Dev Progress
 
+## Status: the Level Select map walks through the same ten backdrops (2026-09-20)
+
+**Ground bands.** `LevelSelect._backdrop_stops()` turns the trail into
+colour stops top-first -- `{"y", "palette"}` into `Backdrop.PALETTES` --
+two per decade: the change from decade k-1 to k is centred midway between
+level 10k and level 10k+1 and faded over `BAND_BLEND` (= `NODE_SPACING`,
+104 px), so the fade runs from the one node's centre to the other's and
+both sit on solid colour. Band 0 runs to the bottom of the map (the
+tutorial shares the meadow) and band 9 to the top. `LevelMap._draw_bands()`
+paints one full-width quad per pair of stops with the stop colours on the
+vertices, under the trail, in the scrolling content -- the fixed `Grass`
+rect behind the ScrollContainer stays the meadow as a base and is never
+visible. Twenty stops, nineteen quads: nothing to cull.
+
+**Header sky.** `LevelMap.colour_at(y, key)` interpolates the same stops
+for "ground" or "sky". `LevelSelect._update_header_sky()` paints the
+header bar in the sky at the middle of the screen (a screen shows about a
+decade of trail), on every scrollbar `value_changed` and after
+`_scroll_to_reached()` sets the scroll outright, so a fling, the wheel,
+the debug toggle rebuild and a resize all keep it right. Across a
+boundary it fades over the same 104 px of scroll the ground does.
+
+**Chapter labels** are outlined in `Backdrop.outline_for()` of the ground
+under them, like the level HUD; a label in a fade gets the blended ground.
+The trail's dark-green casing was left as is -- it reads as a shadow on
+every band, including the pale Pan.
+
+**Verified.** `VerifyLevelMap` +30 checks (84): twenty ordered stops
+spanning the map, every mid-decade and decade-edge level on its solid
+colour, the tutorial on the meadow, the 10/11 midpoint an exact half
+blend for ground and sky, the header sky at levels 55 / 5 / 96, and the
+Geyser Country label's outline. `VerifyMapScroll` unchanged and passing.
+Screenshots at nine scroll positions eyeballed at 720x1280, with zooms on
+the 20/21 and 90/91 fades and a label on slate. All suites pass except
+the pre-existing hydro level 18.
+
+Still the meadow: the main menu and the save-slot screen.
+
 ## Status: a different sky and ground every ten levels (2026-09-20)
 
 **`scripts/gameplay/Backdrop.gd`** (new, `class_name Backdrop`): ten

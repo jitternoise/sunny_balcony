@@ -29,7 +29,7 @@ The Godot project is `game/`. Design docs live at the repo root.
 cd game
 godot --headless res://tests/SmokeLevel.tscn        # 78 checks, in-level HUD end to end
 godot --headless res://tests/VerifyHydroBonus.tscn  # the optional plant bonus, 8 levels
-godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths
+godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths, decade bands, 84 checks
 godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
 godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks
@@ -171,7 +171,11 @@ any viewport-dependent measurement, and sanity-check by printing
   `Level.tscn` is authored in the first pair; the tutorials use it too. A
   ground hue must stay clear of the tile palette (fire, lakebed, dirt,
   geyser, water, the amber preview) and clearly lighter than an empty cell
-  -- `VerifyBackdrops` holds every pair to that.
+  -- `VerifyBackdrops` holds every pair to that. The map uses the same
+  table: `LevelSelect._backdrop_stops()` turns the trail into colour stops
+  (`LevelMap.bands`), `LevelMap._draw_bands()` paints the ground under the
+  trail with a fade between decades, and the header bar shows the sky of
+  the band at the middle of the screen (`_update_header_sky()`).
 
 **Beat cycle.** One measure = 4 beats = 1.2 s (`SUBTICK_INTERVAL` 0.15 ×
 `ticks_per_beat` 2 × 4). Beats are PLACEMENT → WATER → TERRAIN → STATUS. The

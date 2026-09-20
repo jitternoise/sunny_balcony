@@ -3,7 +3,10 @@ extends Node
 ## Checks the Level Select map builds correctly and that each node's state
 ## follows save progress: one node per level along a connected trail, a lock
 ## while a level is locked, a check once completed, and a turbine badge only
-## on the levels that ship a Hydro Plant.
+## on the levels that ship a Hydro Plant. Then that the ground behind the
+## trail is banded by decade (Backdrop) with a fade between bands, that the
+## header bar's sky follows the band in the middle of the screen, and that
+## a chapter label is outlined in the ground it sits on.
 ## Run from game/:  godot --headless res://tests/VerifyLevelMap.tscn
 
 var _failures := 0
@@ -112,6 +115,62 @@ func _ready() -> void:
 		if spur["open"]:
 			reopened += 1
 	_check(reopened == 1, "meeting par on level 8 opens one spur (%d)" % reopened)
+
+	print("The ground is banded by decade")
+	var bands: Array[Dictionary] = map.bands
+	_check(bands.size() == 2 * Backdrop.PALETTES.size(),
+		"two stops per band, %d in all" % bands.size())
+	var ordered := true
+	for i in range(1, bands.size()):
+		if bands[i]["y"] < bands[i - 1]["y"]:
+			ordered = false
+	_check(ordered, "the stops run top to bottom")
+	_check(bands[0]["y"] == 0.0 and bands[0]["palette"] == Backdrop.PALETTES.size() - 1,
+		"the top of the map is the last palette")
+	_check(bands.back()["y"] == map.custom_minimum_size.y and bands.back()["palette"] == 0,
+		"the bottom of the map is the meadow")
+	for k in range(Backdrop.PALETTES.size()):
+		var mid_level: int = k * Backdrop.DECADE + 5
+		var y: float = map.points[screen.slot_of_level(mid_level)].y
+		_check(map.colour_at(y, "ground") == Backdrop.PALETTES[k]["ground"],
+			"level %d sits on solid '%s' ground" % [mid_level, Backdrop.PALETTES[k]["name"]])
+	for edge in [[1, 0], [10, 0], [11, 1], [90, 8], [91, 9], [100, 9]]:
+		var y: float = map.points[screen.slot_of_level(edge[0])].y
+		_check(map.colour_at(y, "ground") == Backdrop.PALETTES[edge[1]]["ground"],
+			"level %d, at the edge of its decade, still sits on solid '%s'" % [edge[0], Backdrop.PALETTES[edge[1]]["name"]])
+	_check(map.colour_at(map.points[0].y, "ground") == Backdrop.PALETTES[0]["ground"],
+		"the tutorial shares the meadow below level 1")
+	var mid_10_11: float = (map.points[screen.slot_of_level(10)].y + map.points[screen.slot_of_level(11)].y) * 0.5
+	var halfway: Color = Backdrop.PALETTES[0]["ground"].lerp(Backdrop.PALETTES[1]["ground"], 0.5)
+	_check(map.colour_at(mid_10_11, "ground").is_equal_approx(halfway),
+		"midway between 10 and 11 the ground is half meadow, half valley")
+	_check(map.colour_at(mid_10_11, "sky").is_equal_approx(
+			Backdrop.PALETTES[0]["sky"].lerp(Backdrop.PALETTES[1]["sky"], 0.5)),
+		"and the sky fades the same way")
+
+	print("The header's sky follows the band in the middle of the screen")
+	var scroll: ScrollContainer = screen.get_node("ScrollContainer")
+	var header: ColorRect = screen.get_node("HeaderBar")
+	for spec in [[55, 5], [5, 0], [96, 9]]:
+		var node_y: float = map.points[screen.slot_of_level(spec[0])].y
+		scroll.scroll_vertical = int(node_y - scroll.size.y * 0.5)
+		await get_tree().process_frame
+		_check(header.color == Backdrop.PALETTES[spec[1]]["sky"],
+			"centred on level %d the header is the '%s' sky" % [spec[0], Backdrop.PALETTES[spec[1]]["name"]])
+
+	print("A chapter label is outlined in its ground")
+	var geyser_label: Label = null
+	for child in map.get_children():
+		if child is Label and (child as Label).text.contains("Geyser Country"):
+			geyser_label = child
+	_check(geyser_label != null, "the Geyser Country label exists")
+	if geyser_label != null:
+		var label_y: float = geyser_label.position.y + geyser_label.size.y * 0.5
+		var expected := Backdrop.outline_for(map.colour_at(label_y, "ground"))
+		_check(geyser_label.get_theme_color("font_outline_color").is_equal_approx(expected),
+			"its outline is derived from the ground under it")
+		_check(map.colour_at(label_y, "ground") == Backdrop.PALETTES[6]["ground"],
+			"which is solid 'Geyser country' (levels 61-70)")
 
 	if _failures == 0:
 		print("LEVEL MAP PASS")
