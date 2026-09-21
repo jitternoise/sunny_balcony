@@ -40,6 +40,7 @@ godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
+godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the art files, the generator, the import scale, 115 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 44 checks
