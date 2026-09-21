@@ -148,6 +148,35 @@ func _ready() -> void:
 			Backdrop.PALETTES[0]["sky"].lerp(Backdrop.PALETTES[1]["sky"], 0.5)),
 		"and the sky fades the same way")
 
+	print("One animal per band stands beside the trail")
+	var animals := {}
+	for child in map.get_children():
+		if child.name.begins_with("animal_"):
+			animals[int(child.name.trim_prefix("animal_"))] = child
+	_check(animals.size() == Backdrop.PALETTES.size(), "ten animals on the map (%d)" % animals.size())
+	for k in range(Backdrop.PALETTES.size()):
+		if not animals.has(k):
+			continue
+		var group: Control = animals[k]
+		var centre: Vector2 = group.position + group.size * 0.5
+		var mid_slot: int = screen.slot_of_level(k * Backdrop.DECADE + 5)
+		var node: Vector2 = map.points[mid_slot]
+		_check(is_equal_approx(centre.y, node.y), "animal %d stands level with level %d" % [k, k * Backdrop.DECADE + 5])
+		_check(centre.x > screen._map_left and centre.x < screen._map_left + screen._map_width,
+			"animal %d is inside the map's width" % k)
+		var map_centre: float = screen._map_left + screen._map_width * 0.5
+		_check(signf(centre.x - map_centre) != signf(node.x - map_centre) or is_zero_approx(node.x - map_centre),
+			"animal %d is on the far side of the trail from its node" % k)
+		_check(map.colour_at(centre.y, "ground") == Backdrop.PALETTES[k]["ground"],
+			"animal %d stands on its own band's ground" % k)
+		var slugs: Array = Characters.CAST[k]["slugs"]
+		_check(group.get_child_count() == slugs.size(), "animal %d shows %d sprite(s)" % [k, slugs.size()])
+		_check(group.mouse_filter == Control.MOUSE_FILTER_IGNORE and group.get_child(0).mouse_filter == Control.MOUSE_FILTER_IGNORE,
+			"animal %d takes no input" % k)
+		var pose := 4 if k == 0 else 2 # the fixture has completed levels 1-15: band 0 done, band 1 half
+		_check((group.get_child(0) as TextureRect).texture == Characters.pose_texture(slugs[0], pose),
+			"animal %d is %s" % [k, "drinking, its ten levels done" if pose == 4 else "standing"])
+
 	print("The header's sky follows the band in the middle of the screen")
 	var scroll: ScrollContainer = screen.get_node("ScrollContainer")
 	var header: ColorRect = screen.get_node("HeaderBar")

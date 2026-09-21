@@ -182,6 +182,11 @@ const NODE_SPACING := 104.0 # vertical gap between consecutive levels
 const GROUP_GAP := 84.0 # extra room inserted where a new chapter begins
 const NODE_AMPLITUDE := 200.0 # how far the trail swings either side of centre
 const NODE_PHASE := PI / 3.0
+## The band's animal (Characters) stands beside the trail at the middle of
+## its ten levels, on the side the trail is swinging away from, this far
+## from the centre as a fraction of the map's width, and this big.
+const ANIMAL_OFFSET := 0.32
+const ANIMAL_SIZE := 96.0
 ## The design width the trail was laid out against. Under
 ## stretch/aspect=expand the logical viewport is at least this wide and can
 ## be wider (a 4:3 tablet, an unfolded foldable), so the live width is read
@@ -432,6 +437,18 @@ func _build_map() -> void:
 		map_root.add_child(_build_group_label(
 			entry["name"], content_height - entry["offset"]))
 
+	# One animal per band, at the band's middle level, standing until the
+	# band's ten levels are all done and drinking after. Built here rather
+	# than once because the whole map is rebuilt from scratch above.
+	for k in range(Backdrop.PALETTES.size()):
+		@warning_ignore("integer_division")
+		var mid_slot := slot_of_level(k * Backdrop.DECADE + Backdrop.DECADE / 2)
+		var side := -signf(sin(mid_slot * NODE_PHASE))
+		if side == 0.0:
+			side = 1.0
+		map_root.add_child(_build_band_animal(k, Vector2(
+			_map_left + _map_width * (0.5 + ANIMAL_OFFSET * side), points[mid_slot].y)))
+
 	# Where the view opens. A brand-new save should land on the tutorial
 	# rather than on level 1 -- which is unlocked from the very first launch
 	# and would otherwise always win this.
@@ -551,6 +568,40 @@ func _build_bonus_node(gate_level: int, center: Vector2, open: bool) -> Button:
 			Vector2(NODE_SIZE - BADGE_SIZE * 0.66, -BADGE_SIZE * 0.34),
 			BADGE_BG_LOCK, Color.WHITE)
 	return button
+
+
+## The band's animal(s) on the map, centred on `center`: one TextureRect
+## per animal at the pool, side by side, drinking once every level of the
+## band is complete and standing until then. Decoration only -- it takes
+## no input, so VerifyTouchTargets has nothing to measure.
+func _build_band_animal(band: int, center: Vector2) -> Control:
+	var slugs: Array = Characters.CAST[band]["slugs"]
+	var pose := 4 if _band_complete(band) else 2
+	var group := Control.new()
+	group.name = "animal_%d" % band
+	group.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	group.size = Vector2(ANIMAL_SIZE * slugs.size(), ANIMAL_SIZE)
+	group.position = center - group.size * 0.5
+	for i in range(slugs.size()):
+		var sprite := TextureRect.new()
+		sprite.name = "sprite_%d" % i
+		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		sprite.size = Vector2(ANIMAL_SIZE, ANIMAL_SIZE)
+		sprite.position = Vector2(ANIMAL_SIZE * i, 0.0)
+		sprite.texture = Characters.pose_texture(slugs[i], pose)
+		group.add_child(sprite)
+	return group
+
+
+## Every level of band `band` (ten of them) is complete.
+static func _band_complete(band: int) -> bool:
+	var first := band * Backdrop.DECADE + Backdrop.FIRST_LEVEL
+	for level in range(first, first + Backdrop.DECADE):
+		if not GameState.completed_levels.has(level):
+			return false
+	return true
 
 
 ## The index into GROUPS of the chapter that starts at `level_number`, or

@@ -29,7 +29,7 @@ The Godot project is `game/`. Design docs live at the repo root.
 cd game
 godot --headless res://tests/SmokeLevel.tscn        # 78 checks, in-level HUD end to end
 godot --headless res://tests/VerifyHydroBonus.tscn  # the optional plant bonus, 8 levels
-godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths, decade bands, 84 checks
+godot --headless res://tests/VerifyLevelMap.tscn    # Level Select map, badges, side paths, decade bands, one animal per band, 155 checks
 godot --headless res://tests/VerifySafeArea.tscn    # notch/gesture-bar insets, 27 checks
 godot --headless res://tests/VerifySaveIntegrity.tscn # save durability/corruption, 34 checks
 godot --headless res://tests/VerifyMultiTouch.tscn  # second-finger handling, 13 checks

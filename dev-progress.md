@@ -61,9 +61,18 @@ side by side, and -- on every lake of all 105 levels -- the animal
 standing in a top cell of its own lake. All other suites pass except the
 pre-existing hydro level 18; no leak warnings; verifier 92 / 7 / 1.
 
+**On the map too.** `LevelSelect._build_band_animal()` stands each band's
+animal beside the trail at the band's fifth level, on the side the trail
+swings away from -- standing until the band's ten levels are all done,
+drinking after. A `Control` of `TextureRect`s named `animal_<band>`,
+`MOUSE_FILTER_IGNORE`, rebuilt with the rest of the map. `VerifyLevelMap`
++71 checks (155): ten of them, level with their level, inside the map's
+width, on the far side of the trail from the node, on their own band's
+ground, no input, band 0 drinking in the levels-1-15 fixture and the rest
+standing. Rendered with `LevelSelectShots`.
+
 **Next:** the eight missing animals (`ANIMAL()` records; the sheepdog
-redraw; `lying_legs` for the long-legged), then the band's animal on the
-Level Select map.
+redraw; `lying_legs` for the long-legged).
 
 ## Status: sound effects volume slider (2026-09-20)
 

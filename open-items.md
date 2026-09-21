@@ -409,10 +409,14 @@ pose in turn -- the plain FillShots places nothing, so on a campaign level
 only pose 0 is reachable by simulation. `BoardSnapshots` now covers 35,
 55, 75 and 95 so every band is captured.
 
+**On the map too.** `LevelSelect._build_band_animal()` stands each band's
+animal beside the trail at the band's fifth level, on the side the trail
+swings away from, standing until the band's ten levels are done and
+drinking after. Decoration only (`MOUSE_FILTER_IGNORE`).
+
 **Still open from the bible:** vignettes at chapter breaks
 (`Level._on_win_next_pressed()`, `Level.gd:1367`), the town/edge-loss
-staging, the Pan, ghost-hand tutorials, the `intro_text` prose decision,
-and the animal on the Level Select map (S7 of the 2026-09-20 plan).
+staging, the Pan, ghost-hand tutorials, the `intro_text` prose decision.
 
 ### 2. Almost-lost warning, with a way out
 
