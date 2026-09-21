@@ -296,6 +296,12 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   `Level.BOARD_SOUNDS` sites. Buttons need nothing: `Sfx.hook_buttons()`
   gives every button under a screen the tap, and a button with a sound of
   its own is named in the `except` list (Start, Pause, Resume).
+- **Editing a `.import` file alone does not reimport it.** A fresh SVG
+  import writes `svg/scale=1.0` (a blurry 100 px texture); set it to
+  `3.0`, then `touch` the `.svg` and run `godot --headless --import --path
+  game` again -- `--import` decides by the source's timestamp, not the
+  `.import` text, so a bare re-run leaves the 100 px texture in place.
+  `VerifyCharacters` checks the imported size for exactly this reason.
 - **Check `git branch -r` before choosing a base.** Two sessions once
   branched from the same commit and built the same feature independently.
 - **Never write a save file in place.** `GameState.save_current_slot()` builds
