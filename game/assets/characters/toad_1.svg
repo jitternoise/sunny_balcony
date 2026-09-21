@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g stroke="#0b3d63" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+<path d="M16.69,91.5 Q7.37,84.04 12.96,74.71 Q18.56,61.65 40.95,60.72 Q59.6,59.79 65.2,70.98 Q67.06,82.17 63.33,91.5 Z" fill="#7a8a4a"/><circle cx="27.89" cy="71.91" r="2.8" fill="#6f7f42" stroke-width="3" stroke="#0b3d63"/><circle cx="39.08" cy="66.31" r="2.8" fill="#6f7f42" stroke-width="3" stroke="#0b3d63"/><circle cx="49.34" cy="67.25" r="2.8" fill="#6f7f42" stroke-width="3" stroke="#0b3d63"/><path d="M16.69,82.17 Q5.5,87.77 11.1,91.5 L40.95,91.5 Q42.81,87.77 37.21,87.77 Q29.75,84.04 24.16,82.17 Z" fill="#6f7f42"/><path d="M54,86.84 L54,91.5 L67.06,91.5 Q68,87.77 63.33,86.84 Z" fill="#6f7f42"/><path d="M55.87,67.25 Q68.93,57.92 81.99,67.25 Q91.32,75.64 85.72,84.97 Q73.59,86.84 61.47,83.1 Q55.87,76.58 55.87,67.25 Z" fill="#7a8a4a"/><path d="M85.72,80.31 Q74.53,79.37 63.33,75.64" fill="none" stroke-width="3.5"/><circle cx="68.93" cy="63.52" r="8.4" fill="#dcc45c" stroke="#0b3d63"/><path d="M68.93,58.39 Q72.66,63.52 68.93,68.65 Q65.2,63.52 68.93,58.39 Z" fill="#0b3d63" stroke="none"/>
+  </g>
+</svg>

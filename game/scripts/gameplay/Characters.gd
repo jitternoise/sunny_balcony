@@ -24,19 +24,18 @@ const DIR := "res://assets/characters/"
 const POSES := 5
 
 ## One entry per Backdrop.PALETTES index. `slugs` is normally one animal;
-## the Jamboree band has two, drawn side by side. A band whose art is not
-## drawn yet points at the tortoise, the one animal with poses today.
+## the Jamboree band has two, drawn side by side.
 const CAST: Array[Dictionary] = [
-	{"name": "Beaver", "slugs": ["tortoise"]},               # 1-10   TODO(art): beaver
-	{"name": "Toad", "slugs": ["tortoise"]},                 # 11-20  TODO(art): toad
-	{"name": "Otter", "slugs": ["tortoise"]},                # 21-30  TODO(art): otter
+	{"name": "Beaver", "slugs": ["beaver"]},                 # 1-10
+	{"name": "Toad", "slugs": ["toad"]},                     # 11-20
+	{"name": "Otter", "slugs": ["otter"]},                   # 21-30
 	{"name": "Tortoise", "slugs": ["tortoise"]},             # 31-40
-	{"name": "Sheepdog", "slugs": ["tortoise"]},             # 41-50  TODO(art): sheepdog
-	{"name": "Bison", "slugs": ["tortoise"]},                # 51-60  TODO(art): bison
-	{"name": "Flamingo", "slugs": ["tortoise"]},             # 61-70  TODO(art): flamingo
-	{"name": "Badger", "slugs": ["tortoise"]},               # 71-80  TODO(art): badger
-	{"name": "Everyone", "slugs": ["tortoise", "tortoise"]}, # 81-90  TODO(art): tortoise + flamingo
-	{"name": "Wild horse", "slugs": ["tortoise"]},           # 91-100 TODO(art): horse
+	{"name": "Sheepdog", "slugs": ["sheepdog"]},             # 41-50
+	{"name": "Bison", "slugs": ["bison"]},                   # 51-60
+	{"name": "Flamingo", "slugs": ["flamingo"]},             # 61-70
+	{"name": "Badger", "slugs": ["badger"]},                 # 71-80
+	{"name": "Everyone", "slugs": ["tortoise", "flamingo"]}, # 81-90
+	{"name": "Wild horse", "slugs": ["horse"]},              # 91-100
 ]
 
 ## Loaded pose textures by path, so a level asks the disk once per pose

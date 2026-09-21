@@ -71,8 +71,19 @@ width, on the far side of the trail from the node, on their own band's
 ground, no input, band 0 drinking in the levels-1-15 fixture and the rest
 standing. Rendered with `LevelSelectShots`.
 
-**Next:** the eight missing animals (`ANIMAL()` records; the sheepdog
-redraw; `lying_legs` for the long-legged).
+**All nine animals drawn (first pass).** Eight `ANIMAL()` records drafted
+from `characters/svg/` in parallel and reviewed on the plates: the toad,
+otter and sheepdog redrawn in side view (the concepts are frontal), the
+sheepdog white on purpose with a dark saddle and cap, the flamingo drawn
+facing right and flipped to meet the tortoise in the Jamboree pair, and
+`lying_legs` for the bison, flamingo and horse. 45 files at scale 3.0;
+`CAST` points every band at its own animal;
+`VerifyCharacters.DISTINCT_SLUGS_REQUIRED` is on (337 checks). Rendered
+tutorial 2, 13, 25, 47, 55 and 61 (flat), 75 and 85 (on a 2600-px
+viewport, their lakes scroll) with `POSES=1`. Gotcha met on the way: a
+`.import` edit alone is not reimported by `--import`; `touch` the SVGs
+first -- the test's 300x300 check is what caught it. Not yet
+owner-reviewed on a phone; the records are where a pose is tuned.
 
 ## Status: sound effects volume slider (2026-09-20)
 

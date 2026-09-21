@@ -125,9 +125,7 @@ Settle these before the first build; each is a scope decision, not a bug.
 - [ ] **Story layer** (`story-bible.md`) is not in the engine beyond the pool
       animal (2026-09-20). Either ship without the rest and say nothing about
       it in the listing, or schedule it for a later update. Do not screenshot
-      art that is not in the build; Apple rejects for misleading metadata --
-      and until every band has its own animal, every band shows the
-      tortoise, so do not screenshot a placeholder band either.
+      art that is not in the build; Apple rejects for misleading metadata.
 - [ ] **Audio.** Sound effects and ten music loops exist (2026-09-20) and
       both Options toggles are real. Listen on a device before shipping --
       nothing has been heard except by waveform on a machine with no audio

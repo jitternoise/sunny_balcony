@@ -387,21 +387,26 @@ dipper and the mother are not pool animals. The map's 13 chapter labels
 still follow `LevelSelect.GROUPS`; the animal, sky and music share the
 bands.
 
-**Art: only the tortoise exists.** Every band points at it
-(`# TODO(art)` per line in `CAST`). Poses are not drawn five times:
-`tools/gen_characters.py` stages them from an animal's three parts (body,
-legs, head) plus a neck pivot -- the construction `characters/pool-sequence/`
-already used -- bakes the transforms, normalises into the frame with the
-feet on a baseline, solves the drink angle so the muzzle meets the water,
-and writes `characters/pose-plates.html` for review. Adding an animal is
-one `ANIMAL()` record (transcribe or redraw its parts from
-`characters/svg/`), a run, `godot --headless --import --path game`,
-`svg/scale=3.0` in the five new `.import` files, import again, and its slug
-in `CAST`. The sheepdog must be redrawn (keep the body white on purpose,
-`character-plates.html:333`; carry the silhouette with a darker saddle and
-ears); long-legged animals (horse, flamingo, bison) will want a
-`lying_legs` part. Flip `VerifyCharacters.DISTINCT_SLUGS_REQUIRED` on once
-the ninth animal lands. Do not screenshot a placeholder band for a store.
+**Art: all nine animals are drawn, first pass, not yet owner-reviewed.**
+Poses are not drawn five times: `tools/gen_characters.py` stages them from
+an animal's three parts (body, legs, head) plus a neck pivot -- the
+construction `characters/pool-sequence/` already used -- bakes the
+transforms, normalises into the frame with the feet on a baseline, solves
+the drink angle so the muzzle meets the water, and writes
+`characters/pose-plates.html` (every animal at a glance, then each at
+Hex.SIZE 55 / 62 / 83 and on all ten grounds). The eight new records were
+drafted from `characters/svg/` in one pass (2026-09-20): the toad, otter
+and sheepdog were redrawn in side view (the concepts are frontal), the
+sheepdog keeps its white body on purpose (`character-plates.html:333`)
+with a dark saddle and cap carrying the silhouette, the flamingo is drawn
+facing right and flipped so it faces the tortoise in the Jamboree pair,
+and the bison, flamingo and horse have `lying_legs`. Re-tuning one is
+editing numbers in its record (neck pivot, `lie_dy`, `tuck_deg`,
+`max_drink_deg`, `step_dx`) or a part's path, then a run, then
+`touch game/assets/characters/*.svg` and `godot --headless --import --path
+game` (a `.import` edit alone is not reimported). Things to look at on a
+phone: the beaver's dark paddle tail at 55 px; the pair on level 85 at
+0.8 scale; the neck crease every rigid-neck animal shows in pose 4.
 
 **Review aids.** `POSES=1 LEVEL=... SHOT_DIR=... godot --resolution
 720x1280 res://tests/FillShots.tscn` (under xvfb) sets every lake to each

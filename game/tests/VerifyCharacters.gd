@@ -11,10 +11,9 @@ extends Node
 ##
 ## Uses save slot 99.
 
-## Flip on once every band has its own art (S6 of the plan): until then
-## every band points at the tortoise and the cast is deliberately not
-## distinct.
-const DISTINCT_SLUGS_REQUIRED := false
+## Nine animals across the ten bands (the Jamboree band reuses two). Was
+## off while every band pointed at the tortoise.
+const DISTINCT_SLUGS_REQUIRED := true
 
 var _failures := 0
 
