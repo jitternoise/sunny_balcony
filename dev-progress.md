@@ -1,5 +1,101 @@
 # Flash Flood — Dev Progress
 
+## Status: every level in 1-50 has its own silhouette (2026-09-21)
+
+**The owner, playing the 6-wide build: "the grid of the levels can taper
+and be asymmetrical. too many levels have similar grids."** The 2026-09-16
+narrowing had turned 42 of the first fifty into the same 6x9 rectangle.
+Each of those 42 now has a distinct outline, carved with `blocked_cells`
+inside the same radius-5 grid; the corridors (13-17, 19, 22) and the flat
+level 20 were already their own shapes and are untouched, as are the
+tutorials.
+
+| Level | Shape | Row widths, top to bottom |
+|---|---|---|
+| 1 | funnel | 6 6 6 5 5 5 4 4 3 |
+| 2 | V (opens downward) | 3 4 4 5 6 6 6 6 6 |
+| 3 | lean, top-left to bottom-right | 5 5 5 5 6 6 5 5 5 |
+| 4 | chamfered NE and SW corners | 4 5 6 6 6 6 6 5 4 |
+| 5 | lean, top-right to bottom-left | 5 x 9 |
+| 6 | right bite (rows -1..2) plus its hole | 6 6 5 4 4 4 4 6 6 |
+| 7 | teardrop | 3 3 5 5 6 6 6 6 4 |
+| 8 | wedge (right edge steps in) | 6 6 5 5 4 4 3 3 3 |
+| 9 | left stairs | 6 6 6 5 5 5 4 4 4 |
+| 10 | hourglass | 6 6 5 4 4 4 5 6 6 |
+| 11 | boot (narrow channel, right flare under it) | 4 5 4 5 4 6 5 6 6 |
+| 12 | stub, six rows tall (rows 2-4 never saw water) | 6 6 6 5 5 4 |
+| 18 | lens, 13 rows | 3 4 4 5 6 6 6 6 5 5 4 4 3 |
+| 21 | gorge (left-aligned neck over the dirt plain) | 3 3 4 6 6 6 6 6 5 |
+| 23 | chamfered NW and SE corners | 4 5 6 6 6 6 6 5 5 |
+| 24 | pinch | 6 6 6 4 4 4 6 6 6 |
+| 25 | flare (4-wide left-aligned top, 6-wide base) | 4 4 4 4 5 6 6 6 6 |
+| 26 | left-aligned V | 3 4 4 5 5 6 6 6 6 |
+| 27 | hexagon | 4 5 6 6 6 6 5 5 4 |
+| 28 | right stairs | 6 6 6 5 5 5 4 4 4 |
+| 29 | Z (left-aligned top block, centred bottom block) | 4 4 4 6 6 6 4 4 4 |
+| 30 | D, rounded on the right | 4 5 6 6 6 6 6 5 5 |
+| 31 | left wedge | 6 6 5 5 5 5 4 4 3 |
+| 32 | L (3-wide neck on the left, wide base) | 4 3 3 3 3 6 6 6 6 |
+| 33 | V with a boulder at (0, 2) | 3 4 4 5 6 6 5 6 6 |
+| 34 | SE corner cut | 6 6 6 6 6 6 5 4 4 |
+| 35 | NE corner cut | 3 4 5 6 6 6 6 6 6 |
+| 36 | ramp (right edge slopes to 3, with a foot) | 6 6 5 5 4 4 3 3 4 |
+| 37 | diamond | 3 4 5 6 6 6 5 4 3 |
+| 38 | lean, top-left to bottom-right | 5 5 5 5 6 6 5 5 5 |
+| 39 | D, rounded on the left | 4 5 6 6 6 6 6 5 4 |
+| 40 | flask (3-wide centred neck) | 3 3 3 4 4 6 6 6 6 |
+| 41 | left stairs | 6 6 6 5 5 5 4 4 4 |
+| 42 | chamfered NE and SW corners | 4 5 6 6 6 6 5 5 4 |
+| 43 | cross | 4 4 4 6 6 6 4 4 4 |
+| 44 | triangle top (the source alone on the peak) | 1 2 3 4 5 6 6 6 6 |
+| 45 | right bite | 6 6 6 4 4 4 5 6 6 |
+| 46 | NW corner cut | 4 5 5 6 6 6 6 6 6 |
+| 47 | T | 6 6 6 4 4 4 4 4 4 |
+| 48 | spout | 6 6 5 5 4 3 3 3 3 |
+| 49 | D, rounded on the right | 4 5 6 6 6 6 6 5 5 |
+| 50 | bell | 4 4 5 5 6 6 6 6 6 |
+
+**How a shape was chosen so nothing plays differently.** Natural fall only
+ever tries a cell it would then enter, so a cell the water never visits can
+be blocked without touching a single replay. `tools/footprint.gd` (new,
+kept) replays each level three ways -- bare, the documented solution, and
+the solution with the hydro plant switched on at every delay that earns the
+bonus -- and prints the union of visited cells, the real block footprints
+(a Wall's mirrored half included: level 38's wall at (-1,-1) covers (-2,-1),
+not (0,-1), because the fire is there) and the terrain. Every outline was
+checked to contain that set, then every bare run and solution was replayed
+and compared line for line with the pre-reshape result: identical on 41
+levels. `solution_space.gd` before and after: no level changed health band;
+a few OK levels lost some winning placements that sat on carved cells (27:
+46 -> 39, 29: 45 -> 33, 43: 46 -> 34) and stay OK.
+
+**Every outline keeps the 6.5-hex bounding box of a 6-wide column**, so
+tile size is unchanged on all 42 and none of them scrolls: a 5.5-hex box
+would grow the tile to 68 px and put a 9-row board 14 px past the band. A
+6.0 box (odd rows to column 2, even rows to 1) is the other fit that works.
+`VerifyBoardCentring` ran at the real 720x1280 on the Mac (51 checks, pass)
+-- the desktop app can open a real window, so this suite is not Linux-only
+after all.
+
+**Level 33 won by itself.** Its bare stream ran through the fire and into
+the pool; the documented wall (-3, 3) changed nothing, and this predates
+the narrowing (the pre-2026-09-16 hexagon wins bare too). A boulder at
+(0, 2) -- a blocked cell on the stream -- bounces it one column left and
+off the bottom edge at measure 10; the same documented wall now catches
+it and wins at 12, the hydro bonus is still earnable (delay 3), and the
+solution book did not change. It is the only rock in 1-50 that is on a
+stream on purpose, and the search over every other cell of that stream
+found no other rock with any winning wall. 33 is KNIFE now (one winning
+wall), which is honest: it was "OK, 35 placements" only because doing
+nothing won.
+
+**Verified:** `smoke_test.gd` pass; `verify_solutions.gd` 92 exact / 7
+broken / 1 prose, the same seven; the 6-wide audit; SmokeLevel,
+VerifyHydroBonus (the known level-18 failure only), VerifyLevelMap,
+VerifyTutorial, VerifyCharacters, VerifyBackdrops, VerifyWaterBlocking,
+VerifyBoardHeartbeat, VerifyBoardCentring; and a contact sheet of all 42
+boards from `AllLevelShots`.
+
 ## Status: the pool animal -- one character per ten levels (2026-09-20)
 
 **The 4-box pool status bar is gone.** Every lake now has an animal in it:

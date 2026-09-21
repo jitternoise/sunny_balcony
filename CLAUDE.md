@@ -74,13 +74,25 @@ result: **92 exact / 7 broken / 1 prose (level 22)**. The 7 (64, 66, 67,
 68, 69, 92, 96) are all wall placements broken by the 2026-08-31 change
 making the Wall 2 tiles wide. Every level in 1-50 has a verified solution.
 
-**Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16). A
-former radius-4 hexagon is now a radius-5 grid with rows +-5 and every
-offset column outside -3..2 in `blocked_cells`, its terrain slid sideways
-to fit. `HexBoard.bottom_row` (the lowest playable row) is what the edge
-loss tests against, NOT `grid_radius`, so blocking the bottom row is safe.
-Level 20 (flat grid) keeps its radius-4 hexagon and blocks columns q = -4,
--3 and 4 instead, because the flat grid's loss test is `_cube_distance()`.
+**Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16) **and
+no two neighbours share a silhouette** (owner's rule, 2026-09-21: "the grid
+can taper and be asymmetrical"). A former radius-4 hexagon is a radius-5
+grid whose outline -- funnel, V, lean, wedge, stairs, hourglass, bite, T,
+cross, diamond, a 6-row stub on 12, a 13-row lens on 18 -- is carved with
+`blocked_cells`; the table of shapes is in `dev-progress.md` (2026-09-21).
+Every outline keeps the same 6.5-hex bounding box as a plain 6-wide column,
+so the tile size and the no-scroll fit at 720x1280 are identical on all of
+them: a narrower box grows the tiles and a 9-row board then scrolls 14 px.
+An outline only ever removes cells that neither the bare run, the documented
+solution, nor the hydro bonus route ever visits, so every replay is
+bit-identical -- `tools/footprint.gd` prints those cells; run it before
+carving. The one exception is level 33's boulder at (0, 2), placed ON the
+bare stream on purpose: the level won untouched before it. `HexBoard.
+bottom_row` (the lowest playable row) is what the edge loss tests against,
+NOT `grid_radius`, so blocking the bottom row is safe. Level 20 (flat grid)
+keeps its radius-4 hexagon and blocks columns q = -4, -3 and 4 instead,
+because the flat grid's loss test is `_cube_distance()`. Levels 13-17, 19
+and 22 are corridors and were left alone.
 
 ### Safe-area insets are simulated here, never real
 
