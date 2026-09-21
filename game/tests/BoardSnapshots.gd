@@ -16,10 +16,14 @@ const COVERED := {
 	20: "flat grid",
 	21: "dirt / dig",
 	22: "radius-50 corridor, presets, dirt",
+	35: "pool animal, band 3",
 	47: "town",
+	55: "pool animal, band 5, flat grid",
 	63: "geyser",
+	75: "pool animal, band 7",
 	82: "jamboree budget, hydro",
 	87: "preset blocks",
+	95: "pool animal, band 9",
 }
 
 

@@ -4,9 +4,14 @@ First-pass character concepts from the 2026-08-31 session. Unpacked from
 `flash-flood_checkThese.zip`, which has since been removed from the repo now
 that its contents live here.
 
-**Nothing in this directory is wired into the engine yet.** These are concept
+**Nothing in this directory is loaded by the engine.** These are concept
 assets, not game resources — no `.tres`, no `preload()`, nothing referenced by
-a scene.
+a scene. What the game draws is `game/assets/characters/<slug>_<pose>.svg`,
+five poses per animal written by `game/tools/gen_characters.py` from that
+animal's parts (body, legs, head) — the same construction as `pool-sequence/`,
+which is where the tortoise's parts came from. One animal per ten levels
+(`Characters.CAST`); see `pose-plates.html` here for every generated frame at
+tile size, and `open-items.md` for which animals took which band.
 
 ## Contents
 

@@ -1,6 +1,9 @@
 # Flash Flood — Story Bible (wordless)
 
-**Status:** design doc, agreed 2026-08-31. Nothing in the engine implements this yet.
+**Status:** design doc, agreed 2026-08-31. The first slice -- the pool animal, one per
+ten levels rather than per chapter -- is in the engine as of 2026-09-20 (`Characters`,
+`HexBoard._draw_pool_characters()`); see `open-items.md` for how the ten bands were cut
+from these thirteen chapters. Nothing else below is implemented.
 
 ---
 
@@ -225,11 +228,13 @@ drag-to-scroll, press-and-hold-to-aim (catapult).
 
 ## What this changes in the build
 
-Engine / asset work this implies, none of it started:
+Engine / asset work this implies:
 
-1. **Pool bar → animal states.** Replace the 4-box bar draw with a per-chapter
-   animal sprite in 5 states (absent/0/1/2/3/4). Reads the same
-   `pool_progress` data.
+1. **Pool bar → animal states.** ✅ 2026-09-20, per ten-level band rather than per
+   chapter (`Characters.CAST`). The 4-box bar is gone; the band's animal lies in
+   the dry basin of every lake and the water rises to it, five poses off
+   `pool_fill`. Art is generated from parts by `tools/gen_characters.py`; only
+   the tortoise is drawn so far, every band shows it until its own lands.
 2. **Town loss staging.** Lit windows; extinguish on flood. Currently the flooded
    town cell just turns light blue.
 3. **Edge-loss staging.** Water into sand, plus the downhill reaction shot.

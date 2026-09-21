@@ -214,10 +214,26 @@ const ICON_SCALE := 1.5
 ## width of the hex's flat middle band, so it draws bigger than a glyph.
 const SOURCE_ICON_SCALE := 1.75
 
-## Every pool needs exactly this many beats of water connection to finish,
-## visualized as a 4-box status bar above the pool. Fixed for every pool on
-## every level -- not configurable per level/pool (see LevelData.pool_targets
-## doc comment).
+## The pool's animal (Characters) lives IN its lake: a square sprite the
+## size of a glyph, standing on the lakebed of the lake's top cells, so the
+## dry pool it lies in is its own and the water rises to it -- lying on the
+## cracked mud, head up, standing, at the water's edge, drinking, one pose
+## per beat of pool_fill. Nothing outside the lake is ever covered, and
+## the lake's own cells draw no glyph. The art keeps its feet on a baseline
+## this far down its frame (tools/gen_characters.py writes every pose to
+## that line); the feet go CHARACTER_BED_DEPTH Hex.SIZEs below the lake's
+## top corner, the middle of the top cells' band on either grid. Two
+## animals at one pool (the Jamboree band) each draw at the pair scale.
+const CHARACTER_SCALE := ICON_SCALE
+const CHARACTER_BASELINE := 0.94
+const CHARACTER_BED_DEPTH := 0.95
+const CHARACTER_PAIR_SCALE := 0.8
+const CHARACTER_PAIR_GAP := 0.05
+
+## Every pool needs exactly this many beats of water connection to finish.
+## Each beat is one pose of the pool's animal (see _draw_pool_characters()).
+## Fixed for every pool on every level -- not configurable per level/pool
+## (see LevelData.pool_targets doc comment).
 const POOL_BEATS_REQUIRED := 4
 
 ## A geyser needs exactly this many beats of water connection before it
@@ -424,10 +440,15 @@ var flooded_towns: Dictionary = {}
 
 ## Vector2i -> int. Cumulative count of beats this pool has been connected to
 ## water, capped at POOL_BEATS_REQUIRED. Never decreases once incremented --
-## a pool's 4-box status bar only appears once this is > 0, and boxes already
-## turned stay turned even if the water disconnects later (progress is
-## preserved, not reset by a disconnect).
+## it is the pool's animal's pose (0 lying by the dry basin .. 4 drinking),
+## and the animal never goes back to lying if the water disconnects later
+## (progress is preserved, not reset by a disconnect).
 var pool_fill: Dictionary = {}
+
+## The pool animal's art for this level's band: one Array[Texture2D] of
+## Characters.POSES textures per animal at the pool (one, or two for the
+## Jamboree band). Filled by setup(); empty means no animal is drawn.
+var _character_poses: Array = []
 var fires_remaining: int = 0
 
 ## Vector2i -> Vector2i. Every cell of every lake mapped to that lake's
@@ -709,6 +730,7 @@ func empty_fill() -> Color:
 func setup(data: LevelData, blocks: Dictionary) -> void:
 	level_data = data
 	block_catalog = blocks
+	_character_poses = Characters.poses_for_level(data.level_id)
 	use_block_budget = data.total_block_budget > 0
 	if use_block_budget:
 		inventory.clear()
@@ -1467,7 +1489,7 @@ func resolve_terrain_phase() -> void:
 ## win condition (now that beat 3 has finalized pool_fill/fires_remaining
 ## for this measure) and reveals whatever beats 2/3 changed by finally
 ## calling queue_redraw(). Holding the redraw until this beat is what makes
-## a pool's status-bar box flipping, or a fire going out, visibly land on
+## a pool's animal changing pose, or a fire going out, visibly land on
 ## beat 4 specifically, even though the underlying state changed a beat
 ## earlier.
 func resolve_status_phase() -> void:
@@ -2444,6 +2466,11 @@ func _draw() -> void:
 			continue
 		_draw_water(entry["coord"], _is_lead_water(entry["coord"], wet))
 
+	# The pool animals: after the water, so a stream arriving through the
+	# cells above a lake never paints over one, and before the flow preview
+	# so the amber arrows stay an overlay.
+	_draw_pool_characters(visible)
+
 	# Pre-start flow preview (see show_flow_preview) -- drawn after the
 	# source markers so its amber arrows sit on top of them, and before the
 	# water circles below (there's never any real water yet while this is
@@ -2477,9 +2504,11 @@ func _draw() -> void:
 ##
 ## The margin is deliberately generous. A cell draws past its own centre by
 ## up to Hex.SIZE (a FILL sheet is 2*Hex.SIZE across and the hex corners sit
-## at Hex.SIZE), and a pool/geyser status bar hangs a further ~26px above the
-## tile -- a FIXED offset that does not scale with Hex.SIZE, so it is the
-## term that matters on a small-celled board like level 22's. Overshooting
+## at Hex.SIZE), a pool's animal is a glyph-sized sprite inside its own
+## lake (culled on its own centre), and a geyser's status bar hangs a
+## further ~26px above the tile -- a FIXED offset that
+## does not scale with Hex.SIZE, so it is the term that matters on a
+## small-celled board like level 22's. Overshooting
 ## costs a few extra cells; undershooting pops art in and out at the screen
 ## edge, which is exactly the bug this must not introduce.
 func _visible_draw_rect() -> Rect2:
@@ -2572,10 +2601,9 @@ func _draw_cell(coord: Vector2i) -> void:
 		elif state == TILE_GEYSER:
 			_draw_geyser_icon(center)
 
-	# 6. per-state overlays
-	if terrain == CellState.POOL:
-		_draw_pool_status_bar(coord)
-
+	# 6. per-state overlays. (A pool's animal is not one of them: it is
+	#    one scene per LAKE, drawn by _draw_pool_characters() after the
+	#    cell loop so no later cell paints over it.)
 	if terrain == CellState.GEYSER:
 		_draw_status_bar(coord, geyser_fill.get(coord, 0) as int, GEYSER_BEATS_REQUIRED, Color(0.75, 0.35, 0.85))
 		_draw_geyser_direction_arrow(coord)
@@ -2771,21 +2799,15 @@ func _draw_icon(center: Vector2, texture: Texture2D, scale_factor: float = ICON_
 ## cell of the same lake.
 func _draw_basin(coord: Vector2i, center: Vector2, points: PackedVector2Array) -> void:
 	var anchor: Vector2i = lake_anchor.get(coord, coord)
-	var cells := lake_cells_of(anchor)
 	var beats: int = pool_fill.get(anchor, 0) as int
 	var level := clampf(float(beats) / float(POOL_BEATS_REQUIRED), 0.0, 1.0)
 
 	_draw_basin_cracks(coord, center)
 
 	if level > 0.0:
-		var top := INF
-		var bottom := -INF
-		for cell in cells:
-			var c := Hex.axial_to_pixel(cell)
-			for i in range(6):
-				var y := Hex.hex_corner(c, i).y
-				top = minf(top, y)
-				bottom = maxf(bottom, y)
+		var bounds := _lake_bounds(anchor)
+		var top := bounds.position.y
+		var bottom := bounds.end.y
 		var waterline := bottom - level * (bottom - top)
 
 		# The wet part is the stream's own animated water, cut off at the
@@ -2852,33 +2874,88 @@ func _draw_basin_cracks(coord: Vector2i, center: Vector2) -> void:
 			draw_polyline(line, BASIN_CRACK_COLOR, 2.0, true)
 
 
-## Draws the 4-box status bar above a pool cell once water has connected to
-## it at least once (pool_fill > 0). Each box left-to-right represents one
-## beat of connection; a box's color flips once that beat has been reached.
-## Boxes stay flipped even if the water disconnects later -- progress is
-## cumulative, not reset by a gap.
-func _draw_pool_status_bar(coord: Vector2i) -> void:
-	var anchor: Vector2i = lake_anchor.get(coord, coord)
-	var connected_beats: int = pool_fill.get(anchor, 0) as int
-	if connected_beats <= 0:
-		return # bar hasn't "popped up" yet -- no connection landed here yet
-	# One bar per LAKE, not per cell: drawn only from the cell that sits
-	# highest on screen, and centred over the whole lake rather than over
-	# that one hex, so a four-cell pool reads as one target with one bar.
-	var cells := lake_cells_of(anchor)
-	var top_y := INF
-	var top_cell := coord
-	var centre_x := 0.0
-	for cell in cells:
+## The bounding box of every corner of every cell of the lake anchored at
+## `anchor`. Its top is the waterline once the pool is full (_draw_basin),
+## which is why the animal stands on it: it is the pointy grid's top vertex
+## and the flat grid's top edge, so one rule serves both orientations.
+func _lake_bounds(anchor: Vector2i) -> Rect2:
+	var top := INF
+	var bottom := -INF
+	var left := INF
+	var right := -INF
+	for cell in lake_cells_of(anchor):
 		var c := Hex.axial_to_pixel(cell)
-		centre_x += c.x
-		if c.y < top_y - 0.001 or (absf(c.y - top_y) <= 0.001 and cell < top_cell):
-			top_y = c.y
-			top_cell = cell
-	if coord != top_cell:
+		for i in range(6):
+			var corner := Hex.hex_corner(c, i)
+			top = minf(top, corner.y)
+			bottom = maxf(bottom, corner.y)
+			left = minf(left, corner.x)
+			right = maxf(right, corner.x)
+	return Rect2(left, top, right - left, bottom - top)
+
+
+## The lake's cells that reach its top, left to right -- the animal stands
+## on their lakebed.
+func _lake_top_cells(anchor: Vector2i) -> Array[Vector2i]:
+	var top := _lake_bounds(anchor).position.y
+	var cells: Array[Vector2i] = []
+	for cell in lake_cells_of(anchor):
+		var c := Hex.axial_to_pixel(cell)
+		var cell_top := INF
+		for i in range(6):
+			cell_top = minf(cell_top, Hex.hex_corner(c, i).y)
+		if absf(cell_top - top) < 0.01:
+			cells.append(cell)
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return Hex.axial_to_pixel(a).x < Hex.axial_to_pixel(b).x)
+	return cells
+
+
+## One animal's side; two at a pool each draw smaller.
+func _character_side(slots: int) -> float:
+	return Hex.SIZE * CHARACTER_SCALE * (CHARACTER_PAIR_SCALE if slots > 1 else 1.0)
+
+
+## The rect one animal draws in at the lake anchored at `anchor`; slot 0 of
+## `slots` is the left-most. All the slots together are centred over the
+## lake's top cells, feet CHARACTER_BED_DEPTH below its top corner. Public
+## so a test can measure it.
+func character_rect(anchor: Vector2i, slot: int, slots: int) -> Rect2:
+	var side := _character_side(slots)
+	var width := side * slots + side * CHARACTER_PAIR_GAP * (slots - 1)
+	var top_cells := _lake_top_cells(anchor)
+	var cx := 0.0
+	for cell in top_cells:
+		cx += Hex.axial_to_pixel(cell).x
+	cx /= maxi(top_cells.size(), 1)
+	var feet := _lake_bounds(anchor).position.y + CHARACTER_BED_DEPTH * Hex.SIZE
+	return Rect2(cx - width / 2.0 + slot * side * (1.0 + CHARACTER_PAIR_GAP),
+		feet - side * CHARACTER_BASELINE, side, side)
+
+
+## The pose a lake's animal is in: its pool_fill, 0 (lying by the dry
+## basin) to POOL_BEATS_REQUIRED (drinking).
+func character_pose_for(anchor: Vector2i) -> int:
+	return clampi(pool_fill.get(anchor, 0) as int, 0, Characters.POSES - 1)
+
+
+## The animal at every lake in the pose its pool_fill says -- one scene per
+## LAKE, not per cell, drawn once the cell loop and the water are done so
+## nothing paints over it and the risen water is under its feet. Drawn from
+## the level's first frame: the animal lying in the dry basin is the
+## scene's setup, not something that pops in with the first beat of water.
+func _draw_pool_characters(visible: Rect2) -> void:
+	if _character_poses.is_empty():
 		return
-	centre_x /= cells.size()
-	_draw_status_bar_at(Vector2(centre_x, top_y), connected_beats, POOL_BEATS_REQUIRED, Color(0.2, 0.85, 0.4))
+	var slots := _character_poses.size()
+	for anchor in pool_fill.keys():
+		if not visible.has_point(character_rect(anchor, 0, slots).get_center()):
+			continue
+		var pose := character_pose_for(anchor)
+		for slot in range(slots):
+			var texture: Texture2D = _character_poses[slot][pose]
+			if texture != null:
+				draw_texture_rect(texture, character_rect(anchor, slot, slots), false)
 
 
 ## Every cell of the lake anchored at `anchor` -- the anchor itself first,
@@ -2892,17 +2969,16 @@ func lake_cells_of(anchor: Vector2i) -> Array:
 	return cells
 
 
-## Shared box-bar renderer for anything that fills up over a fixed number of
-## beats (Pool, Geyser, ...) -- `required` boxes above the cell, `filled`
-## of them lit in `lit_color`, the rest dark. Used by both
-## _draw_pool_status_bar() and the Geyser branch in _draw_cell().
+## Box-bar renderer for anything that fills up over a fixed number of
+## beats -- `required` boxes above the cell, `filled` of them lit in
+## `lit_color`, the rest dark. The Geyser branch in _draw_cell() is its one
+## caller now that a pool shows its animal instead (_draw_pool_characters()).
 func _draw_status_bar(coord: Vector2i, filled: int, required: int, lit_color: Color) -> void:
 	_draw_status_bar_at(Hex.axial_to_pixel(coord), filled, required, lit_color)
 
 
-## The same bar positioned by a pixel centre rather than a cell, for a lake
-## whose bar belongs to four cells at once. `center` is treated as the
-## centre of the cell the bar sits above.
+## The same bar positioned by a pixel centre rather than a cell. `center`
+## is treated as the centre of the cell the bar sits above.
 func _draw_status_bar_at(center: Vector2, filled: int, required: int, lit_color: Color) -> void:
 	if filled <= 0:
 		return # bar hasn't "popped up" yet -- no connection landed here yet

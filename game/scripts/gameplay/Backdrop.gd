@@ -19,6 +19,8 @@ class_name Backdrop
 ##
 ## Named loosely after the story bible's chapters (story-bible.md); the
 ## chapters are not ten levels each, so the names are a mood, not a map.
+## The pool animal (Characters.CAST) and the music share these bands; the
+## chapter labels on the Level Select map do not.
 
 const DECADE := 10
 const FIRST_LEVEL := 1

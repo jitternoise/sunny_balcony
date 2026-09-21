@@ -16,10 +16,10 @@ The Godot project is `game/`. Design docs live at the repo root.
 | `open-items.md` | What is genuinely outstanding, plus the **pre-export checklist**. |
 | `release-checklist.md` | Step-by-step path to both stores, code and non-code, with dated store requirements (2026-09-10). |
 | `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. Findings 33-44 were settled 2026-09-10 -- **33, level 68 being unwinnable, is the most serious thing still open.** |
-| `story-bible.md` | The wordless story design. Nothing in the engine implements it yet. |
+| `story-bible.md` | The wordless story design. Only its first slice, the pool animal, is in the engine (2026-09-20). |
 | `level-solutions.md` | One verified solution per level. |
 | `level-min-times.md` | Verified minimum measures per level — the source of `par_measures`. |
-| `characters/README.md` | 15 animal concept assets. **Not wired into the engine.** |
+| `characters/README.md` | 15 animal concept assets. The pool poses in `game/assets/characters/` are generated from them by `tools/gen_characters.py`; the concepts themselves stay outside the project. |
 
 ---
 
@@ -40,7 +40,7 @@ godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
-godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the art files, the generator, the import scale, 115 checks
+godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the art files, the generator, the import scale, the poses, every lake on every level, 176 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 44 checks

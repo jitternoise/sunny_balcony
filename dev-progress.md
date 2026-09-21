@@ -1,5 +1,70 @@
 # Flash Flood — Dev Progress
 
+## Status: the pool animal -- one character per ten levels (2026-09-20)
+
+**The 4-box pool status bar is gone.** Every lake now has an animal in it:
+the band's animal lies on the cracked lakebed of the lake's top cells from
+the level's first frame and acts out `pool_fill` in five poses -- lying,
+head up, standing, at the water's edge, drinking -- as the water rises to
+it. `Characters.CAST` (`scripts/gameplay/Characters.gd`, a `class_name`
+static table like `Backdrop`, never an autoload so `verify_solutions.gd`
+still compiles the board) is the third ten-entry band table beside
+`Backdrop.PALETTES` and `Music.TRACKS`, indexed by the one band formula.
+`HexBoard._draw_pool_characters()` draws one scene per LAKE after the cell
+loop and the water, so nothing paints over it and the risen water is under
+its feet; `character_rect()` is public for the tests; `_lake_bounds()` is
+lifted out of `_draw_basin()`. The geyser keeps its 3-box bar.
+
+**Why inside the lake and not beside it.** The bible's staging put the
+animal beside the basin; the plan put it on the lake's top corner, where
+the bar was. Rendered, that had to dodge the glyphs in the cells above --
+level 1's fire sits directly over the lake's seam, town cells on 47/50/52
+-- and every clear spot was a shrunken smudge hovering over a pointy hex's
+slope. Inside the lake it is glyph-sized (`CHARACTER_SCALE = ICON_SCALE`),
+covers nothing that draws anything, needs no placement heuristics at all,
+and "the flood reaching the animal" is the game's own beat. It is in the
+water from beat 3 or 4: wading, not submerged, since it draws on top.
+
+**Ten bands from thirteen chapters, the owner's calls:** beaver, toad (over
+the salmon, which cannot stand or walk to the edge), otter, tortoise,
+sheepdog (over the ants, redraw pending), bison, flamingo, badger, a
+tortoise + flamingo pair for the Jamboree instead of the crowd glyph,
+horse. The chapter labels on the map still follow `GROUPS`; the animal,
+sky and music share the bands. Recorded in `open-items.md`.
+
+**Only the tortoise is drawn.** Every band points at it (`# TODO(art)` per
+`CAST` line). Poses are not drawn five times: `tools/gen_characters.py`
+stages them from an animal's three parts and a neck pivot -- the
+construction `characters/pool-sequence/` already used -- bakes every
+transform, normalises the five poses into the frame with the feet on a
+baseline (`CHARACTER_BASELINE`, 0.94), solves the drink angle so the
+muzzle meets the water, refuses any pose that leaves the frame, and writes
+`characters/pose-plates.html` (every frame at Hex.SIZE 55 / 62 / 83 and on
+all ten grounds). Re-running is byte-identical; `--verify` reports drift.
+The five tortoise SVGs import at `svg/scale=3.0` like the icons.
+
+**Review aid.** `POSES=1` on `tests/FillShots.tscn` sets every lake to
+each pose in turn and shoots p0..p4 -- the plain run places nothing, so
+on a campaign level only pose 0 was ever reachable. Rendered levels 1, 22,
+47, 55 (flat) and tutorial 2 under xvfb; `BoardSnapshots` now also covers
+35, 55, 75 and 95 so every band is captured, and the seven changed
+snapshots (the three unchanged have their lake below the fold) are the
+new baseline.
+
+**Verified.** New `VerifyCharacters` (176): the band contract against
+`Backdrop.index_for_level()` for all 100 levels and the out-of-range ids,
+the cast vs the directory vs the generator's records, the `.import` scale
+and the 300x300 textures, the cache and the null path, the pose following
+`pool_fill`, the board holding its band's art, the feet
+`CHARACTER_BED_DEPTH` below the lake's top on both orientations, the pair
+side by side, and -- on every lake of all 105 levels -- the animal
+standing in a top cell of its own lake. All other suites pass except the
+pre-existing hydro level 18; no leak warnings; verifier 92 / 7 / 1.
+
+**Next:** the eight missing animals (`ANIMAL()` records; the sheepdog
+redraw; `lying_legs` for the long-legged), then the band's animal on the
+Level Select map.
+
 ## Status: sound effects volume slider (2026-09-20)
 
 **`Settings.sfx_volume`**, the `SFX` bus's gain, exactly as

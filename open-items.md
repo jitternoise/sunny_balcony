@@ -354,45 +354,65 @@ forward simulation of the live board. The only lookahead in shipped code
 (`_predict_flow_arrows()`) cannot answer either. Build that once and both
 features get much smaller; build them separately and it gets built twice.
 
-### 1. Incorporate the animals
+### 1. Incorporate the animals -- first slice DONE (2026-09-20), art outstanding
 
-The 15 character assets exist and none of them are in the engine.
+**What shipped.** The pool animal, one per ten levels: `Characters.CAST`
+(`scripts/gameplay/Characters.gd`, a `class_name` static table beside
+`Backdrop.PALETTES` and `Music.TRACKS`, indexed by the one band formula
+`Backdrop.index_for_level()`). `HexBoard._draw_pool_characters()` replaced
+the 4-box pool status bar: the band's animal lies in the dry basin of every
+lake from the level's first frame and acts out `pool_fill` in five poses --
+lying, head up, standing, at the water's edge, drinking -- as the water
+rises to it. The geyser keeps its 3-box bar (`_draw_status_bar()`).
 
-**This is not a blank slate — read `story-bible.md` first.** It is an agreed
-design (2026-08-31) whose 13 chapters map onto `LevelSelect.GROUPS`
-name-for-name and range-for-range, so the chapter→animal mapping is already
-decided even though no `.tres` carries a chapter field (derive it from
-`GROUPS`, or add one).
+**Where it stands, and why not "beside the basin".** The bible staged the
+animal beside the pool. Above the lake's top corner (the bar's old slot) it
+had to dodge the glyphs in the cells above -- level 1's fire sits directly
+over the lake's seam -- and every clear spot was a shrunken smudge hovering
+over a pointy hex's slope. Inside the lake it is glyph-sized
+(`CHARACTER_SCALE = ICON_SCALE`), covers nothing that draws anything, and
+"the flood reaching the animal" is the game's own beat. Feet
+`CHARACTER_BED_DEPTH` (0.95) Hex.SIZE below the lake's top corner, centred
+over the top-row cells, drawn after the water. It is in the water from beat
+3 or 4 -- wading, not submerged, since it draws on top.
 
-**Highest-value first slice**, and the bible calls it ~90% of the
-storytelling: replace the 4-box pool status bar with the chapter animal in 5
-states. Same data (`pool_fill`, `POOL_BEATS_REQUIRED = 4`), no new mechanics,
-and the art already exists as `characters/pool-sequence/s0`–`s4`. The hook is
-`HexBoard._draw_pool_status_bar()` (`HexBoard.gd:2530`) — **replace its body
-only**. `_draw_status_bar()` (`HexBoard.gd:2541`) is shared with the Geyser
-and must keep working.
+**Ten bands from thirteen chapters (owner's calls, 2026-09-20).** 1-10
+beaver; 11-20 **toad** (over the salmon: a fish cannot lie, stand and walk
+to the edge); 21-30 otter; 31-40 tortoise; 41-50 **sheepdog** (over the
+ants, which only work as a line -- its village is on the board for 47-50 of
+its ten levels, accepted); 51-60 bison; 61-70 flamingo; 71-80 badger;
+81-90 tortoise + flamingo side by side instead of the `14_everyone` crowd
+glyph; 91-100 horse. Dropped: salmon, mole, ants, the crowd glyph. The
+dipper and the mother are not pool animals. The map's 13 chapter labels
+still follow `LevelSelect.GROUPS`; the animal, sky and music share the
+bands.
 
-Second slice: chapter vignettes at group boundaries. The bible's named hook is
-the win popup's Next path, `Level._on_win_next_pressed()` (`Level.gd:1097`).
+**Art: only the tortoise exists.** Every band points at it
+(`# TODO(art)` per line in `CAST`). Poses are not drawn five times:
+`tools/gen_characters.py` stages them from an animal's three parts (body,
+legs, head) plus a neck pivot -- the construction `characters/pool-sequence/`
+already used -- bakes the transforms, normalises into the frame with the
+feet on a baseline, solves the drink angle so the muzzle meets the water,
+and writes `characters/pose-plates.html` for review. Adding an animal is
+one `ANIMAL()` record (transcribe or redraw its parts from
+`characters/svg/`), a run, `godot --headless --import --path game`,
+`svg/scale=3.0` in the five new `.import` files, import again, and its slug
+in `CAST`. The sheepdog must be redrawn (keep the body white on purpose,
+`character-plates.html:333`; carry the silhouette with a darker saddle and
+ears); long-legged animals (horse, flamingo, bison) will want a
+`lying_legs` part. Flip `VerifyCharacters.DISTINCT_SLUGS_REQUIRED` on once
+the ninth animal lands. Do not screenshot a placeholder band for a store.
 
-Things worth knowing before starting:
+**Review aids.** `POSES=1 LEVEL=... SHOT_DIR=... godot --resolution
+720x1280 res://tests/FillShots.tscn` (under xvfb) sets every lake to each
+pose in turn -- the plain FillShots places nothing, so on a campaign level
+only pose 0 is reachable by simulation. `BoardSnapshots` now covers 35,
+55, 75 and 95 so every band is captured.
 
-- **Use `characters/svg/`, not `characters/png/`.** The PNGs are 8-bit RGB
-  with no alpha and would draw an opaque box over the hex. The SVGs are
-  already in the house style (100×100 viewBox, stroke `#0b3d63`, width 5 —
-  deliberately matching `game/assets/icons/`).
-- **Pipeline**: copy into `game/assets/characters/`, open the editor once to
-  generate the `.svg.import` files, then set `svg/scale=3.0` to match the 20
-  existing icons. The default `1.0` gives a blurry 100px texture.
-- **The 5 pool frames are separate files, not a strip.** `_draw_tile_art()` /
-  `_anim_frame()` expect a horizontal sheet, so this needs either a per-frame
-  texture array or a re-exported sheet *with* alpha.
-- `characters/README.md` flags the sheepdog, the "everyone" crowd glyph and
-  the mole as the three weakest reads — redraw before animating.
-- If any of this art reaches further from a cell centre than
-  `Hex.SIZE * 2 + 48`, widen `_visible_draw_rect()`'s margin or it will pop in
-  at the screen edge — and note `BoardSnapshots` cannot catch that (see
-  CLAUDE.md).
+**Still open from the bible:** vignettes at chapter breaks
+(`Level._on_win_next_pressed()`, `Level.gd:1367`), the town/edge-loss
+staging, the Pan, ghost-hand tutorials, the `intro_text` prose decision,
+and the animal on the Level Select map (S7 of the 2026-09-20 plan).
 
 ### 2. Almost-lost warning, with a way out
 

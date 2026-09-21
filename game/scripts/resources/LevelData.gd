@@ -61,10 +61,11 @@ class_name LevelData
 
 ## Axial coordinate -> int (kept for file-format/back-compat reasons only).
 ## Every pool now requires exactly POOL_BEATS_REQUIRED (4, see HexBoard.gd)
-## beats of water connection to finish, shown as a 4-box status bar that
-## pops up above the pool on its first connected beat -- the stored int
-## value here is NOT read by the simulation and can be left at any value.
-## Only the dictionary's keys (which cells are pools) matter.
+## beats of water connection to finish, acted out by the band's animal at
+## the lake's top edge (Characters; lying, head up, standing, at the edge,
+## drinking) -- the stored int value here is NOT read by the simulation
+## and can be left at any value. Only the dictionary's keys (which cells
+## are pools) matter.
 @export var pool_targets: Dictionary = {}
 
 ## The three OTHER cells of each pool's lake: pool anchor (a pool_targets

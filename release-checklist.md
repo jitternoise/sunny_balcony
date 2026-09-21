@@ -91,7 +91,9 @@ the build work.
       those.
 - [ ] **Asset licensing audit.** For every font, sprite, sound (the 18
       effects and 10 loops are synthesised in-repo by `tools/gen_sfx.py` and
-      `tools/gen_music.py`, so nothing to license there) and the 15 character
+      `tools/gen_music.py`, so nothing to license there; the pool animals in
+      `game/assets/characters/` are likewise generated in-repo by
+      `tools/gen_characters.py` from the owner's concepts) and the 15 character
       concepts in `characters/`: who owns it,
       under what licence, and does the licence allow commercial distribution
       and require attribution. Write a `THIRD_PARTY_NOTICES` file and
@@ -120,10 +122,12 @@ Settle these before the first build; each is a scope decision, not a bug.
       docs, not shipping content, but re-verify the 11 levels are winnable
       with the 2-wide Wall by hand or by updating the solution book. Run
       `verify_solutions.gd` and record the result.
-- [ ] **Story layer** (`story-bible.md`) and **characters** are not in the
-      engine. Either ship without them and say nothing about them in the
-      listing, or schedule them for a later update. Do not screenshot art
-      that is not in the build; Apple rejects for misleading metadata.
+- [ ] **Story layer** (`story-bible.md`) is not in the engine beyond the pool
+      animal (2026-09-20). Either ship without the rest and say nothing about
+      it in the listing, or schedule it for a later update. Do not screenshot
+      art that is not in the build; Apple rejects for misleading metadata --
+      and until every band has its own animal, every band shows the
+      tortoise, so do not screenshot a placeholder band either.
 - [ ] **Audio.** Sound effects and ten music loops exist (2026-09-20) and
       both Options toggles are real. Listen on a device before shipping --
       nothing has been heard except by waveform on a machine with no audio

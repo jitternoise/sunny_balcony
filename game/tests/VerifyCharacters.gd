@@ -2,8 +2,10 @@ extends Node
 
 ## The animal at every pool changes every ten levels (Characters). Checks
 ## the level-to-band mapping is Backdrop's, that the cast table, the art
-## directory and the generator's records agree, and that every pose file
-## is imported at the icons' scale.
+## directory and the generator's records agree, that every pose file is
+## imported at the icons' scale, that a board holds its band's art and
+## poses it by pool_fill, that the animal lives inside its own lake on
+## every level of the campaign, and that the geyser kept its bar.
 ##
 ##   godot --headless res://tests/VerifyCharacters.tscn
 ##
@@ -53,6 +55,31 @@ func _cast_slugs() -> Array[String]:
 				slugs.append(slug)
 	slugs.sort()
 	return slugs
+
+
+func _open(path: String) -> Node:
+	GameState.pending_level_path = path
+	var level: Node = load("res://scenes/Level.tscn").instantiate()
+	add_child(level)
+	for i in range(4):
+		await get_tree().process_frame
+	return level
+
+
+## A bare board set up on a level's data, for geometry that needs no scene.
+func _board_for(path: String) -> HexBoard:
+	var board := HexBoard.new()
+	add_child(board)
+	board.setup(load(path), FFSim.load_block_catalog())
+	return board
+
+
+func _mean_top_x(board: HexBoard, anchor: Vector2i) -> float:
+	var x := 0.0
+	var cells: Array[Vector2i] = board._lake_top_cells(anchor)
+	for cell in cells:
+		x += Hex.axial_to_pixel(cell).x
+	return x / cells.size()
 
 
 func _ready() -> void:
@@ -112,6 +139,84 @@ func _ready() -> void:
 			_check(Characters.pose_texture(slug, pose) == Characters.pose_texture(slug, pose),
 				"%s_%d is loaded once and cached" % [slug, pose])
 	_check(Characters.pose_texture("nobody", 0) == null, "a missing animal is null, not a crash")
+
+	print("Pose follows the lake")
+	var one: Node = await _open("res://data/levels/level_001.tres")
+	var board: HexBoard = one.board
+	var anchor: Vector2i = board.pool_fill.keys()[0]
+	for k in range(Characters.POSES):
+		board.pool_fill[anchor] = k
+		_check(board.character_pose_for(anchor) == k, "pool_fill %d is pose %d" % [k, k])
+	board.pool_fill[anchor] = 7
+	_check(board.character_pose_for(anchor) == Characters.POSES - 1, "a pool_fill past full still drinks")
+	_check(board._character_poses.size() == 1 and board._character_poses[0].size() == Characters.POSES,
+		"level 1's board holds one animal with %d poses" % Characters.POSES)
+	for k in range(Characters.POSES):
+		_check(board._character_poses[0][k] == Characters.pose_texture(Characters.CAST[0]["slugs"][0], k),
+			"pose %d is the first band's animal" % k)
+	one.free()
+
+	print("The animal lives in its own lake")
+	for spec in [["tutorial_1", 0], ["level_001", 0], ["level_011", 1], ["level_047", 4],
+			["level_055", 5], ["level_085", 8], ["level_100", 9]]:
+		var name: String = spec[0]
+		var band: int = spec[1]
+		var b := _board_for("res://data/levels/%s.tres" % name)
+		var slugs: Array = Characters.CAST[band]["slugs"]
+		_check(b._character_poses.size() == slugs.size(), "%s holds band %d's %d animal(s)" % [name, band, slugs.size()])
+		for slot in range(slugs.size()):
+			_check(b._character_poses[slot][2] == Characters.pose_texture(slugs[slot], 2),
+				"%s slot %d standing is %s" % [name, slot, slugs[slot]])
+		for lake in b.pool_fill.keys():
+			var bounds: Rect2 = b._lake_bounds(lake)
+			var rect: Rect2 = b.character_rect(lake, 0, slugs.size())
+			var feet: float = rect.end.y - rect.size.y * (1.0 - HexBoard.CHARACTER_BASELINE)
+			_check(is_equal_approx(feet, bounds.position.y + HexBoard.CHARACTER_BED_DEPTH * Hex.SIZE),
+				"%s lake %s: the feet are %.2f Hex.SIZE below the lake's top" % [name, lake, HexBoard.CHARACTER_BED_DEPTH])
+			var side: float = Hex.SIZE * HexBoard.CHARACTER_SCALE * (HexBoard.CHARACTER_PAIR_SCALE if slugs.size() > 1 else 1.0)
+			_check(is_equal_approx(rect.size.x, side) and is_equal_approx(rect.size.y, side),
+				"%s lake %s: the sprite is %.2f Hex.SIZE square" % [name, lake, side / Hex.SIZE])
+			if slugs.size() == 1:
+				_check(is_equal_approx(rect.get_center().x, _mean_top_x(b, lake)),
+					"%s lake %s: centred over the lake's top cells" % [name, lake])
+			else:
+				var right: Rect2 = b.character_rect(lake, 1, slugs.size())
+				_check(not rect.intersects(right) and is_equal_approx(rect.position.y, right.position.y),
+					"%s lake %s: the pair stand side by side" % [name, lake])
+				_check(is_equal_approx((rect.get_center().x + right.get_center().x) / 2.0, _mean_top_x(b, lake)),
+					"%s lake %s: the pair are centred over the lake's top cells" % [name, lake])
+		if name == "level_055":
+			var lake: Vector2i = b.pool_fill.keys()[0]
+			var top_cell: Vector2i = b._lake_top_cells(lake)[0]
+			_check(is_equal_approx(b._lake_bounds(lake).position.y, Hex.axial_to_pixel(top_cell).y - Hex.SIZE * sqrt(3.0) / 2.0),
+				"level 55 (flat grid): the lake's top is the top cell's flat edge, not a vertex")
+		b.free()
+	var inside := 0
+	var lakes := 0
+	for path in LevelSelect.campaign_paths():
+		var b := _board_for(path)
+		for lake in b.pool_fill.keys():
+			lakes += 1
+			var bounds: Rect2 = b._lake_bounds(lake)
+			var rect: Rect2 = b.character_rect(lake, 0, 1)
+			# Where the animal's feet touch: the middle of the art's baseline.
+			var feet := Vector2(rect.get_center().x, rect.end.y - rect.size.y * (1.0 - HexBoard.CHARACTER_BASELINE))
+			var in_a_top_cell := false
+			for cell in b._lake_top_cells(lake):
+				if Hex.axial_to_pixel(cell).distance_to(feet) <= Hex.SIZE:
+					in_a_top_cell = true
+			if bounds.has_point(feet) and in_a_top_cell:
+				inside += 1
+			else:
+				printerr("    ", path, " lake ", lake, ": the animal's feet ", feet, " are not in a top cell")
+		b.free()
+	_check(inside == lakes, "on every campaign level the animal stands in a top cell of its lake (%d/%d)" % [inside, lakes])
+
+	print("The geyser still has its bar")
+	var bare := HexBoard.new()
+	_check(bare.has_method("_draw_status_bar") and not bare.has_method("_draw_pool_status_bar"),
+		"a pool draws an animal; the geyser's box bar remains")
+	bare.free()
 
 	if _failures == 0:
 		print("CHARACTERS PASS")
