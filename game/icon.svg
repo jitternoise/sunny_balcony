@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Flash Flood app icon: one dark pointy hex tile on the sky blue the
+       game clears to, with the source's waterfall pouring off its ledge
+       onto a fire that is still licking up through the splash. Flat
+       colour, hard edges, the same outline style as the in-game glyphs
+       (assets/icons/icon_source.svg, icon_fire.svg). -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="#87cfeb"/>
+  <!-- the tile -->
+  <path d="M512 92 L892 312 L892 752 L512 972 L132 752 L132 312 Z"
+        fill="#26262e" stroke="#10101a" stroke-width="28" stroke-linejoin="round"/>
+  <!-- cascade -->
+  <path d="M410 300 L614 300 L654 640 L370 640 Z"
+        fill="#3b9ee6" stroke="#0b3d63" stroke-width="26" stroke-linejoin="round"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M452 340 Q442 490 438 610" stroke="#8fd4ff" stroke-width="32"/>
+    <path d="M512 340 Q520 490 512 610" stroke="#eaf6ff" stroke-width="26"/>
+    <path d="M572 340 Q582 490 586 610" stroke="#8fd4ff" stroke-width="32"/>
+  </g>
+  <!-- rock ledge across the top of the falls -->
+  <path d="M290 236 L734 236 L734 306 L690 330 L630 312 L572 336 L512 312 L452 336 L394 312 L334 330 L290 306 Z"
+        fill="#6b7280" stroke="#2b3140" stroke-width="22" stroke-linejoin="round"/>
+  <rect x="306" y="246" width="412" height="36" rx="10" fill="#9aa3b2"/>
+  <!-- the river running over the lip -->
+  <path d="M404 230 Q512 200 620 230 L620 276 Q512 252 404 276 Z"
+        fill="#3b9ee6" stroke="#0b3d63" stroke-width="20" stroke-linejoin="round"/>
+  <!-- foam where the falls hit the fire -->
+  <ellipse cx="512" cy="656" rx="216" ry="58" fill="#eaf6ff" stroke="#0b3d63" stroke-width="22"/>
+  <!-- fire, over the foam so its tongue still shows through the splash -->
+  <path d="M512 508
+           C456 586 400 620 400 710
+           C400 800 456 868 512 868
+           C568 868 624 800 624 710
+           C624 654 590 632 580 598
+           C568 654 535 665 524 632
+           C512 588 535 552 512 508 Z"
+        fill="#f97316" stroke="#7a1a0a" stroke-width="26" stroke-linejoin="round"/>
+  <path d="M512 660
+           C484 700 464 718 464 768
+           C464 812 486 838 512 838
+           C538 838 560 812 560 768
+           C560 734 540 722 536 700
+           C530 730 514 732 510 712
+           C506 690 518 680 512 660 Z"
+        fill="#ffd166"/>
+  <!-- droplets on top of everything -->
+  <g fill="#bfe4ff" stroke="#0b3d63" stroke-width="16">
+    <circle cx="346" cy="640" r="34"/>
+    <circle cx="678" cy="640" r="34"/>
+    <circle cx="420" cy="688" r="24"/>
+    <circle cx="604" cy="688" r="24"/>
+    <circle cx="512" cy="700" r="20"/>
+  </g>
+</svg>

@@ -19,7 +19,7 @@ extends Node
 const PLANT_LEVELS := {
 	7: Vector2i(0, 2),
 	13: Vector2i(1, -2),
-	18: Vector2i(-2, 0),
+	18: Vector2i(1, 0),
 	25: Vector2i(0, -2),
 	33: Vector2i(-2, 1),
 	52: Vector2i(0, -2),

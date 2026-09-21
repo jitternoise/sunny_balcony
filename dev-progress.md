@@ -1,5 +1,111 @@
 # Flash Flood — Dev Progress
 
+## Status: every level wins, every open item that needed no owner input (2026-09-21, later)
+
+**The owner: "of these items fix what you can without my additional
+input."** Eight work items ran as parallel agents, each followed by an
+independent verifier told to refute it; all eight verdicts came back clean.
+Then the whole suite. The book is **100 exact / 0 broken / 0 prose** for
+the first time since the 2-wide Wall.
+
+**The seven Wall-broken levels, each a data fix.** `solve_broken.gd` had
+already shown no solution exists with their shipped data (every wall
+position, every 1- and 2-placement combination of the inventory), so each
+got the smallest change that restores a win, searched programmatically
+(every free cell as a rock x every wall anchor, then one extra tile, then
+one-hex terrain moves), keeping the wall load-bearing where the geometry
+allows and the win near the documented measure:
+
+| Level | Change | Solution | Win |
+|---|---|---|---|
+| 64 | two rocks, (-1, -3) and (-1, -1) | wall (0, 0) | 14 (was 15) |
+| 66 | rock (-2, -1); fire (-2, 2) -> (-1, 1); pool (-4, 4)'s lake relaid to (-4, 1..3) | wall (-3, 1) | 15 |
+| 67 | second lake shifted one hex right, anchor (-2, 6) -> (-1, 6) | wall (-3, 5) | 18 |
+| 68 | + one Splitter in the inventory | splitter (0, -2) + wall (-2, 1) | 18 (par 24) |
+| 69 | rock (-1, 6) | wall (-2, 3) | 19 |
+| 92 | + one Diverter-Right | divert-right (1, -1) + the same 4 digs | 37 |
+| 96 | + one Diverter-Left | divert-left (-6, 12) + divert-right (-9, 17) + the same 8 digs | 41 (was 42) |
+
+Why not always a rock: on 64 the source's two fall cells are horizontally
+adjacent, so any 2-wide wall touching one covers the other (dams the
+source) or mirrors off-grid; the first rock does the old 1-wide wall's job
+and the second gives the player's wall a job. On 66 the level was broken
+twice -- the 2026-09-15 lakes had also put pool (-4, 4)'s cells across the
+only route to pool (-3, 4) -- and no two changes fix it, hence three. On
+67 the fire sat on the geyser stream with a lake cell one step before it,
+so the old 1-wide wall never won either. On 92 and 96 the second
+splitter's two streams run in adjacent columns the whole way down, so a
+2-wide wall that blocks one always covers the other: a diverter one cell
+above does exactly what the 1-wide wall did, and the Wall stays in the
+tray unused (a red herring; placing it at the old cell times out). On 68
+every rock either fails or makes the bare run win; the Splitter makes the
+intro's "TWO streams" literal. Every geyser level still wakes its geyser
+in the winning run. Health per `solution_space.gd`: 64/66/67/69 TIGHT
+(two wall answers each), 68/92/96 OK.
+
+**Level 22 was unwinnable, and had been since 6312206.** Splitters S7
+(-5, 9) and S9 (-14, 27) sit on odd rows, so their down-right child lands
+on an even row and prefers DOWN_LEFT -- straight into a lake cell of the
+splitter's own pool, while the down-left output was a lake cell too. Both
+branches drained into one lake and nothing reached S8-S10 or the last
+four pools; the best channel timed out at 7/11 pools. The prose solution
+hid it because the verifier skips prose. Both lakes are relaid to the
+compact rhombus the five upper lakes use (anchor (a, b) -> (a-2, b+1),
+(a-1, b), (a-1, b+1)), the six freed cells are dirt again, and the book
+carries a 100-cell dig list that wins at 101 (was "108 cells, 103" --
+the bottom lake's cell (-24, 48) is two rows above its anchor). A router
+that models the engine's parity rule (next_dir flips every measure, moved
+or not; a splitter's children inherit the opposite of the arriving
+direction) found it; the real HexBoard confirmed it, no stall, no
+mudslide, no edge loss.
+
+**Level 18's hydro bonus is earnable.** The plant sat at (-2, 0), off both
+streams, so nothing ever touched it. It is now at (1, 0) -- on the cell
+the winning stream used to fall into after the fire, so natural fall TRIES
+it (touched) and takes the other diagonal -- with an interior hole at
+(-2, 1) that bounces the stream back onto its old path, so the wall
+(2, -2) still wins at 18. A brute force over every plant anchor, then
+every anchor + one hole, found this the only combination that keeps the
+measure-18 win. Activating as soon as the ring appears loses at the edge;
+waiting 2+ measures earns it, the same timing shape as level 33.
+`PLANT_LEVELS[18]` in `VerifyHydroBonus.gd` updated; 8/8 PASS. The bare
+run now stalls against the plant instead of losing at the edge, which is
+what 25's plant already does.
+
+**Art.** `assets/icons/icon_geyser.svg`: a dormant vent -- cracked stone
+cap, wisps -- in the geyser's purple, wired through `TILE_VISUALS` like
+every other terrain glyph; `_draw_geyser_icon()` is gone. The three flat-
+orientation glyphs now import at 3x (they were the last 100 px textures).
+`game/icon.svg` + `icon.png` (`config/icon`) and `assets/splash.png`
+(`boot_splash/image`): one placeholder mark, the waterfall falling onto a
+flame over a dark hex on the sky blue, rasterised from the SVG headlessly.
+Snapshot net: only the geyser levels and the two flat levels changed.
+
+**Also.** Book lines 45 and 62 no longer list a placement the engine
+rejects (the remaining block wins alone). Level 19's and 90's intros
+teach the Bomb Catapult (19: it is only a solid block there; 90: press,
+hold, drag, release, 7-hex blast, one shot). `MUDSLIDE_BEATS_REQUIRED`'s
+comment said ~3 s; it is ten measures, 12 s, and now says so. `level-
+editor.html` rewritten to the full LevelData format (every field, lakes,
+2-wide Wall, flat grids, corridor band, byte-identical round trips on
+four files). `open-items.md` has a dated reconcile section at the top;
+`handheld-audit.md` #4, #32, #33 annotated. `level-min-times.md` rows
+22, 64, 68, 96 and the totals updated.
+
+**Not done, on purpose** -- each needs the owner or a device: the 16
+single-answer levels, the six flat-grid off-board sources, tutorial
+gating, a campaign-complete screen, the par clock, dig-progress colour,
+resetting a healthy save slot, the story staging, the backlog features,
+and everything export/device-side.
+
+**Verified:** smoke_test; verify_solutions 100/0/0; solution_space 0
+BROKEN; every headless suite (SmokeLevel, VerifyHydroBonus, VerifyLevelMap,
+VerifySafeArea, VerifySaveIntegrity, VerifyMultiTouch, VerifyBoardHeartbeat,
+VerifyWaterBlocking, VerifyTutorial, VerifyGridOpacity, VerifyBackdrops,
+VerifySfx, VerifyMusic, VerifyCharacters) and the four windowed ones
+(VerifyBoardCentring, VerifyTouchTargets, VerifyMapScroll,
+VerifyUndoAndHeader) at the real 720x1280 on the Mac -- all PASS.
+
 ## Status: every level in 1-50 has its own silhouette (2026-09-21)
 
 **The owner, playing the 6-wide build: "the grid of the levels can taper

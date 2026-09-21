@@ -6,7 +6,7 @@
 script = ExtResource("1_abq1b")
 level_id = 19
 display_name = "19. Jamboree"
-intro_text = "A Jamboree level: instead of a fixed set of blocks, you get 3 total placements to spend on any block type, in any combination. Use them to steer the water around the town and down to the fires and pool."
+intro_text = "A Jamboree level: instead of a fixed set of blocks, you get 3 total placements to spend on any block type, in any combination. Use them to steer the water around the town and down to the fires and pool. The Bomb Catapult is on offer too, but its shot only clears dirt and there is none here -- placed, it is just a solid one-hex block that water cannot pass."
 grid_radius = 10
 water_sources = Array[Vector2i]([Vector2i(5, -10)])
 fire_cells = Array[Vector2i]([Vector2i(2, -4), Vector2i(-4, 6)])

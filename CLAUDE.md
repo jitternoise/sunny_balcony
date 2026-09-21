@@ -15,7 +15,7 @@ The Godot project is `game/`. Design docs live at the repo root.
 | `dev-progress.md` | Session log, **newest first**. Prepend a `## Status: … (date)` entry when you finish work. |
 | `open-items.md` | What is genuinely outstanding, plus the **pre-export checklist**. |
 | `release-checklist.md` | Step-by-step path to both stores, code and non-code, with dated store requirements (2026-09-10). |
-| `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. Findings 33-44 were settled 2026-09-10 -- **33, level 68 being unwinnable, is the most serious thing still open.** |
+| `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. Findings 33-44 were settled 2026-09-10; the whole fix-first list and 33 (level 68 unwinnable) are done as of 2026-09-21. What is left needs a device. |
 | `story-bible.md` | The wordless story design. Only its first slice, the pool animal, is in the engine (2026-09-20). |
 | `level-solutions.md` | One verified solution per level. |
 | `level-min-times.md` | Verified minimum measures per level — the source of `par_measures`. |
@@ -70,9 +70,12 @@ godot --headless --path game --script res://tools/verify_solutions.gd -- ../leve
 `game/tools/verify_solutions.gd`. A previous session missed it, built a
 duplicate whose parser silently skipped the 24 dig-bearing entries, and
 reported 9 broken solutions when the real figure was 11. Current expected
-result: **92 exact / 7 broken / 1 prose (level 22)**. The 7 (64, 66, 67,
-68, 69, 92, 96) are all wall placements broken by the 2026-08-31 change
-making the Wall 2 tiles wide. Every level in 1-50 has a verified solution.
+result: **100 exact / 0 broken / 0 prose** (since 2026-09-21: the seven
+Wall-broken levels 64, 66, 67, 68, 69, 92, 96 got data fixes, level 33 got
+its boulder, and level 22's prose became a 100-cell dig list after its two
+blocking lakes were relaid). Anything below 100 exact is a regression.
+`tools/solution_space.gd` reports 0 BROKEN too; 16 levels are single-answer
+(KNIFE), which is a design question, not a bug.
 
 **Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16) **and
 no two neighbours share a silhouette** (owner's rule, 2026-09-21: "the grid
@@ -216,9 +219,9 @@ level's outcome. Keep it that way.
 **Tile drawing is table-driven.** `_resolve_tile_state()` is the single place
 terrain precedence lives; `TILE_VISUALS` is the single place each state's
 appearance lives. To animate a tile type, add a sheet to its table entry — do
-not add a branch. A state with no sheet falls back to its static icon. Two
-states draw themselves instead: a geyser (no art yet) and a **pool**, whose
-look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
+not add a branch. A state with no sheet falls back to its static icon (the
+dormant geyser's is `icon_geyser.svg`; an activated one draws as a source).
+One state draws itself instead: a **pool**, whose look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
 stream's water sheet clipped at a waterline set by `pool_fill`, and rims only
 the lake's outer edges. A lake cell also skips the per-cell border.
 
@@ -255,9 +258,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   spacers (`_make_bar_spacer()`), so the bar's children alternate
   spacer/button: **`get_child(0)` is not the first button.**
 - **The Wall is 2 tiles wide.** Placing one covers the tapped cell *and* a
-  neighbour. This invalidated 11 documented solutions and is the single most
-  common source of "why doesn't this level win any more". Tutorial 5 exists
-  to teach exactly this.
+  neighbour. This invalidated 11 documented solutions -- the last seven were
+  re-solved with data fixes on 2026-09-21 (rocks, a relaid lake, one extra
+  tile; see `dev-progress.md`) -- and it is still the single most common
+  source of "why doesn't this level win any more". Tutorial 5 exists to
+  teach exactly this. Its second cell mirrors leftward when the right one
+  cannot take a block, and a wall whose BOTH orientations fail is refused
+  with the `invalid` buzz.
 - **A trail slot is not a level number.** The five tutorial levels sit below
   level 1 on the map, so slot 5 is level 1 and slot 104 is level 100. Use
   `LevelSelect.slot_of_level()` / `level_of_slot()`; indexing `points[]` by a
@@ -331,6 +338,12 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **Nothing has ever run on a GPU or a device.** Every render so far is Linux
   / Xvfb / llvmpipe software rendering. That verifies drawing logic and
   nothing about how it behaves on a phone.
+- **The app icon and boot splash are placeholders** drawn 2026-09-21:
+  `game/icon.svg` (`config/icon`), `game/icon.png` (512 px, for the export
+  presets) and `game/assets/splash.png` (`boot_splash/image`, centred on the
+  sky colour) are all the same waterfall-on-a-hex mark, rasterised from the
+  SVG by a headless `Image.load_svg_from_string()`; redraw the SVG and
+  re-rasterise, do not edit the PNGs by hand.
 - **No export presets are committed** (`export_presets.cfg` is gitignored) and
   neither export has been configured. See the pre-export checklist in
   `open-items.md` — the iOS Compatibility renderer reaching Metal through

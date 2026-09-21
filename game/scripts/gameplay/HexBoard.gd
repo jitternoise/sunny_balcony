@@ -48,9 +48,9 @@ const CellState := {
 ## resource's own `icon` field (data-driven, see BlockData.gd) since new
 ## block types get their icon by just filling in that field on their
 ## .tres -- no code change needed. Terrain isn't a Resource per-type, so
-## its icons are preloaded here instead. Geyser has no dedicated glyph yet
-## (see claude/icon-system.md's open follow-ups) -- it keeps its existing
-## procedural _draw_geyser_icon() droplet shape. Dirt deliberately has no
+## its icons are preloaded here instead. A dormant geyser is the cracked
+## stone vent (ICON_GEYSER); once it activates it is drawn as a source with
+## the waterfall glyph (see _draw_source_marker()). Dirt deliberately has no
 ## glyph at all: per the "color stages only" design decision for the dig
 ## mechanic, an undug/partially-dug hex communicates its state purely
 ## through its fill color (see _draw_cell()'s DIRT branch).
@@ -58,6 +58,7 @@ const ICON_FIRE := preload("res://assets/icons/icon_fire.svg")
 const ICON_TOWN := preload("res://assets/icons/icon_town.svg")
 const ICON_SOURCE := preload("res://assets/icons/icon_source.svg")
 const ICON_HYDRO := preload("res://assets/icons/icon_hydro.svg")
+const ICON_GEYSER := preload("res://assets/icons/icon_geyser.svg")
 
 ## Animated water tiles. Each sheet is WATER_FRAMES frames of
 ## WATER_FRAME_PX laid out in a row, and every frame fills a whole hex --
@@ -171,10 +172,9 @@ const TILE_VISUALS := {
 	# the board visibly marks exactly which cell the flood hit.
 	TILE_TOWN: {"fill": Color(0.55, 0.45, 0.35), "icon": ICON_TOWN},
 	TILE_TOWN_FLOODED: {"fill": Color(0.65, 0.85, 0.95), "icon": ICON_TOWN},
-	# Dormant purple -- distinct from every other terrain colour. Geyser is
-	# the one state with no icon texture: it still draws its own procedural
-	# droplet, since no SVG has been made for it yet.
-	TILE_GEYSER: {"fill": Color(0.5, 0.3, 0.6), "icon": null},
+	# Dormant purple -- distinct from every other terrain colour. The vent
+	# glyph is centred, so one orientation serves both grids.
+	TILE_GEYSER: {"fill": Color(0.5, 0.3, 0.6), "icon": ICON_GEYSER},
 	# Steel-blue "structure" colour -- distinct from Pool's water-blue and
 	# from every block colour.
 	TILE_HYDRO: {"fill": Color(0.25, 0.55, 0.75), "icon": ICON_HYDRO},
@@ -298,10 +298,12 @@ const PENDING_REMOVAL_COLOR := Color(0.15, 0.15, 0.18, 0.55)
 ## tile (see _trigger_mudslide()), opening a path the PLAYER didn't choose.
 ## Collapsed tiles are fully open (water flows through immediately) and
 ## drawn in MUDSLIDE_COLOR, distinct from the player-dug trench color, so
-## the board tells the story of where the river forced its own way. At the
-## current tempo (0.3s/beat) 10 beats is ~3 seconds of standing water --
-## enough time to finish a tile you're already digging, but a real threat
-## if you fall behind.
+## the board tells the story of where the river forced its own way. These
+## are WATER beats, and there is one per measure (see _note_dirt_stall()),
+## so 10 of them is ten measures = 12 s of standing water at the current
+## tempo -- not the "~3 s" an earlier comment claimed (handheld-audit.md
+## finding 32). Enough time to finish a tile you're already digging, a
+## real threat if you fall behind.
 const MUDSLIDE_BEATS_REQUIRED := 10
 const MUDSLIDE_COLLAPSE_TILES := 3
 const MUDSLIDE_COLOR := Color(0.22, 0.15, 0.10) # wet mud -- darker than the dug trench
@@ -2588,8 +2590,7 @@ func _draw_cell(coord: Vector2i) -> void:
 
 	# 5. glyph. A state with a sheet animates; one with only an icon draws
 	#    it statically, which is how a tile type gets converted to animation
-	#    without touching anything here. Geyser is the lone special case: it
-	#    has no SVG yet and still draws its own procedural droplet.
+	#    without touching anything here.
 	if visual.get("mode", TileMode.GLYPH) == TileMode.GLYPH:
 		var glyph_sheet: Texture2D = _tile_sheet(visual)
 		if glyph_sheet != null:
@@ -2598,8 +2599,6 @@ func _draw_cell(coord: Vector2i) -> void:
 				_anim_frame(visual.get("fps", ANIM_TICK_FPS), frames, _cell_stagger(coord, frames)))
 		elif visual["icon"] != null:
 			_draw_icon(center, visual["icon"])
-		elif state == TILE_GEYSER:
-			_draw_geyser_icon(center)
 
 	# 6. per-state overlays. (A pool's animal is not one of them: it is
 	#    one scene per LAKE, drawn by _draw_pool_characters() after the
@@ -2995,27 +2994,6 @@ func _draw_status_bar_at(center: Vector2, filled: int, required: int, lit_color:
 		var box_color: Color = lit_color if i < filled else Color(0.15, 0.15, 0.18)
 		draw_rect(rect, box_color, true)
 		draw_rect(rect, Color(0, 0, 0, 0.5), false, 1.0)
-
-
-## Draws a simple upward-spraying droplet shape (a triangular "spout" plus
-## small droplets above it) centered on a dormant geyser cell, so it reads
-## as "something will erupt here" distinct from every other terrain icon.
-## Kept procedural (no SVG asset exists for Geyser yet -- see the ICON_*
-## constants' doc comment above).
-func _draw_geyser_icon(center: Vector2) -> void:
-	var half := Hex.SIZE * 0.22
-	var spout_height := Hex.SIZE * 0.35
-
-	var spout := PackedVector2Array([
-		Vector2(center.x - half, center.y + half),
-		Vector2(center.x + half, center.y + half),
-		Vector2(center.x, center.y + half - spout_height),
-	])
-	draw_colored_polygon(spout, Color(0.85, 0.7, 0.9))
-
-	draw_circle(Vector2(center.x, center.y - spout_height * 0.9), Hex.SIZE * 0.08, Color(0.85, 0.7, 0.9))
-	draw_circle(Vector2(center.x - Hex.SIZE * 0.18, center.y - spout_height * 0.5), Hex.SIZE * 0.06, Color(0.85, 0.7, 0.9))
-	draw_circle(Vector2(center.x + Hex.SIZE * 0.18, center.y - spout_height * 0.5), Hex.SIZE * 0.06, Color(0.85, 0.7, 0.9))
 
 
 ## Marks a water source cell (an original level_data.water_sources entry, or

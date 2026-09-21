@@ -97,7 +97,7 @@ progression it was meant not to touch.
 
 Fix: `debug_unlock_toggle.visible = OS.is_debug_build()` in `_ready()`.
 
-### 4. No application icon or splash image exists — MEDIUM
+### 4. No application icon or splash image exists — MEDIUM ✅ PLACEHOLDERS 2026-09-21 (`game/icon.svg`/`icon.png`, `assets/splash.png`)
 `game/project.godot:9`
 
 Nothing in the repo supplies one, and the pre-export checklist in
@@ -454,7 +454,7 @@ Tapping a just-placed block does not remove it while it is still queued, so the
 undo affordance is dead for a full measure — exactly the second in which the
 player notices the mistake.
 
-### 32. The mudslide fires at 12 s, not the documented ~3 s — LOW
+### 32. The mudslide fires at 12 s, not the documented ~3 s — LOW ✅ COMMENT FIXED 2026-09-21 (12 s is the design; the constant's comment was wrong)
 `game/scripts/gameplay/HexBoard.gd:238`
 
 `MUDSLIDE_BEATS_REQUIRED` counts WATER beats, which land once per measure. Level
@@ -485,7 +485,7 @@ read.
 | 43 | Start / Pause / Back are 31 dp | ⛔ **stale** — now 104×96 units |
 | 44 | 100 baked strings, zero `tr()` | ✅ confirmed |
 
-### 33. Level 68 cannot be won by any play — CRITICAL ✅ MEASURED
+### 33. Level 68 cannot be won by any play — CRITICAL ✅ MEASURED — ✅ FIXED 2026-09-21 (a Splitter added to its inventory; splitter (0, -2) + wall (-2, 1) wins at 18, under par 24)
 `game/data/levels/level_068.tres`
 
 Level 68 ships `starting_inventory = {"wall": 1}`, no dirt, no hydro plant,

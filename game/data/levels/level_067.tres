@@ -13,11 +13,11 @@ water_sources = Array[Vector2i]([Vector2i(3, -6)])
 fire_cells = Array[Vector2i]([Vector2i(-4, 5)])
 pool_targets = {
 Vector2i(-5, 6): 4,
-Vector2i(-2, 6): 4
+Vector2i(-1, 6): 4
 }
 lake_cells = {
 Vector2i(-5, 6): Array[Vector2i]([Vector2i(-5, 5), Vector2i(-4, 3), Vector2i(-4, 4)]),
-Vector2i(-2, 6): Array[Vector2i]([Vector2i(-3, 6), Vector2i(-2, 4), Vector2i(-2, 5)])
+Vector2i(-1, 6): Array[Vector2i]([Vector2i(-2, 6), Vector2i(-1, 4), Vector2i(-1, 5)])
 }
 starting_inventory = {
 "wall": 1

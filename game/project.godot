@@ -12,10 +12,12 @@ config_version=5
 
 config/name="Flash Flood"
 run/main_scene="res://scenes/MainMenu.tscn"
+config/icon="res://icon.svg"
 config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 boot_splash/bg_color=Color(0.53, 0.81, 0.92, 1)
+boot_splash/image="res://assets/splash.png"
 
 [autoload]
 

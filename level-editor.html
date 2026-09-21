@@ -17,12 +17,7 @@
   header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--panel);
     border-bottom:1px solid var(--border);flex-wrap:wrap;}
   header h1{font-size:15px;margin:0;white-space:nowrap;color:var(--accent);}
-  header .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  header label{font-size:11px;color:var(--dim);display:flex;flex-direction:column;gap:2px;}
-  header input[type=number], header input[type=text]{
-    background:var(--panel2);border:1px solid var(--border);color:var(--text);
-    border-radius:4px;padding:4px 6px;font-size:12px;width:90px;}
-  header input[type=number].small{width:56px;}
+  header .meta{font-size:12px;color:var(--dim);}
   .tabs{display:flex;gap:2px;margin-left:auto;}
   .tabs button{background:var(--panel2);border:1px solid var(--border);color:var(--dim);
     padding:6px 12px;font-size:12px;border-radius:5px 5px 0 0;cursor:pointer;}
@@ -33,40 +28,43 @@
   canvas{position:absolute;top:0;left:0;cursor:crosshair;touch-action:none;}
   #hoverReadout{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.55);
     padding:4px 8px;border-radius:5px;font-size:11px;color:var(--dim);pointer-events:none;}
-  #toolbar{position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap;max-width:70%;}
+  #status{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);
+    padding:4px 8px;border-radius:5px;font-size:11px;color:var(--warn);pointer-events:none;max-width:60%;}
+  #toolbar{position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap;max-width:75%;}
   #toolbar button{background:var(--panel2);border:1px solid var(--border);color:var(--text);
-    padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+    padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;}
   #toolbar button.active{outline:2px solid var(--accent);}
-  #toolbar .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  #toolbar select{background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    padding:5px;border-radius:6px;font-size:12px;width:auto;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
   #zoomCtrls{position:absolute;top:8px;right:8px;display:flex;gap:4px;}
   #zoomCtrls button{background:var(--panel2);border:1px solid var(--border);color:var(--text);
     width:28px;height:28px;border-radius:5px;cursor:pointer;font-size:14px;}
-  #sidebar{width:360px;background:var(--panel);border-left:1px solid var(--border);
+  #sidebar{width:380px;background:var(--panel);border-left:1px solid var(--border);
     overflow-y:auto;padding:12px;flex-shrink:0;}
   .panel{display:none;}
   .panel.active{display:block;}
-  .section{margin-bottom:16px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--panel2);}
+  .section{margin-bottom:14px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--panel2);}
   .section h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);}
   .section p.hint{font-size:11px;color:var(--dim);margin:4px 0 8px;line-height:1.5;}
   .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-size:12px;}
-  .row input[type=number]{width:60px;background:var(--panel);border:1px solid var(--border);
+  .row input[type=number]{width:70px;background:var(--panel);border:1px solid var(--border);
     color:var(--text);border-radius:4px;padding:3px 6px;}
   .row input[type=text]{flex:1;background:var(--panel);border:1px solid var(--border);
     color:var(--text);border-radius:4px;padding:3px 6px;}
-  .row input[type=color]{width:32px;height:24px;padding:0;border:none;background:none;}
+  .row select{width:auto;flex:1;}
+  .row textarea{height:90px;font-family:inherit;color:var(--text);background:var(--panel);}
   button.full{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);
     padding:7px;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px;}
   button.full:hover{border-color:var(--accent);}
   button.danger:hover{border-color:var(--bad);color:var(--bad);}
   button.primary{background:var(--accent);color:#08101d;border:none;font-weight:600;}
+  button.mini{background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:2px 7px;border-radius:4px;cursor:pointer;font-size:11px;}
   select{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);
     padding:5px;border-radius:5px;font-size:12px;}
-  textarea{width:100%;height:220px;background:#0b0b0e;color:#c9e6c9;font-family:ui-monospace,Menlo,Consolas,monospace;
+  textarea{width:100%;height:200px;background:#0b0b0e;color:#c9e6c9;font-family:ui-monospace,Menlo,Consolas,monospace;
     font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical;}
-  .badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px;}
-  .badge.ok{background:#173;color:#9f9;}
-  .badge.warn{background:#542;color:var(--warn);}
-  .badge.bad{background:#511;color:var(--bad);}
   .valitem{font-size:11px;padding:4px 6px;border-radius:4px;margin-bottom:4px;line-height:1.4;}
   .valitem.warn{background:rgba(224,168,58,.12);color:var(--warn);border:1px solid rgba(224,168,58,.3);}
   .valitem.bad{background:rgba(230,77,26,.12);color:#ff8a5c;border:1px solid rgba(230,77,26,.3);}
@@ -86,21 +84,19 @@
   code{background:#000;padding:1px 5px;border-radius:3px;font-size:11px;}
   .flexgap{display:flex;gap:6px;}
   .flexgap>*{flex:1;}
-  a.dl{color:var(--accent);}
+  .list{font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.7;}
+  .list .row{margin:2px 0;}
+  input[type=file]{font-size:11px;color:var(--dim);}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
     <h1>🌊 Flash Flood — Level Editor</h1>
-    <div class="meta">
-      <label>Level ID <input type="number" id="levelId" class="small" min="1" value="18"></label>
-      <label>Display name <input type="text" id="displayName" value="Level 18"></label>
-      <label>Grid radius <input type="number" id="gridRadius" class="small" min="1" max="14" value="4"></label>
-    </div>
+    <div class="meta" id="headerMeta">new level</div>
     <div class="tabs">
       <button data-tab="design" class="active">Design</button>
-      <button data-tab="inventory">Inventory</button>
+      <button data-tab="level">Level</button>
       <button data-tab="playtest">Playtest</button>
       <button data-tab="io">Import / Export</button>
       <button data-tab="help">Help</button>
@@ -116,47 +112,87 @@
         <button id="zoomFit" title="Fit to view">⤢</button>
       </div>
       <div id="hoverReadout">—</div>
+      <div id="status" style="display:none"></div>
     </div>
     <div id="sidebar">
 
       <div class="panel active" id="panel-design">
         <div class="section">
-          <h3>Paint tool</h3>
-          <p class="hint">Click a cell to apply the selected tool. Clicking a cell that already has that
-          terrain removes it (toggle). Painting fire/pool/town/source on a blocked cell automatically
-          unblocks it first.</p>
+          <h3>Paint tools</h3>
+          <p class="hint">Click a cell to apply the selected tool; clicking a cell that already holds that
+          terrain removes it. Painting terrain on a blocked cell unblocks it first.<br>
+          <b>Pool</b> creates a whole 4-hex lake (anchor + 3 cells, rhombus where it fits); click the
+          anchor to remove the lake, <b>Lake cell</b> adds/removes a single cell of an adjacent lake.
+          <b>Hydro</b> places a 3-cell plant (centre + left + right). <b>Preset</b> bakes the chosen
+          block into the level; a preset Wall covers its anchor and the cell to its right.</p>
         </div>
         <div class="section">
-          <h3>Corridor generator</h3>
-          <p class="hint">Carves every cell outside a narrow vertical band down to "empty" and blocks
-          the rest — the technique used for the game's tall scrolling levels (13–17). The band is
-          centered on <code>round(-r/2)</code> per row so it stays visually straight.</p>
-          <div class="row"><span>Half-width (tiles each side)</span>
-            <input type="number" id="corridorHalfWidth" value="2" min="0" max="10"></div>
-          <button class="full" id="btnGenCorridor">Generate corridor (overwrites blocked cells)</button>
+          <h3>Grid</h3>
+          <div class="row"><span>grid_radius</span><input type="number" id="fGridRadius" min="1" max="60" value="4"></div>
+          <div class="row"><span>grid_style</span>
+            <select id="fGridStyle"><option value="pointy">pointy (zigzag)</option><option value="flat">flat (straight down possible)</option></select></div>
+          <div class="row"><span>corridor_half_width (0 = off)</span><input type="number" id="fCorridor" min="0" max="20" value="0"></div>
+          <p class="hint">A corridor keeps only the band <code>|q − round(−r/2)| ≤ half_width</code>
+          playable (2·hw+1 tiles wide); cells outside it are drawn dark. It composes with blocked
+          cells. The rounding is half-away-from-zero, as GDScript's <code>roundf()</code>.</p>
+        </div>
+        <div class="section">
+          <h3>Blocked-cell helpers</h3>
+          <p class="hint">Levels 1–50 are at most 6 hexes wide: the usual recipe is a radius-5 grid with
+          rows ±5 and every offset column outside −3..2 in <code>blocked_cells</code>.</p>
+          <div class="row"><span>Keep offset columns</span>
+            <input type="number" id="colMin" value="-3"> <span>to</span> <input type="number" id="colMax" value="2"></div>
+          <div class="row"><span>Block rows |r| ≥</span><input type="number" id="rowBlock" value="5"></div>
+          <button class="full" id="btnGenColumns">Block everything outside those columns/rows</button>
+          <button class="full" id="btnBlockedFromCorridor">Bake current corridor into blocked_cells</button>
           <button class="full danger" id="btnClearBlocked">Clear all blocked cells</button>
         </div>
         <div class="section">
           <h3>Manual coordinate entry</h3>
-          <p class="hint">Precise alternative to clicking — useful on large/tall boards.</p>
           <div class="row"><span>q</span><input type="number" id="manQ" value="0">
             <span>r</span><input type="number" id="manR" value="0">
-            <button class="full" style="margin-top:0;width:auto;padding:6px 10px" id="btnApplyManual">Apply tool</button></div>
+            <button class="mini" id="btnApplyManual">Apply tool</button></div>
         </div>
         <div class="section">
           <h3>Bulk</h3>
-          <button class="full danger" id="btnClearAll">Clear entire level (keep radius/id)</button>
+          <button class="full danger" id="btnClearAll">Clear all terrain (keep scalars)</button>
+          <button class="full danger" id="btnNewLevel">New empty level</button>
         </div>
       </div>
 
-      <div class="panel" id="panel-inventory">
+      <div class="panel" id="panel-level">
         <div class="section">
-          <h3>Block catalog</h3>
-          <p class="hint">Matches <code>data/blocks/*.tres</code> in the project. Set a starting count
-          per block for this level (0 = not available). Add a custom block if you plan to add a new
-          <code>BlockData</code> resource to the project — you can also download its .tres below.</p>
+          <h3>Identity</h3>
+          <div class="row"><span>level_id</span><input type="number" id="fLevelId" min="1" value="1"></div>
+          <div class="row"><span>display_name</span><input type="text" id="fDisplayName" value="Level 1"></div>
+          <div class="row" style="flex-direction:column;align-items:stretch"><span>intro_text (empty = no popup)</span>
+            <textarea id="fIntroText"></textarea></div>
+        </div>
+        <div class="section">
+          <h3>Budget &amp; par</h3>
+          <div class="row"><span>total_block_budget (0 = per-type inventory)</span><input type="number" id="fBudget" min="0" value="0"></div>
+          <div class="row"><span>par_measures (0 = no par)</span><input type="number" id="fPar" min="0" value="0"></div>
+        </div>
+        <div class="section">
+          <h3>starting_inventory</h3>
+          <p class="hint">Matches <code>data/blocks/*.tres</code>. 0 = not in this level. Ignored by the
+          engine when a budget is set.</p>
           <div id="blockList"></div>
-          <button class="full" id="btnAddBlock">+ Add custom block type</button>
+          <button class="full" id="btnAddBlock">+ Add custom block id</button>
+        </div>
+        <div class="section">
+          <h3>Water sources &amp; flow style</h3>
+          <p class="hint"><code>source_flow_style</code> applies on a flat grid only: "straight" (default,
+          falls down every beat) or "zigzag" (alternates down-left / down-right).</p>
+          <div id="sourceList" class="list"></div>
+        </div>
+        <div class="section">
+          <h3>Lakes</h3>
+          <div id="lakeList" class="list"></div>
+        </div>
+        <div class="section">
+          <h3>Preset blocks</h3>
+          <div id="presetList" class="list"></div>
         </div>
       </div>
 
@@ -168,40 +204,50 @@
             <button class="full" id="ptStep">Step</button>
             <button class="full danger" id="ptReset">Retry</button>
           </div>
-          <div class="row"><span>Tick speed</span>
-            <input type="range" id="ptSpeed" min="80" max="1200" value="300" style="flex:1"></div>
-          <div class="row"><span>Tick</span><b id="ptTick">0</b></div>
+          <div class="row"><span>Measure length (ms)</span>
+            <input type="range" id="ptSpeed" min="80" max="1500" value="400" style="flex:1"></div>
+          <div class="row"><span>Measure</span><b id="ptTick">0</b></div>
           <div class="row"><span>Fires remaining</span><b id="ptFires">0</b></div>
           <div id="ptPools"></div>
+          <div id="ptExtra" class="list"></div>
         </div>
         <div class="section">
-          <h3>Inventory (tap to select, then tap the board)</h3>
+          <h3>Inventory (select, then tap the board)</h3>
           <div id="ptInventory"></div>
+          <p class="hint">Tap a placed block to pick it up (presets are fixed). After Start: tap dirt
+          3 times to dig it; tap a Hydro Plant the water has touched to activate it (the game wants a
+          double-tap). Catapults are solid to water here but cannot be fired in this editor.</p>
         </div>
       </div>
 
       <div class="panel" id="panel-io">
         <div class="section">
-          <h3>Load an existing level</h3>
-          <select id="presetSelect"><option value="">— choose a level from the uploaded project —</option></select>
-          <button class="full" id="btnLoadPreset">Load into editor</button>
+          <h3>Open .tres files</h3>
+          <input type="file" id="fileInput" multiple accept=".tres,.txt">
+          <select id="fileSelect"><option value="">— choose an opened file —</option></select>
+          <button class="full" id="btnLoadFile">Load into editor</button>
         </div>
         <div class="section">
-          <h3>Import from .tres text</h3>
+          <h3>Import from pasted text</h3>
           <textarea id="importArea" placeholder="Paste the contents of a level_XXX.tres file here…"></textarea>
           <button class="full" id="btnImport">Parse &amp; load</button>
         </div>
         <div class="section">
           <h3>Export</h3>
           <div id="validation"></div>
-          <div class="row"><span>Suggested filename</span><code id="suggestedName">level_018.tres</code></div>
+          <div class="row"><span>Suggested filename</span><code id="suggestedName">level_001.tres</code></div>
           <textarea id="exportArea" readonly></textarea>
-          <button class="full primary" id="btnDownload">Download level_XXX.tres</button>
-          <p class="hint">Save it to <code>data/levels/</code> in your project, then add this line to
-          <code>LEVEL_PATHS</code> in <code>scripts/ui/LevelSelect.gd</code> (position in the array
-          controls play order, not <code>level_id</code>):</p>
-          <div class="row"><code id="levelPathLine">"res://data/levels/level_018.tres",</code></div>
-          <button class="full" id="btnCopyPath">Copy that line</button>
+          <div class="flexgap">
+            <button class="full primary" id="btnDownload">Download</button>
+            <button class="full" id="btnCopyExport">Copy</button>
+            <button class="full" id="btnRoundTrip">Round-trip check</button>
+          </div>
+          <div id="roundTripResult" class="hint" style="font-size:11px;color:var(--dim);margin-top:6px"></div>
+          <p class="hint">An imported file's header, field order and formatting are kept verbatim for
+          every field you did not change, so a no-edit round trip is byte-identical. Save it to
+          <code>game/data/levels/</code>; a new campaign level also needs a line in
+          <code>LEVEL_PATHS</code> in <code>scripts/ui/LevelSelect.gd</code>:</p>
+          <div class="row"><code id="levelPathLine">"res://data/levels/level_001.tres",</code></div>
         </div>
       </div>
 
@@ -209,34 +255,39 @@
         <div class="section">
           <h3>Controls</h3>
           <p class="hint">
-          • Click/tap a cell to paint the selected tool.<br>
-          • Click-drag (past a small threshold) pans the view instead of painting — same
-          tap-vs-drag distinction <code>Level.gd</code> uses for scrolling vs placing blocks.<br>
-          • Mouse wheel zooms toward the cursor. Use ⤢ to fit the whole board back on screen.
+          • Click/tap a cell to paint the selected tool. Click-drag pans, the wheel zooms, ⤢ fits.<br>
+          • Coordinates are axial (q, r) for both grid styles; water falls in +r.<br>
+          • The playtest tab runs the real beat cycle one measure at a time: PLACEMENT → WATER →
+          TERRAIN → STATUS.
           </p>
         </div>
         <div class="section">
-          <h3>Rules this tool enforces (ported from HexBoard.gd)</h3>
+          <h3>Rules ported from HexBoard.gd</h3>
           <p class="hint">
-          • Water's natural fall zigzags down-left/down-right, alternating per stream, first step
-          always down-left.<br>
-          • Only a <b>Wall</b> blocks natural fall (retries the other diagonal, or pools in place if
-          both are blocked). <b>Diverters</b>/<b>Splitter</b> are pass-throughs — water lands on them
-          fine, then that block's behavior decides the next step.<br>
-          • A pool needs 4 connected beats total (cumulative, not reset by a disconnect). A pool
-          consumes every stream that reaches it forever, so it must be the last stop on a branch.<br>
-          • A town cell or the bottom edge is an instant loss.<br>
-          • <b>Gotcha:</b> a level with zero fire cells and zero pool cells wins vacuously on tick 1 —
-          always add at least one of each unless that's intentional.<br>
-          • Design convention: keep the playable width at or under 9 tiles (grid_radius ≤ 4 for a full
-          diamond, or use the corridor generator for a narrower band on a taller <code>grid_radius</code>).
+          • Pointy grid: natural fall alternates down-left (−1,+1) / down-right (0,+1), first step
+          down-left; a blocked or solid target makes it try the other diagonal; both blocked → it waits.
+          Flat grid: a "straight" stream tries (0,+1) only; a "zigzag" stream alternates (−1,+1)/(+1,0).<br>
+          • Solid to natural fall: Wall, Catapult, undug dirt, an inactive Hydro Plant, an activated
+          geyser. Diverters and Splitters are pass-throughs.<br>
+          • The Wall is 2 tiles wide (anchor + (1,0)); when that does not fit the engine mirrors it to
+          anchor + (−1,0); when neither fits the tap is a no-op. Presets never mirror.<br>
+          • A lake (4 cells) needs 4 beats of contact; all cells share one counter, one beat per beat.
+          A geyser wakes after 3 contacts and becomes a source. A Hydro Plant is solid until water
+          touches it and the player activates it; then its 3 cells become sources.<br>
+          • Water pressing on dirt for 10 beats triggers a mudslide that collapses up to 3 dirt tiles.<br>
+          • Town cell or past the lowest playable row = loss. Win = every fire out and every lake full.<br>
+          • A level with no fires and no pools wins on measure 1.
           </p>
         </div>
         <div class="section">
-          <h3>Note on this build</h3>
-          <p class="hint">This editor matches the <code>LevelData.gd</code> / <code>HexBoard.gd</code>
-          you uploaded (4 block types, no Geyser or Jamboree budget mode yet). If you add those features
-          to the project later, bring me the updated scripts and I'll extend this tool to match.</p>
+          <h3>File format</h3>
+          <p class="hint">Fields are written in the repo's usual order:
+          <code>level_id, display_name, intro_text, grid_radius, corridor_half_width, grid_style,
+          source_flow_style, water_sources, fire_cells, pool_targets, lake_cells, preset_blocks,
+          starting_inventory, blocked_cells, hint_cells, town_cells, geyser_cells, dirt_cells,
+          total_block_budget, hydro_plant_cells, par_measures</code>. Optional fields are omitted
+          when empty/zero unless the imported file already had them. Array fields go on one line;
+          dictionaries one entry per line, as Godot writes them.</p>
         </div>
       </div>
 
@@ -246,20 +297,23 @@
 
 <script>
 /* =========================================================================
-   HEX MATH — ported 1:1 from scripts/hex/Hex.gd (pointy-top, axial q,r)
+   HEX MATH — ported from scripts/hex/Hex.gd (both orientations, axial q,r)
    ========================================================================= */
+const SQ3 = Math.sqrt(3);
 const DOWN_LEFT = {q:-1, r:1};
 const DOWN_RIGHT = {q:0, r:1};
-const NEIGHBOR_OFFSETS = [{q:1,r:0},{q:1,r:-1},{q:0,r:-1},{q:-1,r:0},DOWN_LEFT,DOWN_RIGHT];
+const FLAT_DOWN = {q:0, r:1};
+const FLAT_DOWN_LEFT = {q:-1, r:1};
+const FLAT_DOWN_RIGHT = {q:1, r:0};
+const NEIGHBOR_OFFSETS = [{q:1,r:0},{q:1,r:-1},{q:0,r:-1},{q:-1,r:0},{q:-1,r:1},{q:0,r:1}];
 
-function axialToPixel(coord, size){
-  const q=coord.q, r=coord.r;
-  return { x: size*(Math.sqrt(3)*q + Math.sqrt(3)/2*r), y: size*(1.5*r) };
+function axialToPixel(c, size, flat){
+  if(flat) return { x: size*1.5*c.q, y: size*(SQ3*c.r + SQ3/2*c.q) };
+  return { x: size*(SQ3*c.q + SQ3/2*c.r), y: size*1.5*c.r };
 }
-function pixelToAxial(pos, size){
-  const q = (Math.sqrt(3)/3*pos.x - 1/3*pos.y)/size;
-  const r = (2/3*pos.y)/size;
-  return axialRound(q,r);
+function pixelToAxialFloat(p, size, flat){
+  if(flat) return { q:(2/3*p.x)/size, r:(-1/3*p.x + SQ3/3*p.y)/size };
+  return { q:(SQ3/3*p.x - 1/3*p.y)/size, r:(2/3*p.y)/size };
 }
 function axialRound(q,r){
   let x=q, z=r, y=-x-z;
@@ -270,992 +324,1214 @@ function axialRound(q,r){
   else rz=-rx-ry;
   return {q:rx, r:rz};
 }
-function hexCorner(center,i,size){
-  const ang = (60*i - 30) * Math.PI/180;
+function hexCorner(center,i,size,flat){
+  const ang = (flat ? 60*i : 60*i - 30) * Math.PI/180;
   return { x: center.x + size*Math.cos(ang), y: center.y + size*Math.sin(ang) };
 }
-function cubeDist(coord){
-  const q=coord.q, r=coord.r, s=-q-r;
-  return Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
-}
+function cubeDist(c){ return Math.max(Math.abs(c.q), Math.abs(c.r), Math.abs(-c.q-c.r)); }
+function roundHalfAway(x){ return Math.sign(x)*Math.round(Math.abs(x)); } // GDScript roundf()
 function key(c){ return c.q+","+c.r; }
 function parseKey(k){ const [q,r]=k.split(",").map(Number); return {q,r}; }
+function add(c,d){ return {q:c.q+d.q, r:c.r+d.r}; }
+function sameDir(a,b){ return a.q===b.q && a.r===b.r; }
+// Which neighbour offset lies across edge i (corner i -> corner i+1)? Resolved
+// numerically so it is right for both orientations.
+const EDGE_NEIGHBOR = {pointy:null, flat:null};
+function edgeNeighbors(flat){
+  const k = flat?"flat":"pointy";
+  if(EDGE_NEIGHBOR[k]) return EDGE_NEIGHBOR[k];
+  const out=[];
+  for(let i=0;i<6;i++){
+    const a=hexCorner({x:0,y:0},i,1,flat), b=hexCorner({x:0,y:0},i+1,1,flat);
+    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    let best=null, bestDot=-Infinity;
+    for(const d of NEIGHBOR_OFFSETS){
+      const p=axialToPixel(d,1,flat); const dot=(p.x*mx+p.y*my)/Math.hypot(p.x,p.y);
+      if(dot>bestDot){bestDot=dot;best=d;}
+    }
+    out.push(best);
+  }
+  EDGE_NEIGHBOR[k]=out; return out;
+}
 
 /* =========================================================================
-   DEFAULT BLOCK CATALOG — matches data/blocks/*.tres exactly
+   BLOCK CATALOG — data/blocks/*.tres
    ========================================================================= */
-const BEHAVIOR = { WALL:0, DIVERT_LEFT:1, DIVERT_RIGHT:2, SPLIT:3, ABSORB:4 };
-const BEHAVIOR_NAMES = ["Wall (fully blocks)","Diverter — Left","Diverter — Right","Splitter (both diagonals)","Absorb (reserved — currently behaves like Diverter-Right in the shipped code)"];
-
+const BEHAVIOR = { WALL:0, DIVERT_LEFT:1, DIVERT_RIGHT:2, SPLIT:3, ABSORB:4, CATAPULT:5 };
 function defaultCatalog(){
   return [
-    {id:"wall", display_name:"Wall", behavior:BEHAVIOR.WALL, color:"#808089"},
-    {id:"divert_left", display_name:"Diverter (L)", behavior:BEHAVIOR.DIVERT_LEFT, color:"#cc9933"},
-    {id:"divert_right", display_name:"Diverter (R)", behavior:BEHAVIOR.DIVERT_RIGHT, color:"#33b380"},
-    {id:"splitter", display_name:"Splitter", behavior:BEHAVIOR.SPLIT, color:"#b34dcc"},
+    {id:"wall", display_name:"Wall", behavior:BEHAVIOR.WALL, color:"#80808c", footprint:[{q:1,r:0}]},
+    {id:"divert_left", display_name:"Diverter (L)", behavior:BEHAVIOR.DIVERT_LEFT, color:"#cc9933", footprint:[]},
+    {id:"divert_right", display_name:"Diverter (R)", behavior:BEHAVIOR.DIVERT_RIGHT, color:"#33b380", footprint:[]},
+    {id:"splitter", display_name:"Splitter", behavior:BEHAVIOR.SPLIT, color:"#b34dcc", footprint:[]},
+    {id:"bomb_catapult", display_name:"Bomb Catapult", behavior:BEHAVIOR.CATAPULT, color:"#d97326", footprint:[]},
   ];
 }
+let catalog = defaultCatalog();
+function blockDef(id){ return catalog.find(b=>b.id===id) || null; }
+function blockFootprint(anchor, id, mirrored){
+  const b = blockDef(id);
+  const cells=[anchor];
+  if(b) for(const o of b.footprint) cells.push(add(anchor, mirrored ? {q:-o.q, r:o.r} : o));
+  return cells;
+}
+
+/* =========================================================================
+   .tres TEXT FORMAT — parser and serialiser (pure functions, see window.FF)
+   ========================================================================= */
+const FIELD_ORDER = ["level_id","display_name","intro_text","grid_radius","corridor_half_width",
+  "grid_style","source_flow_style","water_sources","fire_cells","pool_targets","lake_cells",
+  "preset_blocks","starting_inventory","blocked_cells","hint_cells","town_cells","geyser_cells",
+  "dirt_cells","total_block_budget","hydro_plant_cells","par_measures"];
+// Written even when at their default, matching the repo's usual template.
+const ALWAYS_FIELDS = new Set(["level_id","display_name","intro_text","grid_radius","water_sources",
+  "fire_cells","pool_targets","lake_cells","starting_inventory","blocked_cells","town_cells",
+  "geyser_cells","total_block_budget"]);
+const STANDARD_HEADER = '[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]\n\n' +
+  '[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]\n\n[resource]\n';
+
+function skipWs(s,i){ while(i<s.length && /\s/.test(s[i])) i++; return i; }
+// Parses one Godot text-resource value starting at index i. Returns [value, end].
+// Values: number, string, true/false/null, Vector2i(a, b) -> {q,r},
+// Array[T]([...]) / [...] -> {t:"array",type,items}, {k: v, ...} -> {t:"dict",entries},
+// Name(args) -> {t:"call",name,args}.
+function parseValue(s, i){
+  i = skipWs(s,i);
+  if(i>=s.length) throw new Error("unexpected end of file");
+  const ch = s[i];
+  if(ch==='"'){
+    let j=i+1, out="";
+    while(j<s.length && s[j]!=='"'){
+      if(s[j]==='\\' && j+1<s.length){
+        const e=s[j+1];
+        out += e==='n'?"\n" : e==='t'?"\t" : e==='r'?"\r" : e;
+        j+=2;
+      } else { out+=s[j]; j++; }
+    }
+    if(j>=s.length) throw new Error("unterminated string");
+    return [out, j+1];
+  }
+  if(ch==='{'){
+    const entries=[]; let j=i+1;
+    for(;;){
+      j=skipWs(s,j);
+      if(s[j]==='}'){ j++; break; }
+      let k,v; [k,j]=parseValue(s,j); j=skipWs(s,j);
+      if(s[j]!==':') throw new Error("expected ':' at "+j);
+      [v,j]=parseValue(s,j+1); j=skipWs(s,j);
+      entries.push([k,v]);
+      if(s[j]===',') j++;
+    }
+    return [{t:"dict",entries}, j];
+  }
+  if(ch==='['){
+    const items=[]; let j=i+1;
+    for(;;){
+      j=skipWs(s,j);
+      if(s[j]===']'){ j++; break; }
+      let v; [v,j]=parseValue(s,j); j=skipWs(s,j);
+      items.push(v);
+      if(s[j]===',') j++;
+    }
+    return [{t:"array",type:null,items}, j];
+  }
+  const num = /^-?\d+(\.\d+)?([eE][-+]?\d+)?/.exec(s.slice(i, i+40));
+  if(num){
+    const raw=num[0];
+    return [ (/[.eE]/.test(raw) ? {t:"float", raw, v:parseFloat(raw)} : parseInt(raw,10)), i+raw.length ];
+  }
+  const id = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s.slice(i, i+64));
+  if(!id) throw new Error("unexpected character '"+ch+"' at "+i);
+  let j=i+id[0].length; const name=id[0];
+  if(name==="true") return [true,j];
+  if(name==="false") return [false,j];
+  if(name==="null") return [null,j];
+  let type=null;
+  if(s[j]==='['){ // Array[Vector2i](...)
+    const close=s.indexOf(']', j);
+    type=s.slice(j+1, close); j=close+1;
+  }
+  if(s[j]!=='(') throw new Error("expected '(' after "+name+" at "+j);
+  const args=[]; j++;
+  for(;;){
+    j=skipWs(s,j);
+    if(s[j]===')'){ j++; break; }
+    let v; [v,j]=parseValue(s,j); j=skipWs(s,j);
+    args.push(v);
+    if(s[j]===',') j++;
+  }
+  if(name==="Vector2i" && args.length===2) return [{q:args[0], r:args[1]}, j];
+  if(name==="Array"){ const inner=args[0]||{t:"array",items:[]}; return [{t:"array", type, items:inner.items}, j]; }
+  return [{t:"call", name, args}, j];
+}
+// Splits a .tres into its header (through "[resource]\n") and an ordered list
+// of {name, raw, value} fields. `raw` is the exact source text of the field.
+function parseTres(text){
+  const resIdx = text.indexOf("[resource]");
+  if(resIdx<0) throw new Error("no [resource] section");
+  let i = text.indexOf("\n", resIdx);
+  i = i<0 ? text.length : i+1;
+  const header = text.slice(0,i);
+  const fields=[];
+  const nameRe = /^([A-Za-z_][A-Za-z0-9_\/]*)[ \t]*=[ \t]*/;
+  while(i<text.length){
+    i = skipWs(text,i);
+    if(i>=text.length) break;
+    const m = nameRe.exec(text.slice(i, i+200));
+    if(!m) throw new Error("expected 'field = value' at offset "+i);
+    const start=i; i+=m[0].length;
+    const [value,end] = parseValue(text,i);
+    fields.push({name:m[1], raw:text.slice(start,end), value});
+    i=end;
+  }
+  return {header, fields};
+}
+
+/* ---- model -------------------------------------------------------------- */
+function newLevel(){
+  return {
+    level_id:1, display_name:"Level 1", intro_text:"", grid_radius:4, corridor_half_width:0,
+    grid_style:"pointy",
+    source_flow_style:new Map(),      // "q,r" -> "straight"|"zigzag"
+    water_sources:new Set(),          // "q,r" (insertion ordered)
+    fire_cells:new Set(),
+    pool_targets:new Map(),           // anchor "q,r" -> int
+    lake_cells:new Map(),             // anchor "q,r" -> ["q,r", ...]
+    preset_blocks:new Map(),          // anchor "q,r" -> block id
+    starting_inventory:new Map(),     // id -> count
+    blocked_cells:new Set(),
+    hint_cells:new Set(),
+    town_cells:new Set(),
+    geyser_cells:new Set(),
+    dirt_cells:new Set(),
+    hydro_plant_cells:new Set(),      // plant centres
+    total_block_budget:0, par_measures:0,
+    _src:null,                        // {header, order, raw{}, canon{}} of the imported file
+  };
+}
+function isVec(v){ return v && typeof v==="object" && "q" in v && "r" in v && !("t" in v); }
+function coordSetFrom(v){
+  const out=new Set();
+  if(v && v.t==="array") for(const it of v.items) if(isVec(it)) out.add(key(it));
+  return out;
+}
+function levelFromFields(fields){
+  const L=newLevel();
+  const F={}; for(const f of fields) F[f.name]=f.value;
+  const int=(v,d)=> (typeof v==="number") ? v : (v && v.t==="float") ? Math.round(v.v) : d;
+  const str=(v,d)=> typeof v==="string" ? v : d;
+  L.level_id = int(F.level_id, 1);
+  L.display_name = str(F.display_name, "Level "+L.level_id);
+  L.intro_text = str(F.intro_text, "");
+  L.grid_radius = int(F.grid_radius, 4);
+  L.corridor_half_width = int(F.corridor_half_width, 0);
+  L.grid_style = str(F.grid_style, "pointy");
+  L.total_block_budget = int(F.total_block_budget, 0);
+  L.par_measures = int(F.par_measures, 0);
+  for(const n of ["water_sources","fire_cells","blocked_cells","hint_cells","town_cells","geyser_cells","dirt_cells","hydro_plant_cells"])
+    L[n] = coordSetFrom(F[n]);
+  const dict = v => (v && v.t==="dict") ? v.entries : [];
+  for(const [k,v] of dict(F.source_flow_style)) if(isVec(k)) L.source_flow_style.set(key(k), String(v));
+  for(const [k,v] of dict(F.pool_targets)) if(isVec(k)) L.pool_targets.set(key(k), int(v,4));
+  for(const [k,v] of dict(F.lake_cells)) if(isVec(k)) L.lake_cells.set(key(k), [...coordSetFrom(v)]);
+  for(const [k,v] of dict(F.preset_blocks)) if(isVec(k)) L.preset_blocks.set(key(k), String(v));
+  for(const [k,v] of dict(F.starting_inventory)) if(typeof k==="string") L.starting_inventory.set(k, int(v,0));
+  return L;
+}
+function levelFromTres(text){
+  const {header, fields} = parseTres(text);
+  const L = levelFromFields(fields);
+  const src = {header, order:fields.map(f=>f.name), raw:{}, canon:{}};
+  for(const f of fields) src.raw[f.name]=f.raw;
+  for(const f of fields) src.canon[f.name]=canonicalField(L, f.name);
+  L._src=src;
+  return L;
+}
+
+/* ---- canonical text ------------------------------------------------------ */
+function gdString(s){
+  return '"' + String(s).replace(/\\/g,"\\\\").replace(/"/g,'\\"').replace(/\n/g,"\\n").replace(/\r/g,"\\r").replace(/\t/g,"\\t") + '"';
+}
+function vecText(k){ const c=parseKey(k); return `Vector2i(${c.q}, ${c.r})`; }
+function coordsArrayText(iter){ return `Array[Vector2i]([${[...iter].map(vecText).join(", ")}])`; }
+function dictText(lines){ return lines.length ? "{\n"+lines.join(",\n")+"\n}" : "{}"; }
+function canonicalValue(L, name){
+  switch(name){
+    case "level_id": return String(L.level_id);
+    case "display_name": return gdString(L.display_name);
+    case "intro_text": return gdString(L.intro_text);
+    case "grid_radius": return String(L.grid_radius);
+    case "corridor_half_width": return String(L.corridor_half_width);
+    case "grid_style": return gdString(L.grid_style);
+    case "total_block_budget": return String(L.total_block_budget);
+    case "par_measures": return String(L.par_measures);
+    case "source_flow_style": return dictText([...L.source_flow_style].map(([k,v])=>`${vecText(k)}: ${gdString(v)}`));
+    case "pool_targets": return dictText([...L.pool_targets].map(([k,v])=>`${vecText(k)}: ${v}`));
+    case "lake_cells": return dictText([...L.lake_cells].map(([k,v])=>`${vecText(k)}: ${coordsArrayText(v)}`));
+    case "preset_blocks": return dictText([...L.preset_blocks].map(([k,v])=>`${vecText(k)}: ${gdString(v)}`));
+    case "starting_inventory": return dictText([...L.starting_inventory].map(([k,v])=>`${gdString(k)}: ${v}`));
+    case "water_sources": case "fire_cells": case "blocked_cells": case "hint_cells":
+    case "town_cells": case "geyser_cells": case "dirt_cells": case "hydro_plant_cells":
+      return coordsArrayText(L[name]);
+  }
+  return null;
+}
+function canonicalField(L, name){
+  const v = canonicalValue(L, name);
+  return v===null ? null : `${name} = ${v}`;
+}
+function isDefault(L, name){
+  switch(name){
+    case "intro_text": return L.intro_text==="";
+    case "corridor_half_width": return L.corridor_half_width===0;
+    case "grid_style": return L.grid_style==="pointy";
+    case "total_block_budget": return L.total_block_budget===0;
+    case "par_measures": return L.par_measures===0;
+    case "level_id": case "display_name": case "grid_radius": return false;
+    case "source_flow_style": case "pool_targets": case "lake_cells": case "preset_blocks": case "starting_inventory":
+      return L[name].size===0;
+    default: return L[name] && L[name].size===0;
+  }
+}
+// Serialises the level. Fields the imported file had keep their exact text
+// while their value is unchanged; everything else is written canonically, in
+// the repo's usual order, and inserted at the matching spot of an imported
+// file's own order.
+function serializeLevel(L){
+  const src = L._src;
+  const order = src ? [...src.order] : ["script"];
+  const rank = n => { const i=FIELD_ORDER.indexOf(n); return i<0 ? -1 : i; };
+  for(const name of FIELD_ORDER){
+    if(order.includes(name)) continue;
+    const wanted = src ? !isDefault(L,name) : (ALWAYS_FIELDS.has(name) || !isDefault(L,name));
+    if(!wanted) continue;
+    let pos = order.length;
+    for(let i=order.length-1;i>=0;i--){ if(rank(order[i]) < rank(name)){ pos=i+1; break; } }
+    if(pos===0) pos = order.length; // never before `script`
+    order.splice(pos,0,name);
+  }
+  const lines=[];
+  for(const name of order){
+    if(name==="script"){ lines.push(src && src.raw.script ? src.raw.script : 'script = ExtResource("1")'); continue; }
+    const canon = canonicalField(L, name);
+    if(src && name in src.raw){
+      lines.push((canon===null || src.canon[name]===canon) ? src.raw[name] : canon);
+    } else if(canon!==null){
+      lines.push(canon);
+    }
+  }
+  return (src ? src.header : STANDARD_HEADER) + lines.join("\n") + "\n";
+}
+function roundTrip(text){
+  const out = serializeLevel(levelFromTres(text));
+  let firstDiff=-1;
+  if(out!==text){
+    const n=Math.min(out.length,text.length);
+    firstDiff=n;
+    for(let i=0;i<n;i++) if(out[i]!==text[i]){ firstDiff=i; break; }
+  }
+  return {ok: out===text, out, firstDiff};
+}
+window.FF = { parseTres, parseValue, levelFromTres, serializeLevel, roundTrip, newLevel, canonicalField };
 
 /* =========================================================================
    STATE
    ========================================================================= */
-const state = {
-  levelId: 18,
-  displayName: "Level 18",
-  gridRadius: 4,
-  waterSources: new Set(),   // "q,r"
-  fireCells: new Set(),
-  poolCells: new Set(),
-  townCells: new Set(),
-  blockedCells: new Set(),
-  startingInventory: {},     // block id -> count
-  catalog: defaultCatalog(),
-};
-
+let L = newLevel();
+let sim = null;
 let currentTool = "source";
+let presetToolBlock = "wall";
 const TOOLS = [
   {id:"source", label:"Source", color:"#4d99ff"},
   {id:"fire", label:"Fire", color:"#e64d1a"},
-  {id:"pool", label:"Pool", color:"#4159a8"},
+  {id:"pool", label:"Pool (lake)", color:"#3380e6"},
+  {id:"lakecell", label:"Lake cell", color:"#7fb3ff"},
   {id:"town", label:"Town", color:"#8c7359"},
+  {id:"geyser", label:"Geyser", color:"#6fd6d6"},
+  {id:"dirt", label:"Dirt", color:"#6b4f2e"},
+  {id:"hydro", label:"Hydro", color:"#cfd8dc"},
+  {id:"preset", label:"Preset", color:"#fff3cc"},
+  {id:"hint", label:"Hint", color:"#ffd133"},
   {id:"blocked", label:"Blocked", color:"#333"},
   {id:"erase", label:"Erase", color:"#555"},
 ];
+function isFlat(){ return L.grid_style==="flat"; }
+
+/* ---- playable area (HexBoard.in_playable_area) --------------------------- */
+function inPlayable(c){
+  if(L.blocked_cells.has(key(c))) return false;
+  if(cubeDist(c) > L.grid_radius) return false;
+  if(L.corridor_half_width>0){
+    const bc = roundHalfAway(-c.r/2);
+    if(Math.abs(c.q-bc) > L.corridor_half_width) return false;
+  }
+  return true;
+}
+function inCorridorBand(c){
+  if(L.corridor_half_width<=0) return true;
+  return Math.abs(c.q - roundHalfAway(-c.r/2)) <= L.corridor_half_width;
+}
+function bottomRow(){
+  let b=-L.grid_radius;
+  for(const c of playableCoords()) b=Math.max(b,c.r);
+  return b;
+}
+// Every cell inside the radius (and the corridor band ± margin when there is
+// one, so a radius-50 corridor does not iterate 10 000 cells).
+function gridCoords(margin){
+  const R=L.grid_radius, out=[];
+  for(let r=-R;r<=R;r++){
+    let q0=-R, q1=R;
+    if(L.corridor_half_width>0){
+      const bc=roundHalfAway(-r/2);
+      q0=Math.max(q0, bc-L.corridor_half_width-margin); q1=Math.min(q1, bc+L.corridor_half_width+margin);
+    }
+    for(let q=q0;q<=q1;q++){ const c={q,r}; if(cubeDist(c)<=R) out.push(c); }
+  }
+  return out;
+}
+function playableCoords(){ return gridCoords(0).filter(inPlayable); }
+
+/* ---- derived lookups ----------------------------------------------------- */
+function lakeAnchorOf(k){
+  if(L.pool_targets.has(k)) return k;
+  for(const [a,cells] of L.lake_cells) if(cells.includes(k)) return a;
+  return null;
+}
+function hydroCenterOf(k){
+  const c=parseKey(k);
+  for(const d of [{q:0,r:0},{q:-1,r:0},{q:1,r:0}]){ const a=key(add(c,d)); if(L.hydro_plant_cells.has(a)) return a; }
+  return null;
+}
+function presetAnchorOf(k){
+  for(const [a,id] of L.preset_blocks) if(blockFootprint(parseKey(a), id, false).some(c=>key(c)===k)) return a;
+  return null;
+}
+function terrainAt(k){
+  if(L.fire_cells.has(k)) return "fire";
+  if(lakeAnchorOf(k)) return "pool";
+  if(L.town_cells.has(k)) return "town";
+  if(L.geyser_cells.has(k)) return "geyser";
+  if(L.dirt_cells.has(k)) return "dirt";
+  if(hydroCenterOf(k)) return "hydro";
+  return "empty";
+}
+function cellIsFree(k){
+  return terrainAt(k)==="empty" && !L.water_sources.has(k) && !presetAnchorOf(k);
+}
+function clearCell(k, opts){
+  opts=opts||{};
+  L.fire_cells.delete(k); L.town_cells.delete(k); L.geyser_cells.delete(k); L.dirt_cells.delete(k);
+  if(!opts.keepSource){ L.water_sources.delete(k); L.source_flow_style.delete(k); }
+  const a=lakeAnchorOf(k);
+  if(a){ if(a===k){ L.pool_targets.delete(k); L.lake_cells.delete(k); }
+         else L.lake_cells.set(a, L.lake_cells.get(a).filter(x=>x!==k)); }
+  const h=hydroCenterOf(k); if(h) L.hydro_plant_cells.delete(h);
+  const p=presetAnchorOf(k); if(p) L.preset_blocks.delete(p);
+  if(!opts.keepHint) L.hint_cells.delete(k);
+}
 
 /* =========================================================================
-   VIEW (pan/zoom)
+   PAINT TOOLS
+   ========================================================================= */
+function setStatus(msg){
+  const el=document.getElementById("status");
+  if(!msg){ el.style.display="none"; return; }
+  el.style.display="block"; el.textContent=msg;
+  clearTimeout(setStatus._t); setStatus._t=setTimeout(()=>{ el.style.display="none"; }, 4000);
+}
+function toggleSet(set, k){ if(set.has(k)) set.delete(k); else set.add(k); return set.has(k); }
+function applyTool(c, tool){
+  const k=key(c);
+  switch(tool){
+    case "source":
+      if(L.water_sources.has(k)){ L.water_sources.delete(k); L.source_flow_style.delete(k); }
+      else { clearCell(k,{keepHint:true}); L.blocked_cells.delete(k); L.water_sources.add(k); }
+      return;
+    case "fire": case "town": case "geyser": case "dirt": {
+      const set=L[tool+"_cells"];
+      if(set.has(k)){ set.delete(k); return; }
+      clearCell(k,{keepHint:true}); L.blocked_cells.delete(k); set.add(k); return;
+    }
+    case "hint": toggleSet(L.hint_cells,k); return;
+    case "blocked":
+      if(L.blocked_cells.has(k)){ L.blocked_cells.delete(k); return; }
+      clearCell(k); L.blocked_cells.add(k); return;
+    case "erase": clearCell(k); L.blocked_cells.delete(k); return;
+    case "pool": {
+      const a=lakeAnchorOf(k);
+      if(a===k){ L.pool_targets.delete(k); L.lake_cells.delete(k); return; }
+      if(a){ L.lake_cells.set(a, L.lake_cells.get(a).filter(x=>x!==k)); return; }
+      clearCell(k,{keepHint:true}); L.blocked_cells.delete(k);
+      // pick the rhombus (anchor + two adjacent directions + their sum) with
+      // the most free playable cells, preferring +(1,0),+(0,1),+(1,1) as
+      // level 3 uses.
+      const prefs=[[0,5],[5,4],[4,3],[3,2],[2,1],[1,0]];
+      let best=null, bestN=-1;
+      for(const [i,j] of prefs){
+        const d1=NEIGHBOR_OFFSETS[i], d2=NEIGHBOR_OFFSETS[j];
+        const cells=[add(c,d1),add(c,d2),add(c,add(d1,d2))].map(key);
+        const n=cells.filter(x=>inPlayable(parseKey(x)) && cellIsFree(x)).length;
+        if(n>bestN){ bestN=n; best=cells; }
+      }
+      const extras = best.filter(x=>inPlayable(parseKey(x)) && cellIsFree(x));
+      L.pool_targets.set(k,4); L.lake_cells.set(k, extras);
+      if(extras.length<3) setStatus(`Lake at (${k}) has only ${extras.length} extra cells — add more with the Lake cell tool.`);
+      return;
+    }
+    case "lakecell": {
+      const a=lakeAnchorOf(k);
+      if(a===k){ setStatus("That is the lake's anchor — use the Pool tool to remove the lake."); return; }
+      if(a){ L.lake_cells.set(a, L.lake_cells.get(a).filter(x=>x!==k)); return; }
+      if(!inPlayable(c) || !cellIsFree(k)){ setStatus("A lake cell must be a free, playable cell."); return; }
+      for(const d of NEIGHBOR_OFFSETS){
+        const na=lakeAnchorOf(key(add(c,d)));
+        if(na){ L.lake_cells.get(na).push(k); return; }
+      }
+      setStatus("No lake next to that cell — place its anchor with the Pool tool first.");
+      return;
+    }
+    case "hydro": {
+      const h=hydroCenterOf(k);
+      if(h){ L.hydro_plant_cells.delete(h); return; }
+      for(const d of [{q:-1,r:0},{q:0,r:0},{q:1,r:0}]){ const x=key(add(c,d)); clearCell(x,{keepHint:true}); L.blocked_cells.delete(x); }
+      L.hydro_plant_cells.add(k); return;
+    }
+    case "preset": {
+      const p=presetAnchorOf(k);
+      if(p){ L.preset_blocks.delete(p); return; }
+      const cells=blockFootprint(c, presetToolBlock, false).map(key);
+      const bad=cells.filter(x=>!inPlayable(parseKey(x)) || !cellIsFree(x));
+      if(bad.length){ setStatus(`Cannot preset ${presetToolBlock} at (${k}): cell (${bad[0]}) is not free playable ground.`); return; }
+      L.preset_blocks.set(k, presetToolBlock); return;
+    }
+  }
+}
+
+/* =========================================================================
+   VIEW (pan/zoom) + DRAWING
    ========================================================================= */
 const view = { size: 24, ox: 0, oy: 0 };
 const canvas = document.getElementById("cv");
 const ctx = canvas.getContext("2d");
 const wrap = document.getElementById("canvasWrap");
-
 function resizeCanvas(){
   const rect = wrap.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width*dpr;
-  canvas.height = rect.height*dpr;
-  canvas.style.width = rect.width+"px";
-  canvas.style.height = rect.height+"px";
+  canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
+  canvas.style.width = rect.width+"px"; canvas.style.height = rect.height+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(needsFit && rect.width>0 && rect.height>0){ needsFit=false; fitToView(); return; }
   draw();
 }
 window.addEventListener("resize", resizeCanvas);
-
-function playableCoords(){
-  const R = state.gridRadius;
-  const out = [];
-  for(let q=-R; q<=R; q++){
-    for(let r=-R; r<=R; r++){
-      const c={q,r};
-      if(cubeDist(c) <= R && !state.blockedCells.has(key(c))) out.push(c);
-    }
-  }
-  return out;
-}
-function allDiamondCoords(){
-  const R = state.gridRadius;
-  const out = [];
-  for(let q=-R; q<=R; q++)
-    for(let r=-R; r<=R; r++){
-      const c={q,r};
-      if(cubeDist(c) <= R) out.push(c);
-    }
-  return out;
-}
-function inPlayableArea(c){
-  return cubeDist(c) <= state.gridRadius && !state.blockedCells.has(key(c));
-}
-
+let needsFit=false; // a fit attempted while the pane had no size yet is redone on the first real resize
 function fitToView(){
+  if(wrap.clientWidth===0 || wrap.clientHeight===0) needsFit=true;
   const cells = playableCoords();
   if(cells.length===0){ view.size=24; view.ox=wrap.clientWidth/2; view.oy=wrap.clientHeight/2; draw(); return; }
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   for(const c of cells){
-    const center = axialToPixel(c,1);
-    for(let i=0;i<6;i++){
-      const p = hexCorner(center,i,1);
-      minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
-      minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y);
-    }
+    const p=axialToPixel(c,1,isFlat());
+    minX=Math.min(minX,p.x-1); maxX=Math.max(maxX,p.x+1); minY=Math.min(minY,p.y-1); maxY=Math.max(maxY,p.y+1);
   }
-  const w = maxX-minX, h = maxY-minY;
-  const availW = wrap.clientWidth - 40, availH = wrap.clientHeight - 40;
-  const size = Math.max(4, Math.min(availW/w, availH/h));
-  view.size = size;
-  view.ox = wrap.clientWidth/2 - (minX+maxX)/2*size;
-  view.oy = wrap.clientHeight/2 - (minY+maxY)/2*size;
+  const w=maxX-minX, h=maxY-minY;
+  const availW=wrap.clientWidth-40, availH=wrap.clientHeight-60;
+  view.size = Math.max(4, Math.min(availW/w, availH/h, 60));
+  view.ox = wrap.clientWidth/2 - (minX+maxX)/2*view.size;
+  view.oy = wrap.clientHeight/2 - (minY+maxY)/2*view.size + 10;
   draw();
 }
+function toScreen(c){ const p=axialToPixel(c,view.size,isFlat()); return {x:p.x+view.ox, y:p.y+view.oy}; }
+function screenToHex(sx,sy){ const f=pixelToAxialFloat({x:sx-view.ox,y:sy-view.oy},view.size,isFlat()); return axialRound(f.q,f.r); }
 
-function toScreen(c){
-  const p = axialToPixel(c, view.size);
-  return { x: p.x+view.ox, y: p.y+view.oy };
-}
-function screenToHex(sx, sy){
-  return pixelToAxial({x:sx-view.ox, y:sy-view.oy}, view.size);
-}
-
-/* =========================================================================
-   DRAWING — colors ported from HexBoard.gd's _draw_cell / status bar / town icon
-   ========================================================================= */
 const COL = {
-  empty:"#26262e", blocked:"#141418", fire:"#e64d1a",
-  poolUnfilled:"#405973", poolFilled:"#3380e6", town:"#8c7359",
-  townBody:"#d9ccb3", townRoof:"#994033", water:"#4d99ff",
-  litBox:"#33d966", unlitBox:"#26262e", outline:"rgba(0,0,0,.5)",
-  sourceRing:"#7ec4ff",
+  empty:"#2a2a33", blocked:"#131318", outside:"#0f0f13", fire:"#e64d1a", lakeWater:"#3380e6", lakeFull:"#5fb0ff",
+  lakeRim:"#e0d29f", town:"#8c7359", townFlooded:"#7fb3ff", geyser:"#4fb8b8", geyserActive:"#a8f0f0",
+  dirt:"#6b4f2e", trench:"#4d3d2e", mudslide:"#382619", hydro:"#c5ced4", hydroRim:"#37474f", hydroActive:"#e0f7fa",
+  water:"#4d99ff", outline:"rgba(0,0,0,.55)", source:"#8fd0ff", preset:"rgba(255,243,204,.9)", hint:"#ffd133",
 };
-
-function cellTerrainOf(k){
-  if(state.fireCells.has(k)) return "fire";
-  if(state.poolCells.has(k)) return "pool";
-  if(state.townCells.has(k)) return "town";
-  return "empty";
-}
-
-function draw(){
-  const rect = wrap.getBoundingClientRect();
-  ctx.clearRect(0,0,rect.width,rect.height);
-  const showBlocked = true;
-  const cells = allDiamondCoords();
-  for(const c of cells){
-    const k = key(c);
-    const blocked = state.blockedCells.has(k);
-    if(blocked && !showBlocked) continue;
-    drawCell(c, blocked);
-  }
-  // sources drawn on top
-  for(const k of state.waterSources){
-    drawSourceMarker(parseKey(k));
-  }
-  // playtest water overlay
-  if(sim && sim.active){
-    for(const w of sim.waterCells) drawWater(w.coord);
-  }
-}
-
-function drawCell(c, blocked){
-  const center = toScreen(c);
-  const pts = [];
-  for(let i=0;i<6;i++) pts.push(hexCorner(center,i,view.size));
+function hexPath(center){
+  const flat=isFlat();
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for(let i=1;i<6;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  for(let i=0;i<6;i++){ const p=hexCorner(center,i,view.size,flat); if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); }
   ctx.closePath();
-
-  let fill = COL.empty;
-  const k = key(c);
-  let placedBlockId = null;
-  if(sim && sim.active) placedBlockId = sim.placedBlocks.get(k);
-
-  if(blocked){
-    fill = COL.blocked;
-  } else if(placedBlockId){
-    const b = state.catalog.find(b=>b.id===placedBlockId);
-    fill = b ? b.color : "#fff";
-  } else if(state.fireCells.has(k)){
-    fill = COL.fire;
-  } else if(state.poolCells.has(k)){
-    const filled = sim && sim.active && (sim.poolFill.get(k)||0) >= 4;
-    fill = filled ? COL.poolFilled : COL.poolUnfilled;
-  } else if(state.townCells.has(k)){
-    fill = COL.town;
+}
+function draw(){
+  const rect=wrap.getBoundingClientRect();
+  ctx.clearRect(0,0,rect.width,rect.height);
+  const flat=isFlat();
+  const visible = c => { const p=toScreen(c); return p.x>-view.size*2 && p.x<rect.width+view.size*2 && p.y>-view.size*2 && p.y<rect.height+view.size*2; };
+  const cells = gridCoords(2).filter(visible);
+  // pass 1: cell fills
+  for(const c of cells) drawCell(c);
+  // pass 2: bodies (lakes, hydro plants, walls) get one outer rim each
+  for(const [a,extras] of L.lake_cells) drawBodyRim([a,...extras], COL.lakeRim, Math.max(1.5,view.size*0.1));
+  for(const a of L.pool_targets.keys()) if(!L.lake_cells.has(a)) drawBodyRim([a], COL.lakeRim, Math.max(1.5,view.size*0.1));
+  for(const h of L.hydro_plant_cells){ const c=parseKey(h); drawBodyRim([key(add(c,{q:-1,r:0})),h,key(add(c,{q:1,r:0}))], COL.hydroRim, Math.max(1.5,view.size*0.12)); }
+  const placed = new Map(); // anchor -> {id, cells, preset}
+  for(const [a,id] of L.preset_blocks) placed.set(a,{id, cells:blockFootprint(parseKey(a),id,false).map(key), preset:true});
+  if(sim){
+    placed.clear();
+    for(const [cell,a] of sim.anchors){
+      if(!placed.has(a)) placed.set(a,{id:sim.placed.get(cell), cells:[], preset:sim.presetCells.has(a)});
+      placed.get(a).cells.push(cell);
+    }
   }
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.strokeStyle = COL.outline;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  if(blocked){
-    // subtle hatch so it reads as "hole", distinct from empty
-    ctx.save();
-    ctx.clip();
-    ctx.strokeStyle="rgba(255,255,255,.05)";
+  for(const [a,b] of placed){
+    drawBodyRim(b.cells, b.preset ? COL.preset : "rgba(255,255,255,.7)", Math.max(1.5,view.size*(b.preset?0.1:0.07)), b.preset ? [view.size*0.3, view.size*0.15] : null);
+    drawBlockGlyph(b.cells, blockDef(b.id));
+  }
+  for(const k of L.hint_cells) drawHint(parseKey(k));
+  for(const k of L.water_sources) drawSourceMarker(parseKey(k), L.source_flow_style.get(k)||"straight", false);
+  if(sim){
+    for(const g of sim.activeGeysers) drawSourceMarker(parseKey(g), "straight", true);
+    for(const g of sim.hydroSources) drawSourceMarker(parseKey(g), "straight", true);
+    for(const w of sim.water) drawWater(w.coord);
+  }
+  drawFooter(flat);
+}
+function drawCell(c){
+  const k=key(c), center=toScreen(c);
+  const blocked=L.blocked_cells.has(k), outside=!inCorridorBand(c);
+  hexPath(center);
+  let fill=COL.empty, label=null;
+  const t = sim ? (sim.terrain.get(k)||"empty") : terrainAt(k);
+  if(blocked) fill=COL.blocked;
+  else if(outside) fill=COL.outside;
+  else if(sim && sim.placed.has(k)){ const d=blockDef(sim.placed.get(k)); fill=d?d.color:"#fff"; }
+  else if(!sim && presetAnchorOf(k)){ const d=blockDef(L.preset_blocks.get(presetAnchorOf(k))); fill=d?d.color:"#fff"; }
+  else switch(t){
+    case "fire": fill=COL.fire; break;
+    case "pool": { const a=sim ? sim.lakeAnchor.get(k) : lakeAnchorOf(k); const f=sim?(sim.poolFill.get(a)||0):0; fill = f>=4 ? COL.lakeFull : COL.lakeWater; break; }
+    case "town": fill = (sim && sim.flooded.has(k)) ? COL.townFlooded : COL.town; break;
+    case "geyser": fill=COL.geyser; break;
+    case "dirt": fill=COL.dirt; if(sim && sim.digProgress.get(k)) label=String(sim.digProgress.get(k)); break;
+    case "hydro": fill=COL.hydro; break;
+    case "empty":
+      if(sim){ if(sim.mudslide.has(k)) fill=COL.mudslide; else if(sim.digProgress.get(k)>=3) fill=COL.trench; else if(sim.activeGeysers.includes(k)) fill=COL.geyserActive; else if(sim.hydroSources.includes(k)) fill=COL.hydroActive; }
+      break;
+  }
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=COL.outline; ctx.lineWidth=1; ctx.stroke();
+  if(blocked || outside){
+    ctx.save(); ctx.clip();
+    ctx.strokeStyle = blocked ? "rgba(255,255,255,.06)" : "rgba(255,255,255,.025)";
     ctx.lineWidth=view.size*0.12;
-    for(let d=-view.size*2; d<view.size*2; d+=view.size*0.35){
-      ctx.beginPath();
-      ctx.moveTo(center.x-view.size+d, center.y-view.size);
-      ctx.lineTo(center.x+view.size+d, center.y+view.size);
-      ctx.stroke();
+    for(let d=-view.size*2; d<view.size*2; d+=view.size*0.4){
+      ctx.beginPath(); ctx.moveTo(center.x-view.size+d, center.y-view.size); ctx.lineTo(center.x+view.size+d, center.y+view.size); ctx.stroke();
     }
     ctx.restore();
   }
-
-  if(state.townCells.has(k) && !placedBlockId){
-    drawTownIcon(center);
-  }
-  if(state.poolCells.has(k) && sim && sim.active){
-    drawPoolBar(c, sim.poolFill.get(k)||0);
-  }
-  if(view.size > 10){
-    ctx.fillStyle = "rgba(255,255,255,.25)";
-    ctx.font = `${Math.max(8,view.size*0.28)}px monospace`;
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    if(view.size>16) ctx.fillText(`${c.q},${c.r}`, center.x, center.y);
+  if(t==="town" && !blocked) drawTownIcon(center);
+  if(t==="geyser") drawGeyserIcon(center, sim ? (sim.geyserFill.get(k)||0) : 0);
+  if(t==="hydro" && sim){ const a=sim.hydroCellToAnchor.get(k); const p=sim.hydroPlants.get(a); if(p && p.touched && !p.active){ ctx.beginPath(); ctx.arc(center.x,center.y,view.size*0.45,0,Math.PI*2); ctx.strokeStyle="#ffd133"; ctx.lineWidth=2; ctx.stroke(); } }
+  if(label){ ctx.fillStyle="#fff"; ctx.font=`bold ${Math.max(9,view.size*0.5)}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(label, center.x, center.y); }
+  if(view.size>16 && !outside && !label){
+    ctx.fillStyle="rgba(255,255,255,.28)"; ctx.font=`${Math.max(8,view.size*0.28)}px monospace`;
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(`${c.q},${c.r}`, center.x, center.y+view.size*0.55);
   }
 }
-
-function drawSourceMarker(c){
-  const center = toScreen(c);
-  const s = view.size;
-  ctx.beginPath();
-  ctx.arc(center.x, center.y-s*0.05, s*0.32, 0, Math.PI*2);
-  ctx.strokeStyle = COL.sourceRing;
-  ctx.lineWidth = Math.max(1.5, s*0.08);
-  ctx.stroke();
-  // small downward arrow (first move is always down-left, shown as a hint)
-  ctx.beginPath();
-  ctx.moveTo(center.x, center.y+s*0.05);
-  ctx.lineTo(center.x-s*0.22, center.y+s*0.42);
-  ctx.moveTo(center.x, center.y+s*0.05);
-  ctx.lineTo(center.x+s*0.05, center.y+s*0.42);
-  ctx.strokeStyle = COL.sourceRing;
-  ctx.stroke();
+// Strokes only the edges of `cells` that face a cell outside the group.
+function drawBodyRim(cells, color, width, dash){
+  const set=new Set(cells), flat=isFlat(), en=edgeNeighbors(flat);
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineCap="round"; if(dash) ctx.setLineDash(dash);
+  for(const k of cells){
+    const c=parseKey(k), center=toScreen(c);
+    for(let i=0;i<6;i++){
+      if(set.has(key(add(c,en[i])))) continue;
+      const a=hexCorner(center,i,view.size*0.96,flat), b=hexCorner(center,i+1,view.size*0.96,flat);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+  }
+  ctx.restore();
 }
-
+function drawBlockGlyph(cells, def){
+  if(!def) return;
+  const flat=isFlat();
+  let cx=0, cy=0; for(const k of cells){ const p=toScreen(parseKey(k)); cx+=p.x; cy+=p.y; } cx/=cells.length; cy/=cells.length;
+  const s=view.size;
+  ctx.save(); ctx.strokeStyle="rgba(255,255,255,.85)"; ctx.fillStyle="rgba(255,255,255,.85)"; ctx.lineWidth=Math.max(1.5,s*0.1); ctx.lineCap="round";
+  const arrow=(d)=>{ const p=axialToPixel(d,s*0.42,flat); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+p.x,cy+p.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx+p.x,cy+p.y,s*0.09,0,Math.PI*2); ctx.fill(); };
+  const dl = flat?FLAT_DOWN_LEFT:DOWN_LEFT, dr = flat?FLAT_DOWN_RIGHT:DOWN_RIGHT;
+  switch(def.behavior){
+    case BEHAVIOR.DIVERT_LEFT: arrow(dl); break;
+    case BEHAVIOR.DIVERT_RIGHT: arrow(dr); break;
+    case BEHAVIOR.SPLIT: arrow(dl); arrow(dr); break;
+    case BEHAVIOR.CATAPULT: ctx.beginPath(); ctx.arc(cx,cy,s*0.22,0,Math.PI*2); ctx.stroke(); break;
+    case BEHAVIOR.WALL: ctx.strokeRect(cx-s*0.6, cy-s*0.18, s*1.2, s*0.36); break;
+  }
+  ctx.restore();
+}
+function drawHint(c){
+  const center=toScreen(c), flat=isFlat();
+  ctx.save(); ctx.strokeStyle=COL.hint; ctx.lineWidth=Math.max(1.5,view.size*0.1); ctx.setLineDash([view.size*0.3, view.size*0.18]);
+  ctx.beginPath(); for(let i=0;i<6;i++){ const p=hexCorner(center,i,view.size*0.82,flat); if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); } ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
+function drawSourceMarker(c, style, active){
+  const center=toScreen(c), s=view.size, flat=isFlat();
+  ctx.save();
+  ctx.strokeStyle = active ? "#c8f0ff" : COL.source; ctx.lineWidth=Math.max(1.5,s*0.08);
+  ctx.beginPath(); ctx.arc(center.x, center.y-s*0.08, s*0.3, 0, Math.PI*2); ctx.stroke();
+  const d = flat ? (style==="zigzag" ? FLAT_DOWN_LEFT : FLAT_DOWN) : DOWN_LEFT;
+  const p=axialToPixel(d, s*0.5, flat);
+  ctx.beginPath(); ctx.moveTo(center.x, center.y+s*0.1); ctx.lineTo(center.x+p.x, center.y+p.y); ctx.stroke();
+  if(flat){ ctx.fillStyle=ctx.strokeStyle; ctx.font=`bold ${Math.max(8,s*0.32)}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(style==="zigzag"?"Z":"S", center.x, center.y-s*0.08); }
+  ctx.restore();
+}
 function drawTownIcon(center){
-  const s = view.size;
-  const half = s*0.28, roofH = s*0.22, bodyTop = center.y - half*0.2;
-  ctx.fillStyle = COL.townBody;
-  ctx.fillRect(center.x-half, bodyTop, half*2, half*1.4);
-  ctx.beginPath();
-  ctx.moveTo(center.x-half*1.15, bodyTop);
-  ctx.lineTo(center.x+half*1.15, bodyTop);
-  ctx.lineTo(center.x, bodyTop-roofH);
-  ctx.closePath();
-  ctx.fillStyle = COL.townRoof;
-  ctx.fill();
+  const s=view.size, half=s*0.26, roofH=s*0.2, bodyTop=center.y-half*0.2;
+  ctx.fillStyle="#d9ccb3"; ctx.fillRect(center.x-half, bodyTop, half*2, half*1.3);
+  ctx.beginPath(); ctx.moveTo(center.x-half*1.15, bodyTop); ctx.lineTo(center.x+half*1.15, bodyTop); ctx.lineTo(center.x, bodyTop-roofH); ctx.closePath();
+  ctx.fillStyle="#994033"; ctx.fill();
 }
-
-function drawPoolBar(c, connected){
-  const center = toScreen(c);
-  if(connected<=0) return;
-  const box=10, gap=4, total=4*box+3*gap;
-  const startX = center.x-total/2, barY = center.y-view.size-box-6;
-  for(let i=0;i<4;i++){
-    const x = startX+i*(box+gap);
-    ctx.fillStyle = i<connected ? COL.litBox : COL.unlitBox;
-    ctx.fillRect(x,barY,box,box);
-    ctx.strokeStyle="rgba(0,0,0,.5)";
-    ctx.strokeRect(x,barY,box,box);
-  }
+function drawGeyserIcon(center, fill){
+  const s=view.size;
+  ctx.save(); ctx.strokeStyle="rgba(255,255,255,.8)"; ctx.lineWidth=Math.max(1,s*0.07);
+  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.arc(center.x, center.y, s*(0.15+i*0.12), Math.PI*1.15, Math.PI*1.85); ctx.stroke(); }
+  if(fill>0){ ctx.fillStyle="#fff"; ctx.font=`bold ${Math.max(8,s*0.35)}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(`${fill}/3`, center.x, center.y+s*0.35); }
+  ctx.restore();
 }
-
 function drawWater(c){
-  const center = toScreen(c);
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, view.size*0.4, 0, Math.PI*2);
-  ctx.fillStyle = COL.water;
-  ctx.fill();
+  const center=toScreen(c);
+  ctx.beginPath(); ctx.arc(center.x, center.y, view.size*0.38, 0, Math.PI*2);
+  ctx.fillStyle=COL.water; ctx.fill();
+}
+function drawFooter(flat){
+  const rect=wrap.getBoundingClientRect();
+  ctx.fillStyle="rgba(255,255,255,.35)"; ctx.font="11px sans-serif"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+  ctx.fillText(`${flat?"flat":"pointy"} grid · radius ${L.grid_radius}${L.corridor_half_width?` · corridor ±${L.corridor_half_width}`:""} · ${playableCoords().length} playable cells · ≈${playableWidthTiles()} wide · bottom row ${bottomRow()}`, rect.width-10, rect.height-10);
 }
 
 /* =========================================================================
-   INPUT — click-vs-drag threshold, mirroring Level.gd's DRAG_THRESHOLD
+   INPUT — click-vs-drag threshold, mirroring Level.gd
    ========================================================================= */
 const DRAG_THRESHOLD = 8;
 let press=null;
-
-canvas.addEventListener("pointerdown", e=>{
-  canvas.setPointerCapture(e.pointerId);
-  press = {x:e.clientX, y:e.clientY, ox:view.ox, oy:view.oy, dragged:false};
-});
+canvas.addEventListener("pointerdown", e=>{ canvas.setPointerCapture(e.pointerId); press={x:e.clientX,y:e.clientY,ox:view.ox,oy:view.oy,dragged:false}; });
 canvas.addEventListener("pointermove", e=>{
-  const rect = canvas.getBoundingClientRect();
-  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
+  const rect=canvas.getBoundingClientRect(); const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
   updateHoverReadout(sx,sy);
-  if(press){
-    const dx=e.clientX-press.x, dy=e.clientY-press.y;
-    if(Math.hypot(dx,dy) > DRAG_THRESHOLD){
-      press.dragged = true;
-      view.ox = press.ox+dx; view.oy = press.oy+dy;
-      draw();
-    }
-  }
+  if(press){ const dx=e.clientX-press.x, dy=e.clientY-press.y;
+    if(Math.hypot(dx,dy)>DRAG_THRESHOLD){ press.dragged=true; view.ox=press.ox+dx; view.oy=press.oy+dy; draw(); } }
 });
 canvas.addEventListener("pointerup", e=>{
-  const rect = canvas.getBoundingClientRect();
-  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
-  if(press && !press.dragged){
-    handleTap(sx,sy);
-  }
+  const rect=canvas.getBoundingClientRect(); const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  if(press && !press.dragged) handleTap(sx,sy);
   press=null;
 });
 canvas.addEventListener("pointerleave", ()=>{ document.getElementById("hoverReadout").textContent="—"; });
 canvas.addEventListener("wheel", e=>{
   e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
-  const before = screenToHexFloat(sx,sy);
-  const factor = e.deltaY<0 ? 1.1 : 0.9;
-  view.size = Math.max(3, Math.min(140, view.size*factor));
-  // keep cursor position stable
-  const p = axialToPixel(before, view.size);
-  view.ox = sx - p.x; view.oy = sy - p.y;
-  draw();
-}, {passive:false});
-
-function screenToHexFloat(sx,sy){
-  // like screenToHex but returns the (unrounded) axial float via pixelToAxial's inputs
-  const size = view.size;
-  const x = sx-view.ox, y = sy-view.oy;
-  const q = (Math.sqrt(3)/3*x - 1/3*y)/size;
-  const r = (2/3*y)/size;
-  return {q,r};
-}
-
+  const rect=canvas.getBoundingClientRect(); const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const before=pixelToAxialFloat({x:sx-view.ox,y:sy-view.oy},view.size,isFlat());
+  view.size=Math.max(3, Math.min(140, view.size*(e.deltaY<0?1.1:0.9)));
+  const p=axialToPixel(before,view.size,isFlat()); view.ox=sx-p.x; view.oy=sy-p.y; draw();
+},{passive:false});
 function updateHoverReadout(sx,sy){
-  const c = screenToHex(sx,sy);
-  const el = document.getElementById("hoverReadout");
-  if(!inPlayableAreaLoose(c)){ el.textContent = `(${c.q}, ${c.r}) — outside grid`; return; }
-  el.textContent = `(${c.q}, ${c.r})`;
+  const c=screenToHex(sx,sy), k=key(c), el=document.getElementById("hoverReadout");
+  if(cubeDist(c)>L.grid_radius){ el.textContent=`(${c.q}, ${c.r}) — outside grid`; return; }
+  const bits=[`(${c.q}, ${c.r})`];
+  if(L.blocked_cells.has(k)) bits.push("blocked"); else if(!inCorridorBand(c)) bits.push("outside corridor");
+  const t=terrainAt(k); if(t!=="empty") bits.push(t + (t==="pool" ? ` (lake ${lakeAnchorOf(k)})` : t==="hydro" ? ` (plant ${hydroCenterOf(k)})` : ""));
+  if(L.water_sources.has(k)) bits.push("source" + (isFlat() ? " "+(L.source_flow_style.get(k)||"straight") : ""));
+  const p=presetAnchorOf(k); if(p) bits.push(`preset ${L.preset_blocks.get(p)} @ ${p}`);
+  if(L.hint_cells.has(k)) bits.push("hint");
+  if(sim && sim.placed.has(k)) bits.push(`block ${sim.placed.get(k)}`);
+  el.textContent=bits.join(" · ");
 }
-function inPlayableAreaLoose(c){ return cubeDist(c) <= state.gridRadius; }
-
 function handleTap(sx,sy){
-  const c = screenToHex(sx,sy);
-  if(playtestActiveTab()){
-    ptHandleTap(c);
-    return;
-  }
-  if(!inPlayableAreaLoose(c)) return;
-  applyTool(c, currentTool);
-  draw();
-  runValidation();
+  const c=screenToHex(sx,sy);
+  if(activeTab()==="playtest"){ ptHandleTap(c); return; }
+  if(cubeDist(c)>L.grid_radius && currentTool!=="erase") { setStatus("Outside grid_radius."); return; }
+  applyTool(c,currentTool);
+  afterEdit();
 }
-
-function applyTool(c, tool){
-  const k = key(c);
-  if(tool==="source"){
-    if(state.waterSources.has(k)) state.waterSources.delete(k);
-    else state.waterSources.add(k);
-    return;
-  }
-  if(tool==="erase"){
-    state.fireCells.delete(k); state.poolCells.delete(k);
-    state.townCells.delete(k); state.blockedCells.delete(k);
-    return;
-  }
-  if(tool==="blocked"){
-    if(state.blockedCells.has(k)) state.blockedCells.delete(k);
-    else {
-      state.fireCells.delete(k); state.poolCells.delete(k); state.townCells.delete(k);
-      state.waterSources.delete(k);
-      state.blockedCells.add(k);
-    }
-    return;
-  }
-  // fire / pool / town: mutually exclusive terrain, auto-unblock
-  const sets = {fire:state.fireCells, pool:state.poolCells, town:state.townCells};
-  const target = sets[tool];
-  if(target.has(k)){ target.delete(k); return; }
-  for(const other of Object.values(sets)) other.delete(k);
-  state.blockedCells.delete(k);
-  target.add(k);
-}
+function afterEdit(){ sim=null; draw(); runValidation(); refreshExport(); renderLists(); }
 
 /* =========================================================================
-   TOOLBAR / TABS
+   TOOLBAR / TABS / FORM
    ========================================================================= */
 function buildToolbar(){
-  const bar = document.getElementById("toolbar");
-  bar.innerHTML = "";
+  const bar=document.getElementById("toolbar"); bar.innerHTML="";
   for(const t of TOOLS){
-    const btn = document.createElement("button");
-    btn.className = t.id===currentTool ? "active":"";
-    btn.innerHTML = `<span class="swatch" style="background:${t.color}"></span>${t.label}`;
-    btn.onclick = ()=>{ currentTool=t.id; buildToolbar(); };
+    const btn=document.createElement("button");
+    btn.className = t.id===currentTool ? "active" : "";
+    btn.innerHTML=`<span class="swatch" style="background:${t.color}"></span>${t.label}`;
+    btn.onclick=()=>{ currentTool=t.id; buildToolbar(); };
     bar.appendChild(btn);
+    if(t.id==="preset"){
+      const sel=document.createElement("select");
+      for(const b of catalog){ const o=document.createElement("option"); o.value=b.id; o.textContent=b.display_name; if(b.id===presetToolBlock) o.selected=true; sel.appendChild(o); }
+      sel.onchange=()=>{ presetToolBlock=sel.value; currentTool="preset"; buildToolbar(); };
+      bar.appendChild(sel);
+    }
   }
 }
-buildToolbar();
-
+function activeTab(){ return document.querySelector(".tabs button.active").dataset.tab; }
 document.querySelectorAll(".tabs button").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
-    if(btn.dataset.tab==="playtest") ptSetup(true);
+    if(btn.dataset.tab==="playtest") ptSetup(true); else if(sim){ stopAutoplay(); sim=null; }
     if(btn.dataset.tab==="io") refreshExport();
-    if(btn.dataset.tab==="inventory") renderBlockList();
+    if(btn.dataset.tab==="level") renderLists();
     draw();
   });
 });
-function playtestActiveTab(){
-  return document.getElementById("panel-playtest").classList.contains("active");
+document.getElementById("zoomIn").onclick=()=>{ view.size=Math.min(140,view.size*1.25); draw(); };
+document.getElementById("zoomOut").onclick=()=>{ view.size=Math.max(3,view.size*0.8); draw(); };
+document.getElementById("zoomFit").onclick=fitToView;
+
+const $=id=>document.getElementById(id);
+function bindNumber(id, field, min){
+  $(id).oninput=()=>{ const v=parseInt($(id).value); if(!isNaN(v)) L[field]=Math.max(min,v); afterEdit(); if(field==="grid_radius"||field==="corridor_half_width") fitToView(); };
+}
+bindNumber("fLevelId","level_id",1); bindNumber("fGridRadius","grid_radius",1); bindNumber("fCorridor","corridor_half_width",0);
+bindNumber("fBudget","total_block_budget",0); bindNumber("fPar","par_measures",0);
+$("fDisplayName").oninput=()=>{ L.display_name=$("fDisplayName").value; afterEdit(); };
+$("fIntroText").oninput=()=>{ L.intro_text=$("fIntroText").value; afterEdit(); };
+$("fGridStyle").onchange=()=>{ L.grid_style=$("fGridStyle").value; afterEdit(); fitToView(); };
+function syncForm(){
+  $("fLevelId").value=L.level_id; $("fDisplayName").value=L.display_name; $("fIntroText").value=L.intro_text;
+  $("fGridRadius").value=L.grid_radius; $("fGridStyle").value=L.grid_style; $("fCorridor").value=L.corridor_half_width;
+  $("fBudget").value=L.total_block_budget; $("fPar").value=L.par_measures;
+  $("headerMeta").textContent = `${L.display_name} (id ${L.level_id})` + (L._src ? " — imported" : " — new");
 }
 
-document.getElementById("zoomIn").onclick = ()=>{ view.size=Math.min(140,view.size*1.2); draw(); };
-document.getElementById("zoomOut").onclick = ()=>{ view.size=Math.max(3,view.size*0.8); draw(); };
-document.getElementById("zoomFit").onclick = fitToView;
-
-/* =========================================================================
-   HEADER META BINDINGS
-   ========================================================================= */
-const $levelId = document.getElementById("levelId");
-const $displayName = document.getElementById("displayName");
-const $gridRadius = document.getElementById("gridRadius");
-$levelId.oninput = ()=>{ state.levelId = parseInt($levelId.value)||1; refreshExport(); };
-$displayName.oninput = ()=>{ state.displayName = $displayName.value; refreshExport(); };
-$gridRadius.oninput = ()=>{
-  state.gridRadius = Math.max(1, parseInt($gridRadius.value)||1);
-  fitToView(); runValidation(); refreshExport();
+/* ---- design helpers ---------------------------------------------------- */
+$("btnGenColumns").onclick=()=>{
+  const cmin=parseInt($("colMin").value), cmax=parseInt($("colMax").value), rb=Math.abs(parseInt($("rowBlock").value)||99);
+  const R=L.grid_radius;
+  for(let q=-R;q<=R;q++) for(let r=-R;r<=R;r++){
+    const c={q,r}; if(cubeDist(c)>R) continue;
+    const col = q + (r - (r&1))/2; // odd-r offset column, the way the game's "6 hexes wide" rule counts
+    if(col<cmin || col>cmax || Math.abs(r)>=rb){ const k=key(c); if(cellIsFree(k) && !L.hint_cells.has(k)) L.blocked_cells.add(k); }
+  }
+  afterEdit(); fitToView();
+};
+$("btnBlockedFromCorridor").onclick=()=>{
+  if(L.corridor_half_width<=0){ setStatus("Set a corridor_half_width first."); return; }
+  for(const c of gridCoords(99)) if(!inCorridorBand(c)) L.blocked_cells.add(key(c));
+  L.corridor_half_width=0; syncForm(); afterEdit(); fitToView();
+};
+$("btnClearBlocked").onclick=()=>{ L.blocked_cells.clear(); afterEdit(); fitToView(); };
+$("btnClearAll").onclick=()=>{
+  if(!confirm("Clear all terrain, sources, lakes, presets, hints and blocked cells?")) return;
+  for(const n of ["water_sources","fire_cells","blocked_cells","hint_cells","town_cells","geyser_cells","dirt_cells","hydro_plant_cells"]) L[n].clear();
+  for(const n of ["source_flow_style","pool_targets","lake_cells","preset_blocks"]) L[n].clear();
+  afterEdit();
+};
+$("btnNewLevel").onclick=()=>{ if(!confirm("Start a new empty level? Unsaved edits are lost.")) return; loadLevel(newLevel()); };
+$("btnApplyManual").onclick=()=>{
+  const c={q:parseInt($("manQ").value)||0, r:parseInt($("manR").value)||0};
+  if(cubeDist(c)>L.grid_radius && currentTool!=="erase"){ setStatus("That coordinate is outside grid_radius."); return; }
+  applyTool(c,currentTool); afterEdit();
 };
 
+/* ---- level tab lists --------------------------------------------------- */
+function renderBlockList(){
+  const el=$("blockList"); el.innerHTML="";
+  for(const b of catalog){
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span><span class="swatch" style="background:${b.color}"></span> ${b.display_name} <code>${b.id}</code></span>
+      <input type="number" min="0" value="${L.starting_inventory.get(b.id)||0}">`;
+    row.querySelector("input").oninput=e=>{
+      const n=Math.max(0,parseInt(e.target.value)||0);
+      if(n>0) L.starting_inventory.set(b.id,n); else L.starting_inventory.delete(b.id);
+      sim=null; draw(); runValidation(); refreshExport();
+    };
+    el.appendChild(row);
+  }
+}
+$("btnAddBlock").onclick=()=>{
+  const id=prompt("Block id (must match a data/blocks/<id>.tres):"); if(!id) return;
+  if(catalog.some(b=>b.id===id)) return;
+  catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff", footprint:[]});
+  buildToolbar(); renderBlockList();
+};
+function renderLists(){
+  renderBlockList();
+  const sl=$("sourceList"); sl.innerHTML = L.water_sources.size ? "" : '<span style="color:var(--dim)">none</span>';
+  for(const k of L.water_sources){
+    const row=document.createElement("div"); row.className="row";
+    const style=L.source_flow_style.get(k);
+    row.innerHTML=`<span>(${k})</span>` + (isFlat()
+      ? `<select><option value="">(default straight)</option><option value="straight" ${style==="straight"?"selected":""}>straight</option><option value="zigzag" ${style==="zigzag"?"selected":""}>zigzag</option></select>`
+      : `<span style="color:var(--dim)">zigzag, first step down-left</span>`);
+    const sel=row.querySelector("select");
+    if(sel) sel.onchange=()=>{ if(sel.value) L.source_flow_style.set(k,sel.value); else L.source_flow_style.delete(k); afterEdit(); };
+    sl.appendChild(row);
+  }
+  const ll=$("lakeList"); ll.innerHTML = L.pool_targets.size ? "" : '<span style="color:var(--dim)">none</span>';
+  for(const a of L.pool_targets.keys()){
+    const extras=L.lake_cells.get(a)||[];
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span>anchor (${a}) + ${extras.map(x=>`(${x})`).join(" ")||"—"}${extras.length!==3?' <b style="color:var(--warn)">wants 3</b>':""}</span><button class="mini">remove</button>`;
+    row.querySelector("button").onclick=()=>{ L.pool_targets.delete(a); L.lake_cells.delete(a); afterEdit(); };
+    ll.appendChild(row);
+  }
+  const pl=$("presetList"); pl.innerHTML = L.preset_blocks.size ? "" : '<span style="color:var(--dim)">none</span>';
+  for(const [a,id] of L.preset_blocks){
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span>(${a}) ${id}${id==="wall"?` + (${key(add(parseKey(a),{q:1,r:0}))})`:""}</span><button class="mini">remove</button>`;
+    row.querySelector("button").onclick=()=>{ L.preset_blocks.delete(a); afterEdit(); };
+    pl.appendChild(row);
+  }
+}
+
 /* =========================================================================
-   DESIGN TAB EXTRAS: corridor generator, manual entry, bulk clear
+   SIMULATION — ported from HexBoard.gd (one editor "measure" = one beat
+   cycle: PLACEMENT, WATER, TERRAIN, STATUS)
    ========================================================================= */
-document.getElementById("btnGenCorridor").onclick = ()=>{
-  const half = Math.max(0, parseInt(document.getElementById("corridorHalfWidth").value)||0);
-  const R = state.gridRadius;
-  state.blockedCells.clear();
-  for(let r=-R; r<=R; r++){
-    const centerQ = Math.round(-r/2);
-    for(let q=-R; q<=R; q++){
-      const c={q,r};
-      if(cubeDist(c) > R) continue;
-      if(q < centerQ-half || q > centerQ+half){
-        state.blockedCells.add(key(c));
+const POOL_BEATS_REQUIRED=4, GEYSER_BEATS_REQUIRED=3, DIG_TAPS_REQUIRED=3, MUDSLIDE_BEATS_REQUIRED=10, MUDSLIDE_COLLAPSE_TILES=3;
+function makeSim(){
+  const S={
+    started:false, gameOver:false, loseReason:"", won:false, measure:0,
+    terrain:new Map(), placed:new Map(), anchors:new Map(), presetCells:new Set(), spentPreset:new Set(),
+    poolFill:new Map(), lakeAnchor:new Map(), lakesCredited:new Set(), geyserFill:new Map(), digProgress:new Map(),
+    dirtStall:new Map(), stalledThisBeat:new Map(), mudslide:new Set(), activeGeysers:[],
+    hydroPlants:new Map(), hydroCellToAnchor:new Map(), hydroSources:[],
+    water:[], pendingTerrain:[], firesRemaining:L.fire_cells.size, flooded:new Set(),
+    useBudget:L.total_block_budget>0, budgetRemaining:L.total_block_budget, inventory:new Map(),
+    selectedBlockId:"", bottomRow:bottomRow(), flat:isFlat(),
+  };
+  if(!S.useBudget) for(const [id,n] of L.starting_inventory) S.inventory.set(id,n);
+  for(const k of L.fire_cells) S.terrain.set(k,"fire");
+  for(const a of L.pool_targets.keys()){ S.terrain.set(a,"pool"); S.poolFill.set(a,0); S.lakeAnchor.set(a,a);
+    for(const x of (L.lake_cells.get(a)||[])){ S.terrain.set(x,"pool"); S.lakeAnchor.set(x,a); } }
+  for(const k of L.town_cells) S.terrain.set(k,"town");
+  for(const k of L.geyser_cells){ S.terrain.set(k,"geyser"); S.geyserFill.set(k,0); }
+  for(const k of L.dirt_cells){ S.terrain.set(k,"dirt"); S.digProgress.set(k,0); }
+  for(const a of L.hydro_plant_cells){ const c=parseKey(a); const cells=[key(add(c,{q:-1,r:0})),a,key(add(c,{q:1,r:0}))];
+    for(const x of cells){ S.terrain.set(x,"hydro"); S.hydroCellToAnchor.set(x,a); } S.hydroPlants.set(a,{cells,touched:false,active:false}); }
+  for(const [a,id] of L.preset_blocks){ for(const x of blockFootprint(parseKey(a),id,false).map(key)){ S.placed.set(x,id); S.anchors.set(x,a); } S.presetCells.add(a); }
+  return S;
+}
+const simT=(S,k)=>S.terrain.get(k)||"empty";
+function simIsUndugDirt(S,c){ return simT(S,key(c))==="dirt"; }
+function simIsInactiveHydro(S,c){ const k=key(c); if(simT(S,k)!=="hydro") return false; const p=S.hydroPlants.get(S.hydroCellToAnchor.get(k)); return !(p&&p.active); }
+function simIsSolidBlock(S,c){ const id=S.placed.get(key(c)); if(!id) return false; const d=blockDef(id); return !d || d.behavior===BEHAVIOR.WALL || d.behavior===BEHAVIOR.CATAPULT; }
+function simIsWall(S,c){ return S.activeGeysers.includes(key(c)) || simIsUndugDirt(S,c) || simIsInactiveHydro(S,c) || simIsSolidBlock(S,c); }
+function simNoteHydroContact(S,c){ const k=key(c); if(simT(S,k)!=="hydro") return; const p=S.hydroPlants.get(S.hydroCellToAnchor.get(k)); if(p) p.touched=true; }
+function simNoteDirtStall(S,c,dirs){ for(const d of dirs) if(simIsUndugDirt(S,add(c,d))){ S.stalledThisBeat.set(key(c),d); return; } }
+function simTargetOffsets(S,id){
+  const d=blockDef(id); const dl=S.flat?FLAT_DOWN_LEFT:DOWN_LEFT, dr=S.flat?FLAT_DOWN_RIGHT:DOWN_RIGHT;
+  if(!d) return [];
+  switch(d.behavior){ case BEHAVIOR.WALL: case BEHAVIOR.CATAPULT: return []; case BEHAVIOR.DIVERT_LEFT: return [dl]; case BEHAVIOR.DIVERT_RIGHT: return [dr]; case BEHAVIOR.SPLIT: return [dl,dr]; default: return [dr]; }
+}
+function simAddWater(next,c,dir,mode){ const k=key(c); if(next.some(w=>key(w.coord)===k)) return; const e={coord:c,nextDir:dir}; if(mode) e.mode=mode; next.push(e); }
+function simLose(S,reason){ if(S.gameOver) return; S.gameOver=true; S.loseReason=reason; }
+function simTryEnter(S,c){
+  if(!inPlayable(c)){ if(c.r>S.bottomRow) simLose(S,"edge"); return false; }
+  const k=key(c), t=simT(S,k);
+  if(t==="town"){ S.flooded.add(k); simLose(S,"town"); return false; }
+  if(t==="dirt") return false;
+  if(t==="hydro"){ simNoteHydroContact(S,c); return false; }
+  if(t==="fire"||t==="pool"||t==="geyser"){ if(!S.pendingTerrain.includes(k)) S.pendingTerrain.push(k); return false; }
+  return true;
+}
+function simFlatTryEnter(S,c){ if(!L.blocked_cells.has(key(c)) && cubeDist(c)>L.grid_radius){ simLose(S,"edge"); return false; } return simTryEnter(S,c); }
+function simTryNaturalStep(S,c,dir,futureDir,next){
+  const t=add(c,dir);
+  if(t.r>S.bottomRow){ simTryEnter(S,t); return true; }
+  if(!inPlayable(t) || simIsWall(S,t)){ simNoteHydroContact(S,t); return false; }
+  if(simTryEnter(S,t)) simAddWater(next,t,futureDir);
+  return true;
+}
+function simAdvance(S,e,next){
+  const c=e.coord, k=key(c);
+  if(S.flat){
+    const mode=e.mode||"straight", nd=e.nextDir||FLAT_DOWN_LEFT, od=sameDir(nd,FLAT_DOWN_LEFT)?FLAT_DOWN_RIGHT:FLAT_DOWN_LEFT;
+    if(S.placed.has(k)){
+      const targets=simTargetOffsets(S,S.placed.get(k)).map(d=>add(c,d));
+      if(!targets.length){ simAddWater(next,c,od,mode); return; }
+      let allBlocked=true;
+      for(const t of targets){ if(simIsUndugDirt(S,t)||simIsInactiveHydro(S,t)||simIsSolidBlock(S,t)){ simNoteHydroContact(S,t); continue; }
+        allBlocked=false; if(simFlatTryEnter(S,t)) simAddWater(next,t,od,mode); }
+      if(allBlocked){ simNoteDirtStall(S,c,targets.map(t=>({q:t.q-c.q,r:t.r-c.r}))); simAddWater(next,c,od,mode); }
+      return;
+    }
+    const cands = mode==="zigzag" ? [nd,od] : [FLAT_DOWN];
+    let boundary=false;
+    for(const d of cands){
+      const t=add(c,d);
+      if(!L.blocked_cells.has(key(t)) && cubeDist(t)>L.grid_radius){ boundary=true; continue; }
+      if(!inPlayable(t) || simIsWall(S,t)){ simNoteHydroContact(S,t); continue; }
+      if(simTryEnter(S,t)) simAddWater(next,t, mode==="zigzag"?od:FLAT_DOWN, mode);
+      return;
+    }
+    if(boundary) simLose(S,"edge"); else { simNoteDirtStall(S,c,cands); simAddWater(next,c,od,mode); }
+    return;
+  }
+  const nd=e.nextDir, od=sameDir(nd,DOWN_LEFT)?DOWN_RIGHT:DOWN_LEFT;
+  if(S.placed.has(k)){
+    const targets=simTargetOffsets(S,S.placed.get(k)).map(d=>add(c,d));
+    if(!targets.length){ simAddWater(next,c,od); return; }
+    let allBlocked=true;
+    for(const t of targets){ if(simIsUndugDirt(S,t)||simIsInactiveHydro(S,t)||simIsSolidBlock(S,t)){ simNoteHydroContact(S,t); continue; }
+      allBlocked=false; if(simTryEnter(S,t)) simAddWater(next,t,od); }
+    if(allBlocked){ simNoteDirtStall(S,c,targets.map(t=>({q:t.q-c.q,r:t.r-c.r}))); simAddWater(next,c,od); }
+    return;
+  }
+  if(simTryNaturalStep(S,c,nd,od,next)) return;
+  if(simTryNaturalStep(S,c,od,od,next)) return;
+  simNoteDirtStall(S,c,[nd,od]); simAddWater(next,c,od);
+}
+function simMudslides(S){
+  for(const k of [...S.dirtStall.keys()]) if(!S.stalledThisBeat.has(k)) S.dirtStall.delete(k);
+  for(const [k,dir] of S.stalledThisBeat){
+    S.dirtStall.set(k,(S.dirtStall.get(k)||0)+1);
+    if(S.dirtStall.get(k)>=MUDSLIDE_BEATS_REQUIRED){
+      const alts = S.flat ? [dir,FLAT_DOWN,FLAT_DOWN_LEFT,FLAT_DOWN_RIGHT] : [dir, sameDir(dir,DOWN_LEFT)?DOWN_RIGHT:DOWN_LEFT];
+      let cur=parseKey(k);
+      for(let i=0;i<MUDSLIDE_COLLAPSE_TILES;i++){
+        let nextCell=null;
+        for(const a of alts){ const t=add(cur,a); if(inPlayable(t)&&simIsUndugDirt(S,t)){ nextCell=t; break; } }
+        if(!nextCell) break;
+        S.terrain.set(key(nextCell),"empty"); S.digProgress.set(key(nextCell),DIG_TAPS_REQUIRED); S.mudslide.add(key(nextCell)); cur=nextCell;
       }
+      S.dirtStall.delete(k);
     }
   }
-  // keep terrain that fell inside blocked band consistent: unblock anything
-  // that currently holds fire/pool/town/source so those aren't silently lost
-  for(const k of [...state.fireCells, ...state.poolCells, ...state.townCells, ...state.waterSources]){
-    state.blockedCells.delete(k);
+}
+function simMeasure(S){
+  if(S.gameOver) return;
+  S.started=true;
+  // WATER beat
+  for(const k of L.water_sources){
+    const c=parseKey(k);
+    if(S.flat){ const mode=L.source_flow_style.get(k)||"straight"; S.water.push({coord:c,nextDir:mode==="zigzag"?FLAT_DOWN_LEFT:FLAT_DOWN,mode}); }
+    else S.water.push({coord:c,nextDir:DOWN_LEFT});
   }
-  draw(); runValidation();
-};
-document.getElementById("btnClearBlocked").onclick = ()=>{ state.blockedCells.clear(); draw(); runValidation(); };
-document.getElementById("btnClearAll").onclick = ()=>{
-  if(!confirm("Clear all terrain, sources, and inventory for this level?")) return;
-  state.waterSources.clear(); state.fireCells.clear(); state.poolCells.clear();
-  state.townCells.clear(); state.blockedCells.clear(); state.startingInventory={};
-  draw(); runValidation(); renderBlockList();
-};
-document.getElementById("btnApplyManual").onclick = ()=>{
-  const q = parseInt(document.getElementById("manQ").value)||0;
-  const r = parseInt(document.getElementById("manR").value)||0;
-  const c = {q,r};
-  if(!inPlayableAreaLoose(c) && currentTool!=="blocked"){
-    alert("That coordinate is outside grid_radius.");
-    return;
+  for(const list of [S.activeGeysers,S.hydroSources]) for(const k of list){
+    const c=parseKey(k);
+    if(S.flat) S.water.push({coord:c,nextDir:FLAT_DOWN,mode:"straight"}); else S.water.push({coord:c,nextDir:DOWN_LEFT});
   }
-  applyTool(c, currentTool);
-  draw(); runValidation();
-};
-
-/* =========================================================================
-   INVENTORY TAB
-   ========================================================================= */
-function renderBlockList(){
-  const el = document.getElementById("blockList");
-  el.innerHTML = "";
-  for(const b of state.catalog){
-    const row = document.createElement("div");
-    row.className = "section";
-    row.style.marginBottom="8px";
-    row.innerHTML = `
-      <div class="row"><input type="text" value="${b.display_name}" data-f="display_name" style="flex:1;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px 6px;">
-        <input type="color" value="${b.color}" data-f="color"></div>
-      <div class="row"><span>id: <code>${b.id}</code></span>
-        <span style="display:flex;align-items:center;gap:6px">count
-        <input type="number" min="0" value="${state.startingInventory[b.id]||0}" data-inv="${b.id}"></span></div>
-      <div class="row"><select data-f="behavior">
-        ${BEHAVIOR_NAMES.map((n,i)=>`<option value="${i}" ${i===b.behavior?"selected":""}>${n}</option>`).join("")}
-      </select></div>
-      <div class="row">
-        <button class="full" data-dlblock="${b.id}" style="margin-top:0">Download BlockData .tres</button>
-        ${["wall","divert_left","divert_right","splitter"].includes(b.id) ? "" :
-          `<button class="full danger" data-rmblock="${b.id}" style="margin-top:0;margin-left:6px">Remove</button>`}
-      </div>`;
-    el.appendChild(row);
-    row.querySelector('[data-f="display_name"]').oninput = e=>{ b.display_name=e.target.value; refreshExport(); };
-    row.querySelector('[data-f="color"]').oninput = e=>{ b.color=e.target.value; draw(); };
-    row.querySelector('[data-f="behavior"]').onchange = e=>{ b.behavior=parseInt(e.target.value); };
-    row.querySelector(`[data-inv="${b.id}"]`).oninput = e=>{
-      state.startingInventory[b.id] = Math.max(0, parseInt(e.target.value)||0);
-      refreshExport();
-    };
-    row.querySelector(`[data-dlblock="${b.id}"]`).onclick = ()=> downloadBlockTres(b);
-    const rmBtn = row.querySelector(`[data-rmblock="${b.id}"]`);
-    if(rmBtn) rmBtn.onclick = ()=>{
-      state.catalog = state.catalog.filter(x=>x.id!==b.id);
-      delete state.startingInventory[b.id];
-      renderBlockList(); refreshExport();
-    };
+  S.stalledThisBeat.clear();
+  const next=[];
+  for(const e of S.water) simAdvance(S,e,next);
+  S.water=next;
+  simMudslides(S);
+  // TERRAIN beat
+  if(!S.gameOver){
+    S.lakesCredited.clear();
+    for(const k of S.pendingTerrain){
+      const t=simT(S,k);
+      if(t==="fire"){ S.terrain.set(k,"empty"); S.firesRemaining--; }
+      else if(t==="pool"){ const a=S.lakeAnchor.get(k)||k; if(S.lakesCredited.has(a)) continue; S.lakesCredited.add(a); S.poolFill.set(a, Math.min((S.poolFill.get(a)||0)+1, POOL_BEATS_REQUIRED)); }
+      else if(t==="geyser"){ S.geyserFill.set(k,(S.geyserFill.get(k)||0)+1); if(S.geyserFill.get(k)>=GEYSER_BEATS_REQUIRED){ S.terrain.set(k,"empty"); S.activeGeysers.push(k); } }
+    }
+  }
+  S.pendingTerrain=[];
+  S.measure++;
+  // STATUS beat
+  if(!S.gameOver){
+    let allFull=true; for(const v of S.poolFill.values()) if(v<POOL_BEATS_REQUIRED){ allFull=false; break; }
+    if(allFull && S.firesRemaining<=0){ S.gameOver=true; S.won=true; }
   }
 }
-document.getElementById("btnAddBlock").onclick = ()=>{
-  const id = prompt("New block id (snake_case, must match a future data/blocks/<id>.tres):");
-  if(!id) return;
-  if(state.catalog.some(b=>b.id===id)){ alert("That id already exists."); return; }
-  state.catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff"});
-  renderBlockList();
-};
-function downloadBlockTres(b){
-  const text = `[gd_resource type="Resource" script_class="BlockData" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/resources/BlockData.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-id = "${b.id}"
-display_name = "${b.display_name}"
-behavior = ${b.behavior}
-color = Color(${hexToColorFloats(b.color)}, 1)
-`;
-  triggerDownload(`${b.id}.tres`, text);
-}
-function hexToColorFloats(hex){
-  const r = parseInt(hex.slice(1,3),16)/255;
-  const g = parseInt(hex.slice(3,5),16)/255;
-  const b = parseInt(hex.slice(5,7),16)/255;
-  return [r,g,b].map(v=>Math.round(v*1000)/1000).join(", ");
-}
-
-/* =========================================================================
-   SIMULATION ENGINE — ported 1:1 from HexBoard.gd's tick()/_advance_water()
-   ========================================================================= */
-let sim = null;
-
-function ptSetup(force){
-  if(sim && sim.active && !force) return;
-  sim = {
-    active: true,
-    tick: 0,
-    gameOver: false,
-    loseReason: "",
-    won: false,
-    cellTerrain: new Map(), // k -> 'fire'|'pool'|'town'
-    placedBlocks: new Map(), // k -> block id
-    poolFill: new Map(),
-    firesRemaining: 0,
-    waterCells: [], // {coord:{q,r}, nextDir:{q,r}}
-    inventory: {},
-    selectedBlockId: "",
-  };
-  for(const k of state.fireCells) sim.cellTerrain.set(k,"fire");
-  for(const k of state.poolCells){ sim.cellTerrain.set(k,"pool"); sim.poolFill.set(k,0); }
-  for(const k of state.townCells) sim.cellTerrain.set(k,"town");
-  sim.firesRemaining = state.fireCells.size;
-  for(const id of Object.keys(state.startingInventory)) sim.inventory[id] = state.startingInventory[id];
-  stopAutoplay();
-  updatePlaytestUI();
-  renderPtInventory();
-  draw();
-}
-
-function simIsWall(k){
-  if(!sim.placedBlocks.has(k)) return false;
-  const b = state.catalog.find(b=>b.id===sim.placedBlocks.get(k));
-  return b && b.behavior===BEHAVIOR.WALL;
-}
-function simResolveTargets(k){
-  const b = state.catalog.find(b=>b.id===sim.placedBlocks.get(k));
-  const c = parseKey(k);
-  if(!b) return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}];
-  switch(b.behavior){
-    case BEHAVIOR.WALL: return [];
-    case BEHAVIOR.DIVERT_LEFT: return [{q:c.q+DOWN_LEFT.q, r:c.r+DOWN_LEFT.r}];
-    case BEHAVIOR.DIVERT_RIGHT: return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}];
-    case BEHAVIOR.SPLIT: return [{q:c.q+DOWN_LEFT.q,r:c.r+DOWN_LEFT.r},{q:c.q+DOWN_RIGHT.q,r:c.r+DOWN_RIGHT.r}];
-    default: return [{q:c.q+DOWN_RIGHT.q, r:c.r+DOWN_RIGHT.r}]; // ABSORB: unimplemented in the shipped code, falls through like Diverter-Right
+function simFootprintPlaceable(S,cells){
+  for(const c of cells){ const k=key(c);
+    if(!inPlayable(c)) return false;
+    if(L.water_sources.has(k)||S.activeGeysers.includes(k)||S.hydroSources.includes(k)) return false;
+    if(S.placed.has(k)) return false;
+    if(["fire","pool","town","geyser","dirt","hydro"].includes(simT(S,k))) return false;
   }
-}
-function simAddWater(nextWater, coord, nextDir){
-  const k = key(coord);
-  if(nextWater.some(w=>key(w.coord)===k)) return;
-  nextWater.push({coord, nextDir});
-}
-function simTryEnter(coord){
-  if(!inPlayableAreaSim(coord)){
-    if(coord.r > state.gridRadius) simLose("edge");
-    return false;
-  }
-  const k = key(coord);
-  const terrain = sim.cellTerrain.get(k) || "empty";
-  if(terrain==="town"){ simLose("town"); return false; }
-  if(terrain==="fire"){ sim.cellTerrain.set(k,"empty"); sim.firesRemaining--; return false; }
-  if(terrain==="pool"){ sim.poolFill.set(k, Math.min((sim.poolFill.get(k)||0)+1,4)); return false; }
   return true;
 }
-function inPlayableAreaSim(c){ return cubeDist(c) <= state.gridRadius && !state.blockedCells.has(key(c)); }
-
-function simTryNaturalStep(coord, dir, futureDir, nextWater){
-  const target = {q:coord.q+dir.q, r:coord.r+dir.r};
-  if(target.r > state.gridRadius){ simTryEnter(target); return true; }
-  if(!inPlayableAreaSim(target) || simIsWall(key(target))) return false;
-  if(simTryEnter(target)) simAddWater(nextWater, target, futureDir);
+function simPlaceBlock(S,c,id){
+  if(S.gameOver) return false;
+  if(S.useBudget ? S.budgetRemaining<=0 : (S.inventory.get(id)||0)<=0) return false;
+  let cells=blockFootprint(c,id,false);
+  if(!simFootprintPlaceable(S,cells)){ cells=blockFootprint(c,id,true); if(!simFootprintPlaceable(S,cells)) return false; }
+  for(const x of cells){ S.placed.set(key(x),id); S.anchors.set(key(x),key(c)); }
+  if(S.useBudget) S.budgetRemaining--; else S.inventory.set(id,S.inventory.get(id)-1);
   return true;
 }
-function simAdvanceWater(entry, nextWater){
-  const coord = entry.coord, nextDir = entry.nextDir;
-  const opposite = (nextDir.q===DOWN_LEFT.q && nextDir.r===DOWN_LEFT.r) ? DOWN_RIGHT : DOWN_LEFT;
-  const k = key(coord);
-  if(sim.placedBlocks.has(k)){
-    const targets = simResolveTargets(k);
-    if(targets.length===0){ simAddWater(nextWater, coord, opposite); return; }
-    for(const t of targets){ if(simTryEnter(t)) simAddWater(nextWater, t, opposite); }
-    return;
-  }
-  if(simTryNaturalStep(coord, nextDir, opposite, nextWater)) return;
-  if(simTryNaturalStep(coord, opposite, opposite, nextWater)) return;
-  simAddWater(nextWater, coord, opposite);
-}
-function simTick(){
-  if(sim.gameOver) return;
-  for(const k of state.waterSources){
-    sim.waterCells.push({coord:parseKey(k), nextDir:{...DOWN_LEFT}});
-  }
-  const nextWater = [];
-  for(const entry of sim.waterCells) simAdvanceWater(entry, nextWater);
-  sim.waterCells = nextWater;
-  sim.tick++;
-  simCheckEnd();
-}
-function simCheckEnd(){
-  if(sim.gameOver) return;
-  let allFull = true;
-  for(const k of state.poolCells){ if((sim.poolFill.get(k)||0) < 4){ allFull=false; break; } }
-  if(allFull && sim.firesRemaining<=0) simWin();
-}
-function simLose(reason){
-  if(sim.gameOver) return;
-  sim.gameOver=true; sim.loseReason=reason;
-  stopAutoplay(); updatePlaytestUI(); draw();
-}
-function simWin(){
-  if(sim.gameOver) return;
-  sim.gameOver=true; sim.won=true;
-  stopAutoplay(); updatePlaytestUI(); draw();
-}
-function simPlaceBlock(coord, blockId){
-  if(sim.gameOver) return false;
-  if(!inPlayableAreaSim(coord)) return false;
-  const k = key(coord);
-  if(sim.placedBlocks.has(k)) return false;
-  const terrain = sim.cellTerrain.get(k)||"empty";
-  if(terrain==="fire"||terrain==="pool"||terrain==="town") return false;
-  if(!sim.inventory[blockId] || sim.inventory[blockId]<=0) return false;
-  sim.placedBlocks.set(k, blockId);
-  sim.inventory[blockId]--;
+function simRemoveBlock(S,c){
+  const k=key(c); if(!S.placed.has(k)) return false;
+  const a=S.anchors.get(k); if(S.presetCells.has(a)&&!S.spentPreset.has(a)) return false;
+  const id=S.placed.get(k);
+  for(const [cell,anc] of [...S.anchors]) if(anc===a){ S.placed.delete(cell); S.anchors.delete(cell); }
+  if(S.useBudget) S.budgetRemaining++; else S.inventory.set(id,(S.inventory.get(id)||0)+1);
   return true;
 }
-function simRemoveBlock(coord){
-  const k = key(coord);
-  if(!sim.placedBlocks.has(k)) return false;
-  const id = sim.placedBlocks.get(k);
-  sim.placedBlocks.delete(k);
-  sim.inventory[id] = (sim.inventory[id]||0)+1;
+function simDig(S,c){
+  if(S.gameOver||!S.started||!inPlayable(c)||!simIsUndugDirt(S,c)) return false;
+  const k=key(c); S.digProgress.set(k,(S.digProgress.get(k)||0)+1);
+  if(S.digProgress.get(k)>=DIG_TAPS_REQUIRED) S.terrain.set(k,"empty");
+  return true;
+}
+function simActivateHydro(S,c){
+  if(S.gameOver) return false;
+  const a=S.hydroCellToAnchor.get(key(c)); const p=S.hydroPlants.get(a);
+  if(!p||!p.touched||p.active) return false;
+  p.active=true; for(const x of p.cells){ S.terrain.set(x,"empty"); S.hydroSources.push(x); }
   return true;
 }
 
-/* --- playtest UI wiring --- */
-let autoplayTimer = null;
-function stopAutoplay(){ if(autoplayTimer){ clearInterval(autoplayTimer); autoplayTimer=null; }
-  document.getElementById("ptStart").textContent="Start"; }
-document.getElementById("ptStart").onclick = ()=>{
-  if(!sim || !sim.active) ptSetup(true);
-  if(autoplayTimer){ stopAutoplay(); return; }
-  document.getElementById("ptStart").textContent="Pause";
-  const speed = parseInt(document.getElementById("ptSpeed").value);
-  autoplayTimer = setInterval(()=>{
-    if(sim.gameOver){ stopAutoplay(); return; }
-    simTick(); updatePlaytestUI(); draw();
-  }, speed);
-};
-document.getElementById("ptSpeed").oninput = ()=>{
-  if(autoplayTimer){ clearInterval(autoplayTimer);
-    const speed = parseInt(document.getElementById("ptSpeed").value);
-    autoplayTimer = setInterval(()=>{
-      if(sim.gameOver){ stopAutoplay(); return; }
-      simTick(); updatePlaytestUI(); draw();
-    }, speed);
-  }
-};
-document.getElementById("ptStep").onclick = ()=>{
-  if(!sim || !sim.active) ptSetup(true);
-  simTick(); updatePlaytestUI(); draw();
-};
-document.getElementById("ptReset").onclick = ()=> ptSetup(true);
-
+/* ---- playtest UI ------------------------------------------------------- */
+let autoplayTimer=null;
+function ptSetup(force){ if(sim && !force) return; sim=makeSim(); stopAutoplay(); updatePlaytestUI(); renderPtInventory(); draw(); }
+function stopAutoplay(){ if(autoplayTimer){ clearInterval(autoplayTimer); autoplayTimer=null; } $("ptStart").textContent="Start"; }
+function startAutoplay(){
+  const speed=parseInt($("ptSpeed").value);
+  if(autoplayTimer) clearInterval(autoplayTimer);
+  autoplayTimer=setInterval(()=>{ if(sim.gameOver){ stopAutoplay(); updatePlaytestUI(); return; } simMeasure(sim); updatePlaytestUI(); draw(); }, speed);
+  $("ptStart").textContent="Pause";
+}
+$("ptStart").onclick=()=>{ if(!sim) ptSetup(true); if(autoplayTimer){ stopAutoplay(); updatePlaytestUI(); return; } startAutoplay(); updatePlaytestUI(); };
+$("ptSpeed").oninput=()=>{ if(autoplayTimer) startAutoplay(); };
+$("ptStep").onclick=()=>{ if(!sim) ptSetup(true); simMeasure(sim); updatePlaytestUI(); draw(); };
+$("ptReset").onclick=()=>ptSetup(true);
 function ptHandleTap(c){
-  if(!sim || !sim.active) return;
-  const k = key(c);
-  if(sim.placedBlocks.has(k)){
-    if(simRemoveBlock(c)){ renderPtInventory(); draw(); }
-    return;
-  }
-  if(!sim.selectedBlockId) return;
-  if(simPlaceBlock(c, sim.selectedBlockId)){ renderPtInventory(); draw(); }
+  if(!sim) ptSetup(true);
+  const k=key(c);
+  if(sim.started && simIsUndugDirt(sim,c)){ simDig(sim,c); draw(); return; }
+  if(simT(sim,k)==="hydro"){ if(simActivateHydro(sim,c)) { draw(); updatePlaytestUI(); } else setStatus("The plant activates once water has touched it."); return; }
+  if(sim.placed.has(k)){ if(simRemoveBlock(sim,c)){ renderPtInventory(); draw(); } else setStatus("Preset blocks are fixed."); return; }
+  if(!sim.selectedBlockId){ setStatus("Select a block first."); return; }
+  if(simPlaceBlock(sim,c,sim.selectedBlockId)){ renderPtInventory(); draw(); } else setStatus("That placement is refused (footprint, terrain, source, or inventory).");
 }
 function renderPtInventory(){
-  const el = document.getElementById("ptInventory");
-  el.innerHTML = "";
-  const ids = Object.keys(sim ? sim.inventory : state.startingInventory);
-  if(ids.length===0){ el.innerHTML = '<p class="hint">No blocks in this level\'s starting inventory yet — add some on the Inventory tab.</p>'; return; }
+  const el=$("ptInventory"); el.innerHTML="";
+  if(!sim) return;
+  const ids = sim.useBudget ? catalog.map(b=>b.id) : [...sim.inventory.keys()];
+  if(sim.useBudget){ const p=document.createElement("p"); p.className="hint"; p.textContent=`Jamboree budget: ${sim.budgetRemaining} of ${L.total_block_budget} placements left, any block type.`; el.appendChild(p); }
+  if(!ids.length){ el.innerHTML='<p class="hint">No blocks in this level\'s starting inventory — set counts on the Level tab.</p>'; return; }
   for(const id of ids){
-    const b = state.catalog.find(b=>b.id===id);
-    const count = sim ? (sim.inventory[id]||0) : 0;
-    const btn = document.createElement("div");
-    btn.className = "invbtn" + (sim && sim.selectedBlockId===id ? " selected":"");
+    const b=blockDef(id); const count = sim.useBudget ? sim.budgetRemaining : (sim.inventory.get(id)||0);
+    const btn=document.createElement("div"); btn.className="invbtn"+(sim.selectedBlockId===id?" selected":"");
     if(count<=0) btn.setAttribute("disabled","");
-    btn.innerHTML = `<span><span class="swatch" style="background:${b?b.color:'#fff'};display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px"></span>${b?b.display_name:id}</span><b>${count}</b>`;
-    btn.onclick = ()=>{ if(count>0 && sim){ sim.selectedBlockId=id; renderPtInventory(); } };
+    btn.innerHTML=`<span><span class="swatch" style="background:${b?b.color:'#fff'};margin-right:6px"></span>${b?b.display_name:id}${id==="wall"?" (2 wide)":""}</span><b>${count}</b>`;
+    btn.onclick=()=>{ if(count>0){ sim.selectedBlockId=id; renderPtInventory(); } };
     el.appendChild(btn);
   }
 }
 function updatePlaytestUI(){
-  document.getElementById("ptTick").textContent = sim ? sim.tick : 0;
-  document.getElementById("ptFires").textContent = sim ? sim.firesRemaining : 0;
-  const poolsEl = document.getElementById("ptPools");
-  poolsEl.innerHTML = "";
+  $("ptTick").textContent=sim?sim.measure:0; $("ptFires").textContent=sim?sim.firesRemaining:0;
+  const pe=$("ptPools"); pe.innerHTML="";
+  const xe=$("ptExtra"); xe.innerHTML="";
   if(sim){
-    for(const k of state.poolCells){
-      const fill = sim.poolFill.get(k)||0;
-      const row = document.createElement("div");
-      row.className="row";
-      row.innerHTML = `<span>Pool (${k})</span><span class="poolbar">${
-        [0,1,2,3].map(i=>`<span class="${i<fill?'lit':''}"></span>`).join("")
-      }</span>`;
-      poolsEl.appendChild(row);
-    }
+    for(const [a,f] of sim.poolFill){ const row=document.createElement("div"); row.className="row";
+      row.innerHTML=`<span>Lake (${a})</span><span class="poolbar">${[0,1,2,3].map(i=>`<span class="${i<f?'lit':''}"></span>`).join("")}</span>`; pe.appendChild(row); }
+    const bits=[];
+    if(L.geyser_cells.size) bits.push(`geysers active: ${sim.activeGeysers.length}/${L.geyser_cells.size}`);
+    if(L.hydro_plant_cells.size) bits.push(`hydro plants running: ${[...sim.hydroPlants.values()].filter(p=>p.active).length}/${sim.hydroPlants.size}`);
+    if(L.par_measures) bits.push(`par: ${L.par_measures} measures`);
+    xe.textContent=bits.join(" · ");
   }
-  const statusEl = document.getElementById("playtestStatus");
-  if(!sim){ statusEl.className="idle"; statusEl.textContent="Not started."; return; }
-  if(sim.won){ statusEl.className="won"; statusEl.textContent=`Level complete! Won on tick ${sim.tick}.`; return; }
-  if(sim.gameOver){
-    statusEl.className="lost";
-    statusEl.textContent = sim.loseReason==="town" ? `The town flooded on tick ${sim.tick}! Tap Retry.`
-      : `Water overflowed the bottom edge on tick ${sim.tick}! Tap Retry.`;
-    return;
-  }
-  statusEl.className = autoplayTimer ? "playing" : "idle";
-  statusEl.textContent = autoplayTimer ? "Flowing…" : "Place blocks, then Start (or Step to advance one tick at a time).";
+  const st=$("playtestStatus");
+  if(!sim){ st.className="idle"; st.textContent="Not started."; return; }
+  if(sim.won){ st.className="won"; st.textContent=`Level complete on measure ${sim.measure}` + (L.par_measures ? (sim.measure<=L.par_measures ? " — under par." : " — over par.") : "."); return; }
+  if(sim.gameOver){ st.className="lost"; st.textContent = sim.loseReason==="town" ? `The town flooded on measure ${sim.measure}. Retry.` : `Water ran off the bottom edge on measure ${sim.measure}. Retry.`; return; }
+  st.className = autoplayTimer ? "playing" : "idle";
+  st.textContent = autoplayTimer ? "Flowing…" : (sim.started ? "Paused — Step or Start." : "Place blocks, then Start (or Step one measure at a time).");
 }
 
 /* =========================================================================
-   IMPORT / EXPORT — .tres text, matching Godot's resource text format
+   IMPORT / EXPORT UI
    ========================================================================= */
-function coordsArrayText(set){
-  const items = [...set].map(parseKey).map(c=>`Vector2i(${c.q}, ${c.r})`);
-  return `Array[Vector2i]([${items.join(", ")}])`;
+const openedFiles=[]; // {name, text}
+$("fileInput").onchange=async e=>{
+  for(const f of e.target.files){ const text=await f.text(); openedFiles.push({name:f.name,text}); }
+  const sel=$("fileSelect"); sel.innerHTML='<option value="">— choose an opened file —</option>';
+  openedFiles.forEach((f,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=f.name; sel.appendChild(o); });
+  if(openedFiles.length===1){ sel.value=0; $("btnLoadFile").click(); }
+};
+$("btnLoadFile").onclick=()=>{ const i=$("fileSelect").value; if(i==="") return; importText(openedFiles[i].text); };
+$("btnImport").onclick=()=>{ const t=$("importArea").value; if(!t.trim()){ setStatus("Paste a level's .tres contents first."); return; } importText(t); };
+function importText(text){
+  try{ loadLevel(levelFromTres(text)); setStatus(`Loaded "${L.display_name}" (id ${L.level_id}).`); }
+  catch(err){ alert("Couldn't parse that as a LevelData .tres: "+err.message); }
 }
-function poolDictText(set){
-  if(set.size===0) return "{}";
-  const items = [...set].map(parseKey).map(c=>`Vector2i(${c.q}, ${c.r}): 4`);
-  return "{\n" + items.join(",\n") + "\n}";
+function loadLevel(level){
+  L=level; sim=null; stopAutoplay();
+  for(const id of [...L.starting_inventory.keys(), ...L.preset_blocks.values()]) if(!blockDef(id)) catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff", footprint:[]});
+  buildToolbar(); syncForm(); renderLists(); fitToView(); runValidation(); refreshExport();
 }
-function inventoryDictText(inv){
-  const keys = Object.keys(inv).filter(k=>inv[k]>0);
-  if(keys.length===0) return "{}";
-  const items = keys.map(k=>`"${k}": ${inv[k]}`);
-  return "{\n" + items.join(",\n") + "\n}";
-}
-function serializeLevel(){
-  return `[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/resources/LevelData.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-level_id = ${state.levelId}
-display_name = "${state.displayName}"
-grid_radius = ${state.gridRadius}
-water_sources = ${coordsArrayText(state.waterSources)}
-fire_cells = ${coordsArrayText(state.fireCells)}
-pool_targets = ${poolDictText(state.poolCells)}
-starting_inventory = ${inventoryDictText(state.startingInventory)}
-blocked_cells = ${coordsArrayText(state.blockedCells)}
-town_cells = ${coordsArrayText(state.townCells)}
-`;
-}
-function paddedLevelFilename(id){
-  return `level_${String(id).padStart(3,"0")}.tres`;
-}
-
-function parseCoordList(text){
-  const out = new Set();
-  const re = /Vector2i\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/g;
-  let m;
-  while((m = re.exec(text))) out.add(`${parseInt(m[1])},${parseInt(m[2])}`);
-  return out;
-}
-function extractBlock(source, fieldName){
-  // Grabs the RHS starting right after "field = " up to the matching close
-  // for either Array[Vector2i]([...]) or a {...} dictionary — good enough
-  // for the fixed shape Godot always writes for these fields.
-  const idx = source.indexOf(fieldName + " = ");
-  if(idx===-1) return null;
-  let i = idx + (fieldName+" = ").length;
-  const rest = source.slice(i);
-  if(rest.startsWith("Array[Vector2i](")){
-    const end = rest.indexOf("])");
-    return rest.slice(0, end+2);
-  }
-  if(rest.startsWith("{")){
-    // find matching closing brace
-    let depth=0, j=0;
-    for(; j<rest.length; j++){
-      if(rest[j]==="{") depth++;
-      else if(rest[j]==="}"){ depth--; if(depth===0){ j++; break; } }
-    }
-    return rest.slice(0,j);
-  }
-  return null;
-}
-function parseLevelTres(text){
-  const get = (re, def) => { const m = text.match(re); return m ? m[1] : def; };
-  const level = {
-    levelId: parseInt(get(/level_id\s*=\s*(\d+)/, "1")),
-    displayName: get(/display_name\s*=\s*"([^"]*)"/, "Level"),
-    gridRadius: parseInt(get(/grid_radius\s*=\s*(\d+)/, "4")),
-    waterSources: parseCoordList(extractBlock(text,"water_sources")||""),
-    fireCells: parseCoordList(extractBlock(text,"fire_cells")||""),
-    poolCells: parseCoordList(extractBlock(text,"pool_targets")||""),
-    blockedCells: parseCoordList(extractBlock(text,"blocked_cells")||""),
-    townCells: parseCoordList(extractBlock(text,"town_cells")||""),
-    startingInventory: {},
-  };
-  const invBlock = extractBlock(text, "starting_inventory") || "{}";
-  const invRe = /"([a-zA-Z0-9_]+)"\s*:\s*(\d+)/g;
-  let m;
-  while((m = invRe.exec(invBlock))) level.startingInventory[m[1]] = parseInt(m[2]);
-  return level;
-}
-function loadLevelIntoEditor(level){
-  state.levelId = level.levelId;
-  state.displayName = level.displayName;
-  state.gridRadius = level.gridRadius;
-  state.waterSources = level.waterSources;
-  state.fireCells = level.fireCells;
-  state.poolCells = level.poolCells;
-  state.blockedCells = level.blockedCells;
-  state.townCells = level.townCells;
-  state.startingInventory = level.startingInventory;
-  // make sure catalog has an entry for every referenced block id
-  for(const id of Object.keys(state.startingInventory)){
-    if(!state.catalog.some(b=>b.id===id)){
-      state.catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff"});
-    }
-  }
-  $levelId.value = state.levelId;
-  $displayName.value = state.displayName;
-  $gridRadius.value = state.gridRadius;
-  sim = null;
-  fitToView();
-  renderBlockList();
-  runValidation();
-  refreshExport();
-}
-
+function paddedLevelFilename(){ return L.level_id>=901 && L.level_id<=905 ? `tutorial_${L.level_id-900}.tres` : `level_${String(L.level_id).padStart(3,"0")}.tres`; }
 function refreshExport(){
-  document.getElementById("exportArea").value = serializeLevel();
-  const fname = paddedLevelFilename(state.levelId);
-  document.getElementById("suggestedName").textContent = fname;
-  document.getElementById("levelPathLine").textContent = `"res://data/levels/${fname}",`;
+  $("exportArea").value=serializeLevel(L);
+  const f=paddedLevelFilename(); $("suggestedName").textContent=f; $("levelPathLine").textContent=`"res://data/levels/${f}",`;
+  syncForm();
 }
-document.getElementById("btnDownload").onclick = ()=>{
-  refreshExport();
-  triggerDownload(paddedLevelFilename(state.levelId), document.getElementById("exportArea").value);
-};
-document.getElementById("btnCopyPath").onclick = ()=>{
-  navigator.clipboard.writeText(document.getElementById("levelPathLine").textContent).catch(()=>{});
-};
-function triggerDownload(filename, text){
-  const blob = new Blob([text], {type:"text/plain"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-document.getElementById("btnImport").onclick = ()=>{
-  const text = document.getElementById("importArea").value;
-  if(!text.trim()){ alert("Paste a level's .tres contents first."); return; }
-  try{
-    const level = parseLevelTres(text);
-    loadLevelIntoEditor(level);
-    alert(`Loaded "${level.displayName}" (id ${level.levelId}).`);
-  }catch(err){
-    alert("Couldn't parse that — is it a LevelData .tres file? " + err.message);
-  }
-};
-document.getElementById("btnLoadPreset").onclick = ()=>{
-  const idx = document.getElementById("presetSelect").value;
-  if(idx==="") return;
-  const level = parseLevelTres(LEVEL_PRESETS[idx].text);
-  loadLevelIntoEditor(level);
+$("btnDownload").onclick=()=>{ refreshExport(); const blob=new Blob([$("exportArea").value],{type:"text/plain"}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=paddedLevelFilename(); document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); };
+$("btnCopyExport").onclick=()=>{ navigator.clipboard.writeText($("exportArea").value).then(()=>setStatus("Copied.")).catch(()=>{}); };
+$("btnRoundTrip").onclick=()=>{
+  const out=$("roundTripResult");
+  const text=$("importArea").value.trim() ? $("importArea").value : (openedFiles[$("fileSelect").value]||{}).text;
+  if(!text){ out.textContent="Paste or open a file first; the check re-parses that text and compares the re-export byte for byte."; return; }
+  const r=roundTrip(text);
+  out.textContent = r.ok ? "Round trip OK — byte-identical." : `Round trip differs at byte ${r.firstDiff}: …${JSON.stringify(text.slice(Math.max(0,r.firstDiff-30), r.firstDiff+30))} vs …${JSON.stringify(r.out.slice(Math.max(0,r.firstDiff-30), r.firstDiff+30))}`;
 };
 
 /* =========================================================================
-   VALIDATION
+   VALIDATION — the authoring rules tools/smoke_test.gd and LevelData.gd state
    ========================================================================= */
-function computePlayableWidthTiles(){
-  const cells = playableCoords();
-  if(cells.length===0) return 0;
-  let minX=Infinity,maxX=-Infinity;
-  for(const c of cells){
-    const p = axialToPixel(c,1);
-    minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
-  }
-  // horizontal spacing between adjacent hex columns is sqrt(3)*SIZE
-  return Math.round((maxX-minX)/Math.sqrt(3)) + 1;
+function playableWidthTiles(){
+  const cells=playableCoords(); if(!cells.length) return 0;
+  const flat=isFlat(); let minX=Infinity,maxX=-Infinity;
+  for(const c of cells){ const p=axialToPixel(c,1,flat); minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); }
+  return flat ? Math.round((maxX-minX)/1.5)+1 : Math.round((maxX-minX)/SQ3)+1;
 }
 function runValidation(){
-  const el = document.getElementById("validation");
-  const items = [];
-  const width = computePlayableWidthTiles();
-  if(width>9) items.push({level:"warn", text:`Playable width ≈ ${width} tiles — over the project's 9-tile-wide design cap. Consider the corridor generator to narrow it.`});
-  else items.push({level:"ok", text:`Playable width ≈ ${width} tiles (within the 9-tile cap).`});
-
-  if(state.fireCells.size===0 && state.poolCells.size===0)
-    items.push({level:"bad", text:`No fire cells AND no pool cells — this level will instantly (vacuously) win on tick 1. Add at least one of each unless that's intended.`});
-
-  if(state.waterSources.size===0)
-    items.push({level:"bad", text:`No water sources — nothing will ever flow.`});
-
-  for(const k of state.waterSources){
-    if(state.blockedCells.has(k)) items.push({level:"warn", text:`A water source sits on a blocked cell (${k}) — it will spawn water that immediately vanishes.`});
+  const items=[];
+  const bad=t=>items.push({level:"bad",text:t}), warn=t=>items.push({level:"warn",text:t});
+  const width=playableWidthTiles();
+  if(L.level_id<=50 && width>6) warn(`Playable width ≈ ${width} tiles — levels 1–50 are at most 6 wide (owner's rule).`);
+  else if(width>9) warn(`Playable width ≈ ${width} tiles — over the 9-tile cap (HexBoard.MAX_GRID_WIDTH_HEXES).`);
+  if(!L.water_sources.size) bad("No water_sources — nothing will ever flow.");
+  if(!L.fire_cells.size && !L.pool_targets.size) bad("No fires and no pools — the level wins vacuously on measure 1.");
+  for(const k of L.water_sources){ const c=parseKey(k);
+    if(cubeDist(c)>L.grid_radius) warn(`Source (${k}) is outside grid_radius — its marker renders off-board.`);
+    else if(!inPlayable(c)) warn(`Source (${k}) sits on a blocked / outside-corridor cell.`); }
+  if(isFlat()){ for(const k of L.source_flow_style.keys()) if(!L.water_sources.has(k)) warn(`source_flow_style key (${k}) is not a water source.`); }
+  else if(L.source_flow_style.size) warn("source_flow_style is ignored on a pointy grid.");
+  const claimed=new Set(L.pool_targets.keys());
+  for(const a of L.pool_targets.keys()){
+    const extras=L.lake_cells.get(a)||[];
+    if(!inPlayable(parseKey(a))) bad(`Pool anchor (${a}) is not playable.`);
+    if(extras.length!==3) bad(`Pool (${a}) has ${extras.length} lake cells, wants 3.`);
+    for(const x of extras){
+      if(!inPlayable(parseKey(x))) bad(`Lake cell (${x}) of pool (${a}) is off the board.`);
+      if(L.water_sources.has(x)) bad(`Lake cell (${x}) of pool (${a}) is a water source.`);
+      if(claimed.has(x)) bad(`Lake cell (${x}) is shared with another pool.`);
+      claimed.add(x);
+    }
+    for(const x of extras){ const c=parseKey(x); const set=new Set([a,...extras]); if(!NEIGHBOR_OFFSETS.some(d=>set.has(key(add(c,d))))) warn(`Lake cell (${x}) of pool (${a}) is not adjacent to the rest of its lake.`); }
   }
-  if(state.townCells.size>0 && state.townCells.size!==4)
-    items.push({level:"warn", text:`Town has ${state.townCells.size} cell(s) — the project's authoring convention is exactly 4 edge-connected cells (not enforced by the game, just a convention).`});
-
-  const overlapCheck = [...state.fireCells].filter(k=>state.poolCells.has(k)||state.townCells.has(k));
-  if(overlapCheck.length) items.push({level:"bad", text:`Some cells are marked as more than one terrain type — check for overlaps.`});
-
-  if(items.every(i=>i.level==="ok")) items.push({level:"ok", text:"No issues detected."});
-  el.innerHTML = items.map(i=>`<div class="valitem ${i.level}">${i.text}</div>`).join("");
-}
-
-/* =========================================================================
-   EMBEDDED PRESETS — the 17 levels from the uploaded project, so you can
-   review/edit an existing level without leaving the tool.
-   ========================================================================= */
-const LEVEL_PRESETS = [{"name": "Level 1 (level_001.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 1\ndisplay_name = \"Level 1\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {\n\"divert_right\": 2,\n\"divert_left\": 1,\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 2 (level_002.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 2\ndisplay_name = \"Level 2\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -3)])\npool_targets = {\nVector2i(-2, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 3 (level_003.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 3\ndisplay_name = \"Level 3\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -1)])\npool_targets = {\nVector2i(-2, 1): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 4 (level_004.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 4\ndisplay_name = \"Level 4\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(1, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -3)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 5 (level_005.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 5\ndisplay_name = \"Level 5\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-2, -2)])\npool_targets = {\nVector2i(-3, 0): 4\n}\nstarting_inventory = {\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 6 (level_006.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 6\ndisplay_name = \"Level 6\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-3, -1)])\npool_targets = {\nVector2i(-4, 1): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([Vector2i(-1, -2)])\n"}, {"name": "Level 7 (level_007.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 7\ndisplay_name = \"Level 7\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -1)])\npool_targets = {\nVector2i(-3, 1): 4\n}\nstarting_inventory = {\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 8 (level_008.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 8\ndisplay_name = \"Level 8\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -3), Vector2i(-2, -1)])\npool_targets = {\nVector2i(-2, 0): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 9 (level_009.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 9\ndisplay_name = \"Level 9\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4), Vector2i(2, -4)])\nfire_cells = Array[Vector2i]([Vector2i(-1, -2), Vector2i(1, -2)])\npool_targets = {\nVector2i(-3, 1): 4,\nVector2i(-1, 2): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 10 (level_010.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 10\ndisplay_name = \"Level 10\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2), Vector2i(-1, 0)])\npool_targets = {\nVector2i(-2, 2): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 11 (level_011.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 11\ndisplay_name = \"Level 11\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4), Vector2i(2, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -2), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(1, -1)])\npool_targets = {\nVector2i(-2, 2): 4,\nVector2i(-1, 1): 4,\nVector2i(0, 1): 4\n}\nstarting_inventory = {\n\"divert_right\": 1,\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([])\n"}, {"name": "Level 12 (level_012.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1\"]\n\n[resource]\nscript = ExtResource(\"1\")\nlevel_id = 12\ndisplay_name = \"Level 12\"\ngrid_radius = 4\nwater_sources = Array[Vector2i]([Vector2i(0, -4)])\nfire_cells = Array[Vector2i]([Vector2i(0, -3)])\npool_targets = {\nVector2i(-1, 0): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([])\ntown_cells = Array[Vector2i]([Vector2i(-1, -3), Vector2i(-1, -2), Vector2i(-2, -1), Vector2i(-2, 0)])\n"}, {"name": "Level 13 (level_013.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_sdoqn\"]\n\n[resource]\nscript = ExtResource(\"1_sdoqn\")\nlevel_id = 13\ndisplay_name = \"Level 13\"\ngrid_radius = 8\nwater_sources = Array[Vector2i]([Vector2i(4, -8)])\nfire_cells = Array[Vector2i]([Vector2i(2, -5), Vector2i(0, 0), Vector2i(-2, 4)])\npool_targets = {\nVector2i(-3, 6): 4\n}\nstarting_inventory = {}\nblocked_cells = Array[Vector2i]([Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 14 (level_014.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_npory\"]\n\n[resource]\nscript = ExtResource(\"1_npory\")\nlevel_id = 14\ndisplay_name = \"Level 14\"\ngrid_radius = 9\nwater_sources = Array[Vector2i]([Vector2i(5, -9)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 0)])\npool_targets = {\nVector2i(-4, 7): 4\n}\nstarting_inventory = {\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 15 (level_015.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_47jxv\"]\n\n[resource]\nscript = ExtResource(\"1_47jxv\")\nlevel_id = 15\ndisplay_name = \"Level 15\"\ngrid_radius = 10\nwater_sources = Array[Vector2i]([Vector2i(5, -10)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 0), Vector2i(0, 0)])\npool_targets = {\nVector2i(-4, 6): 4,\nVector2i(-3, 6): 4\n}\nstarting_inventory = {\n\"splitter\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0)])\ntown_cells = Array[Vector2i]([])\n"}, {"name": "Level 16 (level_016.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_5wyyj\"]\n\n[resource]\nscript = ExtResource(\"1_5wyyj\")\nlevel_id = 16\ndisplay_name = \"Level 16\"\ngrid_radius = 10\nwater_sources = Array[Vector2i]([Vector2i(5, -10)])\nfire_cells = Array[Vector2i]([Vector2i(3, -6), Vector2i(-1, 4)])\npool_targets = {\nVector2i(-3, 8): 4\n}\nstarting_inventory = {\n\"divert_right\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-7, 9), Vector2i(-7, 10), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-6, 7), Vector2i(-6, 8), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-5, 5), Vector2i(-5, 6), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-4, 3), Vector2i(-4, 4), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-3, 1), Vector2i(-3, 2), Vector2i(-3, 9), Vector2i(-3, 10), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 0), Vector2i(-2, 7), Vector2i(-2, 8), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, -2), Vector2i(-1, -1), Vector2i(-1, 5), Vector2i(-1, 6), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, -4), Vector2i(0, -3), Vector2i(0, 3), Vector2i(0, 4), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, -6), Vector2i(1, -5), Vector2i(1, 1), Vector2i(1, 2), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, -8), Vector2i(2, -7), Vector2i(2, 0), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(3, -10), Vector2i(3, -9), Vector2i(3, -2), Vector2i(3, -1), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(4, -4), Vector2i(4, -3), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(5, -6), Vector2i(5, -5), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(6, -8), Vector2i(6, -7), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(7, -10), Vector2i(7, -9), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0)])\ntown_cells = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(-1, 1), Vector2i(-1, 2)])\n"}, {"name": "Level 17 (level_017.tres)", "text": "[gd_resource type=\"Resource\" script_class=\"LevelData\" load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"res://scripts/resources/LevelData.gd\" id=\"1_4qrqn\"]\n\n[resource]\nscript = ExtResource(\"1_4qrqn\")\nlevel_id = 17\ndisplay_name = \"Level 17\"\ngrid_radius = 12\nwater_sources = Array[Vector2i]([Vector2i(6, -12)])\nfire_cells = Array[Vector2i]([Vector2i(4, -7), Vector2i(0, 3), Vector2i(-3, 8), Vector2i(-2, 8)])\npool_targets = {\nVector2i(-5, 11): 4,\nVector2i(-4, 11): 4\n}\nstarting_inventory = {\n\"divert_right\": 1,\n\"splitter\": 1,\n\"wall\": 1\n}\nblocked_cells = Array[Vector2i]([Vector2i(-12, 0), Vector2i(-12, 1), Vector2i(-12, 2), Vector2i(-12, 3), Vector2i(-12, 4), Vector2i(-12, 5), Vector2i(-12, 6), Vector2i(-12, 7), Vector2i(-12, 8), Vector2i(-12, 9), Vector2i(-12, 10), Vector2i(-12, 11), Vector2i(-12, 12), Vector2i(-11, -1), Vector2i(-11, 0), Vector2i(-11, 1), Vector2i(-11, 2), Vector2i(-11, 3), Vector2i(-11, 4), Vector2i(-11, 5), Vector2i(-11, 6), Vector2i(-11, 7), Vector2i(-11, 8), Vector2i(-11, 9), Vector2i(-11, 10), Vector2i(-11, 11), Vector2i(-11, 12), Vector2i(-10, -2), Vector2i(-10, -1), Vector2i(-10, 0), Vector2i(-10, 1), Vector2i(-10, 2), Vector2i(-10, 3), Vector2i(-10, 4), Vector2i(-10, 5), Vector2i(-10, 6), Vector2i(-10, 7), Vector2i(-10, 8), Vector2i(-10, 9), Vector2i(-10, 10), Vector2i(-10, 11), Vector2i(-10, 12), Vector2i(-9, -3), Vector2i(-9, -2), Vector2i(-9, -1), Vector2i(-9, 0), Vector2i(-9, 1), Vector2i(-9, 2), Vector2i(-9, 3), Vector2i(-9, 4), Vector2i(-9, 5), Vector2i(-9, 6), Vector2i(-9, 7), Vector2i(-9, 8), Vector2i(-9, 9), Vector2i(-9, 10), Vector2i(-9, 11), Vector2i(-9, 12), Vector2i(-8, -4), Vector2i(-8, -3), Vector2i(-8, -2), Vector2i(-8, -1), Vector2i(-8, 0), Vector2i(-8, 1), Vector2i(-8, 2), Vector2i(-8, 3), Vector2i(-8, 4), Vector2i(-8, 5), Vector2i(-8, 6), Vector2i(-8, 7), Vector2i(-8, 8), Vector2i(-8, 9), Vector2i(-8, 10), Vector2i(-7, -5), Vector2i(-7, -4), Vector2i(-7, -3), Vector2i(-7, -2), Vector2i(-7, -1), Vector2i(-7, 0), Vector2i(-7, 1), Vector2i(-7, 2), Vector2i(-7, 3), Vector2i(-7, 4), Vector2i(-7, 5), Vector2i(-7, 6), Vector2i(-7, 7), Vector2i(-7, 8), Vector2i(-6, -6), Vector2i(-6, -5), Vector2i(-6, -4), Vector2i(-6, -3), Vector2i(-6, -2), Vector2i(-6, -1), Vector2i(-6, 0), Vector2i(-6, 1), Vector2i(-6, 2), Vector2i(-6, 3), Vector2i(-6, 4), Vector2i(-6, 5), Vector2i(-6, 6), Vector2i(-5, -7), Vector2i(-5, -6), Vector2i(-5, -5), Vector2i(-5, -4), Vector2i(-5, -3), Vector2i(-5, -2), Vector2i(-5, -1), Vector2i(-5, 0), Vector2i(-5, 1), Vector2i(-5, 2), Vector2i(-5, 3), Vector2i(-5, 4), Vector2i(-4, -8), Vector2i(-4, -7), Vector2i(-4, -6), Vector2i(-4, -5), Vector2i(-4, -4), Vector2i(-4, -3), Vector2i(-4, -2), Vector2i(-4, -1), Vector2i(-4, 0), Vector2i(-4, 1), Vector2i(-4, 2), Vector2i(-3, -9), Vector2i(-3, -8), Vector2i(-3, -7), Vector2i(-3, -6), Vector2i(-3, -5), Vector2i(-3, -4), Vector2i(-3, -3), Vector2i(-3, -2), Vector2i(-3, -1), Vector2i(-3, 0), Vector2i(-3, 11), Vector2i(-3, 12), Vector2i(-2, -10), Vector2i(-2, -9), Vector2i(-2, -8), Vector2i(-2, -7), Vector2i(-2, -6), Vector2i(-2, -5), Vector2i(-2, -4), Vector2i(-2, -3), Vector2i(-2, -2), Vector2i(-2, -1), Vector2i(-2, 9), Vector2i(-2, 10), Vector2i(-2, 11), Vector2i(-2, 12), Vector2i(-1, -11), Vector2i(-1, -10), Vector2i(-1, -9), Vector2i(-1, -8), Vector2i(-1, -7), Vector2i(-1, -6), Vector2i(-1, -5), Vector2i(-1, -4), Vector2i(-1, -3), Vector2i(-1, 7), Vector2i(-1, 8), Vector2i(-1, 9), Vector2i(-1, 10), Vector2i(-1, 11), Vector2i(-1, 12), Vector2i(0, -12), Vector2i(0, -11), Vector2i(0, -10), Vector2i(0, -9), Vector2i(0, -8), Vector2i(0, -7), Vector2i(0, -6), Vector2i(0, -5), Vector2i(0, 5), Vector2i(0, 6), Vector2i(0, 7), Vector2i(0, 8), Vector2i(0, 9), Vector2i(0, 10), Vector2i(0, 11), Vector2i(0, 12), Vector2i(1, -12), Vector2i(1, -11), Vector2i(1, -10), Vector2i(1, -9), Vector2i(1, -8), Vector2i(1, -7), Vector2i(1, 3), Vector2i(1, 4), Vector2i(1, 5), Vector2i(1, 6), Vector2i(1, 7), Vector2i(1, 8), Vector2i(1, 9), Vector2i(1, 10), Vector2i(1, 11), Vector2i(2, -12), Vector2i(2, -11), Vector2i(2, -10), Vector2i(2, -9), Vector2i(2, 1), Vector2i(2, 2), Vector2i(2, 3), Vector2i(2, 4), Vector2i(2, 5), Vector2i(2, 6), Vector2i(2, 7), Vector2i(2, 8), Vector2i(2, 9), Vector2i(2, 10), Vector2i(3, -12), Vector2i(3, -11), Vector2i(3, 0), Vector2i(3, 1), Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(3, 5), Vector2i(3, 6), Vector2i(3, 7), Vector2i(3, 8), Vector2i(3, 9), Vector2i(4, -2), Vector2i(4, -1), Vector2i(4, 0), Vector2i(4, 1), Vector2i(4, 2), Vector2i(4, 3), Vector2i(4, 4), Vector2i(4, 5), Vector2i(4, 6), Vector2i(4, 7), Vector2i(4, 8), Vector2i(5, -4), Vector2i(5, -3), Vector2i(5, -2), Vector2i(5, -1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(5, 2), Vector2i(5, 3), Vector2i(5, 4), Vector2i(5, 5), Vector2i(5, 6), Vector2i(5, 7), Vector2i(6, -6), Vector2i(6, -5), Vector2i(6, -4), Vector2i(6, -3), Vector2i(6, -2), Vector2i(6, -1), Vector2i(6, 0), Vector2i(6, 1), Vector2i(6, 2), Vector2i(6, 3), Vector2i(6, 4), Vector2i(6, 5), Vector2i(6, 6), Vector2i(7, -8), Vector2i(7, -7), Vector2i(7, -6), Vector2i(7, -5), Vector2i(7, -4), Vector2i(7, -3), Vector2i(7, -2), Vector2i(7, -1), Vector2i(7, 0), Vector2i(7, 1), Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 4), Vector2i(7, 5), Vector2i(8, -10), Vector2i(8, -9), Vector2i(8, -8), Vector2i(8, -7), Vector2i(8, -6), Vector2i(8, -5), Vector2i(8, -4), Vector2i(8, -3), Vector2i(8, -2), Vector2i(8, -1), Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(8, 3), Vector2i(8, 4), Vector2i(9, -12), Vector2i(9, -11), Vector2i(9, -10), Vector2i(9, -9), Vector2i(9, -8), Vector2i(9, -7), Vector2i(9, -6), Vector2i(9, -5), Vector2i(9, -4), Vector2i(9, -3), Vector2i(9, -2), Vector2i(9, -1), Vector2i(9, 0), Vector2i(9, 1), Vector2i(9, 2), Vector2i(9, 3), Vector2i(10, -12), Vector2i(10, -11), Vector2i(10, -10), Vector2i(10, -9), Vector2i(10, -8), Vector2i(10, -7), Vector2i(10, -6), Vector2i(10, -5), Vector2i(10, -4), Vector2i(10, -3), Vector2i(10, -2), Vector2i(10, -1), Vector2i(10, 0), Vector2i(10, 1), Vector2i(10, 2), Vector2i(11, -12), Vector2i(11, -11), Vector2i(11, -10), Vector2i(11, -9), Vector2i(11, -8), Vector2i(11, -7), Vector2i(11, -6), Vector2i(11, -5), Vector2i(11, -4), Vector2i(11, -3), Vector2i(11, -2), Vector2i(11, -1), Vector2i(11, 0), Vector2i(11, 1), Vector2i(12, -12), Vector2i(12, -11), Vector2i(12, -10), Vector2i(12, -9), Vector2i(12, -8), Vector2i(12, -7), Vector2i(12, -6), Vector2i(12, -5), Vector2i(12, -4), Vector2i(12, -3), Vector2i(12, -2), Vector2i(12, -1), Vector2i(12, 0)])\ntown_cells = Array[Vector2i]([Vector2i(0, 1), Vector2i(0, 2), Vector2i(-1, 3), Vector2i(-1, 4)])\n"}];
-
-function buildPresetDropdown(){
-  const sel = document.getElementById("presetSelect");
-  LEVEL_PRESETS.forEach((p,i)=>{
-    const opt = document.createElement("option");
-    opt.value = i; opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
+  for(const a of L.lake_cells.keys()) if(!L.pool_targets.has(a)) bad(`lake_cells has an anchor (${a}) that is not a pool.`);
+  for(const [a,id] of L.preset_blocks){
+    if(!blockDef(id)) bad(`preset_blocks references unknown block '${id}'.`);
+    for(const c of blockFootprint(parseKey(a),id,false)){ const k=key(c);
+      if(!inPlayable(c)) bad(`Preset ${id} at (${a}) covers (${k}), which is not playable.`);
+      else if(terrainAt(k)!=="empty"||L.water_sources.has(k)) bad(`Preset ${id} at (${a}) overlaps terrain at (${k}).`); }
+  }
+  for(const id of L.starting_inventory.keys()) if(!blockDef(id)) bad(`starting_inventory references unknown block '${id}'.`);
+  for(const [name,set] of [["fire_cells",L.fire_cells],["town_cells",L.town_cells],["geyser_cells",L.geyser_cells],["dirt_cells",L.dirt_cells]])
+    for(const k of set) if(!inPlayable(parseKey(k))) bad(`${name} (${k}) is not playable.`);
+  for(const a of L.hydro_plant_cells){ const c=parseKey(a);
+    for(const d of [{q:-1,r:0},{q:0,r:0},{q:1,r:0}]) if(!inPlayable(add(c,d))) bad(`Hydro plant (${a}) cell (${key(add(c,d))}) is not playable — it would silently not render.`);
+    if(isFlat()) warn("Hydro plants are untested on a flat grid."); }
+  for(const k of L.hint_cells) if(L.blocked_cells.has(k)) warn(`hint cell (${k}) is blocked.`);
+  if(L.town_cells.size && L.town_cells.size!==4) warn(`Town has ${L.town_cells.size} cell(s); the convention is 4 edge-connected cells.`);
+  if(L.total_block_budget>0 && L.starting_inventory.size) warn("total_block_budget > 0: starting_inventory is ignored by the engine.");
+  if(!items.length) items.push({level:"ok",text:`No issues. ${playableCoords().length} playable cells, ≈${width} wide, bottom row ${bottomRow()}.`});
+  $("validation").innerHTML=items.map(i=>`<div class="valitem ${i.level}">${i.text}</div>`).join("");
 }
 
 /* =========================================================================
    INIT
    ========================================================================= */
 function init(){
-  renderBlockList();
-  buildPresetDropdown();
-  resizeCanvas();
-  fitToView();
-  runValidation();
-  refreshExport();
+  buildToolbar(); syncForm(); renderLists(); resizeCanvas(); fitToView(); runValidation(); refreshExport();
   requestAnimationFrame(()=>{ resizeCanvas(); fitToView(); });
 }
 init();

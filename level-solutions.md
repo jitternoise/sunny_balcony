@@ -36,7 +36,7 @@ Start with the solution applied before pressing Start.
 ## Dig the River (levels 21-22)
 
 - **Level 21** — dig (-1,-1),(-1,0),(-1,2),(-1,3) | win 12
-- **Level 22** — dig the 108-cell channel+spurs | win 103
+- **22. The Great Cascade** — dig 100 cells: [(24, -48), (23, -47), (23, -46), (22, -44), (21, -43), (23, -44), (22, -43), (22, -42), (21, -41), (21, -40), (20, -39), (20, -38), (19, -37), (17, -35), (17, -34), (18, -35), (18, -34), (17, -33), (17, -32), (16, -31), (16, -30), (15, -29), (15, -28), (13, -26), (12, -25), (14, -26), (13, -25), (13, -24), (12, -23), (12, -22), (11, -21), (11, -20), (10, -19), (8, -17), (8, -16), (9, -17), (9, -16), (8, -15), (8, -14), (7, -13), (7, -12), (6, -11), (6, -10), (4, -8), (3, -7), (5, -8), (4, -7), (4, -6), (3, -5), (3, -4), (2, -3), (2, -2), (1, -1), (0, 1), (0, 2), (-1, 3), (-1, 4), (-2, 5), (-2, 6), (-3, 7), (-4, 8), (-6, 10), (-7, 11), (-5, 10), (-6, 11), (-6, 12), (-7, 13), (-7, 14), (-8, 15), (-8, 16), (-9, 17), (-9, 19), (-9, 20), (-10, 21), (-10, 22), (-11, 23), (-11, 24), (-12, 25), (-13, 26), (-15, 28), (-16, 29), (-14, 28), (-15, 29), (-15, 30), (-16, 31), (-16, 32), (-17, 33), (-17, 34), (-18, 35), (-18, 37), (-18, 38), (-19, 39), (-19, 40), (-20, 41), (-20, 42), (-21, 43), (-21, 44), (-22, 45), (-22, 46), (-23, 47)] | win 101
 
 ## Diverter Drills (levels 23-30)
 
@@ -68,7 +68,7 @@ Start with the solution applied before pressing Start.
 - **42. Split Networks IV** — splitter (0, 0) | win 12
 - **43. Split Networks V** — divert-left (-2, 0) + divert-left (-3, 1) | win 13
 - **44. Split Networks VI** — splitter (0, 0) + divert-left (-1, 1) | win 12
-- **45. Split Networks VII** — splitter (-1, 0) + divert-left (-2, 4) | win 12
+- **45. Split Networks VII** — splitter (-1, 0) | win 12
 - **46. Split Networks VIII** — divert-right (-3, 3) + divert-right (0, -2) | win 13
 
 ## Town Defense (levels 47-54)
@@ -91,17 +91,17 @@ Start with the solution applied before pressing Start.
 - **59. Flat Fields V** — wall (-1, 3) | win 17
 - **60. Flat Fields VI** — divert-left (-1, 3) + wall (-1, 0) | win 18
 - **61. Flat Fields VII** — divert-right (1, -3) + wall (-1, -3) | win 18
-- **62. Flat Fields VIII** — divert-right (1, 1) + divert-left (-1, -1) | win 12
+- **62. Flat Fields VIII** — divert-left (-1, -1) | win 12
 
 ## Geyser Country (levels 63-70)
 
 - **63. Geyser Country I** — divert-left (-1, -2) | win 14
-- **64. Geyser Country II** — wall (-1, -3) | win 15
+- **64. Geyser Country II** — wall (0, 0) | win 14
 - **65. Geyser Country III** — wall (0, -2) | win 14
-- **66. Geyser Country IV** — wall (-2, -1) | win 15
-- **67. Geyser Country V** — wall (0, -1) | win 18
-- **68. Geyser Country VI** — wall (-1, -1) | win 19
-- **69. Geyser Country VII** — wall (-3, 5) | win 19
+- **66. Geyser Country IV** — wall (-3, 1) | win 15
+- **67. Geyser Country V** — wall (-3, 5) | win 18
+- **68. Geyser Country VI** — splitter (0, -2) + wall (-2, 1) | win 18
+- **69. Geyser Country VII** — wall (-2, 3) | win 19
 - **70. Geyser Country VIII** — wall (-1, 2) | win 19
 
 ## Big Digs (levels 71-78)
@@ -133,11 +133,11 @@ Start with the solution applied before pressing Start.
 - **89. The Gauntlet III** — divert-left (-5, 9) + dig 2 cells: [(-2, 3), (-2, 4)] | win 40
 - **90. The Gauntlet IV** — divert-right (2, -3) + dig 2 cells: [(-2, 6), (-2, 7)] | win 30
 - **91. The Gauntlet V** — divert-left (-3, 6) + wall (-3, 3) + dig 4 cells: [(-4, 10), (-3, 10), (-5, 11), (-4, 11)] | win 33
-- **92. The Gauntlet VI** — wall (0, 0) + dig 4 cells: [(3, -8), (4, -8), (3, -7), (4, -7)] | win 37
+- **92. The Gauntlet VI** — divert-right (1, -1) + dig 4 cells: [(3, -8), (4, -8), (3, -7), (4, -7)] | win 37
 - **93. The Gauntlet VII** — wall (-2, 1) + divert-left (-4, 10) + dig 4 cells: [(-5, 12), (-4, 12), (-6, 13), (-5, 13)] | win 35
 - **94. The Gauntlet VIII** — wall (3, -6) + wall (4, -7) + dig 6 cells: [(7, -13), (6, -12), (-4, 7), (-3, 7), (-5, 8), (-4, 8)] | win 38
 - **95. The Gauntlet IX** — divert-left (-7, 13) + divert-right (1, -3) + dig 6 cells: [(7, -14), (6, -13), (-3, 4), (-2, 4), (-4, 5), (-3, 5)] | win 41
-- **96. The Gauntlet X** — wall (-6, 13) + divert-right (-9, 17) + dig 8 cells: [(1, -2), (2, -2), (1, -1), (2, -1), (-4, 9), (-3, 9), (-5, 10), (-4, 10)] | win 42
+- **96. The Gauntlet X** — divert-left (-6, 12) + divert-right (-9, 17) + dig 8 cells: [(1, -2), (2, -2), (1, -1), (2, -1), (-4, 9), (-3, 9), (-5, 10), (-4, 10)] | win 41
 - **97. The Gauntlet XI** — wall (-9, 13) + divert-right (3, -6) + dig 8 cells: [(6, -13), (6, -12), (-8, 14), (-6, 14), (-5, 14), (-9, 15), (-7, 15), (-6, 15)] | win 44
 - **98. The Gauntlet XII** — wall (-12, 19) + dig 6 cells: [(5, -9), (5, -8), (0, 2), (1, 2), (-1, 3), (0, 3)] | win 46
 - **99. The Gauntlet XIII** — wall (-4, 8) + divert-right (-9, 16) + dig 12 cells: [(-4, 5), (-3, 5), (-2, 5), (-4, 6), (-3, 6), (-2, 6), (-6, 9), (-4, 9), (-3, 9), (-6, 10), (-4, 10), (-3, 10)] | win 44
