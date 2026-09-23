@@ -46,6 +46,7 @@ var measures_elapsed: int = 0
 @onready var hud: Control = $UI/HUD
 @onready var sky: ColorRect = $Background/Sky
 @onready var grass: ColorRect = $Background/Grass
+@onready var ambient: AmbientBackdrop = $Background/Ambient
 @onready var status_label: Label = $UI/HUD/StatusLabel
 ## "Level 12" / "Tutorial 3", top-left, above the status text -- the one
 ## place in play that says which level this is.
@@ -356,14 +357,16 @@ func _ready() -> void:
 	Sfx.hook_buttons(self, OWN_SOUND_BUTTONS)
 
 
-## Paints the sky and ground for this level's ten-level band (Backdrop) and
-## re-tints the HUD's text outlines to match, so the same white labels
-## read on every sky. The scene file's colours are the first palette, so a
+## Paints the sky and ground for this level's ten-level band (Backdrop),
+## sets the band's clouds, birds and stars moving over them
+## (AmbientBackdrop), and re-tints the HUD's text outlines to match, so the
+## same white labels read on every sky. The scene file's colours are the first palette, so a
 ## level that somehow skipped this would still look like level 1.
 func _apply_backdrop() -> void:
 	var palette := Backdrop.for_level(level_data.level_id)
 	sky.color = palette["sky"]
 	grass.color = palette["ground"]
+	ambient.setup(Backdrop.index_for_level(level_data.level_id))
 	var outline := Backdrop.outline_for(palette["ground"])
 	for label in [level_label, status_label, budget_label]:
 		label.add_theme_color_override("font_outline_color", outline)
@@ -1054,7 +1057,8 @@ func _process(_delta: float) -> void:
 
 
 ## Stops the board's animation heartbeat whenever the player cannot see the
-## board: paused, or with a full-screen panel over it.
+## board: paused, or with a full-screen panel over it. The moving backdrop
+## (AmbientBackdrop) follows the same rule for the same reason.
 ##
 ## HexBoard._process() accumulates delta and calls queue_redraw() 12 times a
 ## second whenever a level has water or an animated tile -- which is every
@@ -1078,6 +1082,8 @@ func _update_board_animation() -> void:
 		or (win_panel != null and win_panel.visible) \
 		or (lose_panel != null and lose_panel.visible)
 	board.set_process(not covered)
+	if ambient != null:
+		ambient.running = not covered
 
 
 ## True if `coord` currently holds an unspent Bomb Catapult block -- the

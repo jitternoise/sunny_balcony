@@ -26,17 +26,36 @@ const DECADE := 10
 const FIRST_LEVEL := 1
 const LAST_LEVEL := 100
 
+## Each band also says what moves in it (AmbientBackdrop draws it):
+##   cloud  -- the clouds' tint, blended into the sky by depth
+##   clouds -- how many drift across (0 for a clear sky)
+##   shadow -- how dark a near cloud's shadow is on the ground, as a blend
+##             toward the HUD outline colour; 0 for no sun. Kept small: the
+##             ground under a shadow must stay as clear of an empty cell as
+##             the ground itself (VerifyAmbience)
+##   birds  -- whether a flock crosses now and then
+##   stars  -- only on a sky dark enough to show them
 const PALETTES: Array[Dictionary] = [
-	{"name": "Spring meadow", "sky": Color(0.53, 0.81, 0.92), "ground": Color(0.30, 0.69, 0.31)},   # 1-10
-	{"name": "Deep valley", "sky": Color(0.70, 0.87, 0.95), "ground": Color(0.20, 0.56, 0.38)},     # 11-20
-	{"name": "Morning riverbank", "sky": Color(0.96, 0.86, 0.68), "ground": Color(0.45, 0.66, 0.30)}, # 21-30
-	{"name": "Dry season", "sky": Color(0.92, 0.82, 0.64), "ground": Color(0.58, 0.64, 0.34)},      # 31-40
-	{"name": "Evening pines", "sky": Color(0.74, 0.70, 0.88), "ground": Color(0.22, 0.50, 0.46)},   # 41-50
-	{"name": "Golden plains", "sky": Color(0.99, 0.82, 0.52), "ground": Color(0.52, 0.58, 0.30)},   # 51-60
-	{"name": "Geyser country", "sky": Color(0.96, 0.74, 0.72), "ground": Color(0.38, 0.56, 0.54)},  # 61-70
-	{"name": "Badger dusk", "sky": Color(0.40, 0.42, 0.60), "ground": Color(0.36, 0.40, 0.46)},     # 71-80
-	{"name": "Jamboree sunset", "sky": Color(0.98, 0.62, 0.44), "ground": Color(0.40, 0.52, 0.36)}, # 81-90
-	{"name": "The Pan", "sky": Color(0.82, 0.88, 0.94), "ground": Color(0.80, 0.80, 0.74)},         # 91-100
+	{"name": "Spring meadow", "sky": Color(0.53, 0.81, 0.92), "ground": Color(0.30, 0.69, 0.31),   # 1-10
+		"cloud": Color(1.0, 1.0, 1.0), "clouds": 5, "shadow": 0.14, "birds": true, "stars": false},
+	{"name": "Deep valley", "sky": Color(0.70, 0.87, 0.95), "ground": Color(0.20, 0.56, 0.38),     # 11-20
+		"cloud": Color(1.0, 1.0, 1.0), "clouds": 6, "shadow": 0.14, "birds": true, "stars": false},
+	{"name": "Morning riverbank", "sky": Color(0.96, 0.86, 0.68), "ground": Color(0.45, 0.66, 0.30), # 21-30
+		"cloud": Color(1.0, 0.98, 0.93), "clouds": 4, "shadow": 0.12, "birds": true, "stars": false},
+	{"name": "Dry season", "sky": Color(0.92, 0.82, 0.64), "ground": Color(0.58, 0.64, 0.34),      # 31-40
+		"cloud": Color(1.0, 0.97, 0.90), "clouds": 2, "shadow": 0.10, "birds": false, "stars": false},
+	{"name": "Evening pines", "sky": Color(0.74, 0.70, 0.88), "ground": Color(0.22, 0.50, 0.46),   # 41-50
+		"cloud": Color(0.98, 0.88, 0.94), "clouds": 4, "shadow": 0.10, "birds": true, "stars": false},
+	{"name": "Golden plains", "sky": Color(0.99, 0.82, 0.52), "ground": Color(0.52, 0.58, 0.30),   # 51-60
+		"cloud": Color(1.0, 0.95, 0.85), "clouds": 4, "shadow": 0.12, "birds": true, "stars": false},
+	{"name": "Geyser country", "sky": Color(0.96, 0.74, 0.72), "ground": Color(0.38, 0.56, 0.54),  # 61-70
+		"cloud": Color(1.0, 0.93, 0.92), "clouds": 5, "shadow": 0.12, "birds": false, "stars": false},
+	{"name": "Badger dusk", "sky": Color(0.40, 0.42, 0.60), "ground": Color(0.36, 0.40, 0.46),     # 71-80
+		"cloud": Color(0.58, 0.59, 0.76), "clouds": 3, "shadow": 0.0, "birds": false, "stars": true},
+	{"name": "Jamboree sunset", "sky": Color(0.98, 0.62, 0.44), "ground": Color(0.40, 0.52, 0.36), # 81-90
+		"cloud": Color(1.0, 0.84, 0.74), "clouds": 4, "shadow": 0.08, "birds": true, "stars": false},
+	{"name": "The Pan", "sky": Color(0.82, 0.88, 0.94), "ground": Color(0.80, 0.80, 0.74),         # 91-100
+		"cloud": Color(1.0, 1.0, 1.0), "clouds": 3, "shadow": 0.10, "birds": false, "stars": false},
 ]
 
 ## The HUD's labels are white with a dark outline that used to be a fixed

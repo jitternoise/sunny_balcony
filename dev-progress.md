@@ -1,5 +1,58 @@
 # Flash Flood — Dev Progress
 
+## Status: moving backdrops -- clouds, shadows, birds, stars (2026-09-22)
+
+**Every level and the main menu now have a moving backdrop** over the flat
+sky and ground. `AmbientBackdrop` (`scripts/gameplay/AmbientBackdrop.gd`, a
+full-rect Control after `Grass` in `Level.tscn`'s Background layer and in
+`MainMenu.tscn`) draws flat cartoon clouds at two depths drifting left to
+right, a soft shadow under each near cloud sliding across the ground, a
+small flock crossing right to left every 40 s, and twinkling stars. What a
+band has is five new keys on each `Backdrop.PALETTES` row (`cloud`,
+`clouds`, `shadow`, `birds`, `stars`): Dry season and The Pan are sparse
+and birdless, Geyser country has no birds, Badger dusk swaps sun and birds
+for stars and has no shadows.
+
+**No assets.** Everything is drawn from code: circles, two short polylines
+per bird, dots for stars, and one 64x64 `GradientTexture2D` built at
+runtime for every shadow. The script is ~13 KB; the export grows by nothing
+else.
+
+**Cheap by construction.** Each cloud, shadow and bird is its own node,
+drawn once; animating is setting positions, which records no draw
+commands. Only the wingbeats and the twinkle redraw, at the board's 12 Hz
+(`TICK_FPS`, held to `HexBoard.ANIM_TICK_FPS`), and a bird only while on
+screen. It stops exactly when the board does --
+`Level._update_board_animation()` sets `ambient.running` -- and freezes
+rather than clears; its clock only advances while running, so it resumes
+without a jump. Laid out from a per-band seed, so `BoardSnapshots` stays
+repeatable.
+
+**Options gains a "Moving background" toggle** (`Settings.background_motion`,
+`[display]` in `settings.cfg`, default on). Off freezes the scenery in place.
+For players who find motion behind a puzzle distracting, and for battery.
+
+**Readability is tested, not eyeballed.** `VerifyAmbience` (134 checks) holds
+every band to: clouds that stand out from their sky, ground under a full
+shadow still >= 0.2 luma above an empty cell (the `VerifyBackdrops` rule),
+birds that read, stars only on a dark sky; the layer present, in the right
+band, after `Grass`, `mouse_filter` IGNORE (on the Background layer a
+STOP would swallow every board tap); clouds wholly in the sky and shadows
+wholly on the ground; same layout every visit; moving, stopping with the
+intro/pause/background/lose, resuming without a jump; the toggle live,
+persisted, and defaulting on for an old file. Mutation-checked: dropping
+the `running` line fails five of them.
+
+**Snapshots:** every frame differs in the sky, as expected. On the board
+the only changed pixels are anti-aliased hex-edge fringes beside a shadow
+(max 12/255); levels without shadows (75) are pixel-identical below the
+horizon. All suites pass except `VerifyHydroBonus` on level 18, which fails
+identically on a clean HEAD (known, see below). `VerifyTouchTargets` is 45
+checks now (the new toggle).
+
+**Not done:** the Level Select map is still static. Nothing has been seen
+moving on a device -- as ever, llvmpipe only.
+
 ## Status: the pool animal -- one character per ten levels (2026-09-20)
 
 **The 4-box pool status bar is gone.** Every lake now has an animal in it:

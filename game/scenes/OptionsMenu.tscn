@@ -106,6 +106,12 @@ custom_minimum_size = Vector2(0, 96)
 step = 5.0
 value = 100.0
 
+[node name="MotionToggle" type="CheckButton" parent="Center/Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+button_pressed = true
+text = "Moving background"
+
 [node name="CloseButton" type="Button" parent="Center/Panel/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 96)

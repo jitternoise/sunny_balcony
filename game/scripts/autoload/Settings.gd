@@ -1,8 +1,8 @@
 extends Node
 # Autoload singleton (see [autoload] in project.godot).
 # Player preferences that belong to the DEVICE rather than to a save slot:
-# a mute and a volume each for the music and the sound effects, and how
-# opaque the hex grid is drawn. Kept out of GameState on purpose -- a
+# a mute and a volume each for the music and the sound effects, how opaque
+# the hex grid is drawn, and whether the backdrop moves. Kept out of GameState on purpose -- a
 # player who mutes the game wants it muted in every slot, and these must
 # survive a slot being deleted.
 #
@@ -21,6 +21,10 @@ const BUS_SFX := "SFX"
 ## Fired whenever grid_opacity is set, so a board on screen can repaint with
 ## the new value while the player is still dragging the slider.
 signal grid_opacity_changed(value: float)
+
+## Fired whenever background_motion is set, so a backdrop on screen stops
+## or starts at once.
+signal background_motion_changed(on: bool)
 
 var music_muted: bool = false:
 	set(value):
@@ -64,6 +68,16 @@ var grid_opacity: float = 1.0:
 	set(value):
 		grid_opacity = clampf(value, 0.0, 1.0)
 		grid_opacity_changed.emit(grid_opacity)
+		_save()
+
+## Whether the backdrop moves (AmbientBackdrop): drifting clouds and their
+## shadows, birds, stars. Off freezes it where it stands -- the scenery
+## stays, the motion goes -- for a player who finds it distracting behind
+## a puzzle, or wants the battery.
+var background_motion: bool = true:
+	set(value):
+		background_motion = value
+		background_motion_changed.emit(value)
 		_save()
 
 
@@ -111,6 +125,7 @@ func _load() -> void:
 	music_volume = clampf(float(config.get_value(SECTION, "music_volume", 1.0)), 0.0, 1.0)
 	sfx_volume = clampf(float(config.get_value(SECTION, "sfx_volume", 1.0)), 0.0, 1.0)
 	grid_opacity = clampf(float(config.get_value(SECTION_DISPLAY, "grid_opacity", 1.0)), 0.0, 1.0)
+	background_motion = bool(config.get_value(SECTION_DISPLAY, "background_motion", true))
 
 
 ## Small and rewritten whole. Unlike a save there is nothing here that
@@ -123,4 +138,5 @@ func _save() -> void:
 	config.set_value(SECTION, "music_volume", music_volume)
 	config.set_value(SECTION, "sfx_volume", sfx_volume)
 	config.set_value(SECTION_DISPLAY, "grid_opacity", grid_opacity)
+	config.set_value(SECTION_DISPLAY, "background_motion", background_motion)
 	config.save(SETTINGS_PATH)

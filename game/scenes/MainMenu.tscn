@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/OptionsMenu.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/gameplay/AmbientBackdrop.gd" id="3"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -23,6 +24,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 color = Color(0.3, 0.69, 0.31, 1)
+
+[node name="Ambient" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1

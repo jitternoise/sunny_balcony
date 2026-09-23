@@ -38,12 +38,13 @@ godot --headless res://tests/VerifyWaterBlocking.tscn # solid targets block a re
 godot --headless res://tests/VerifyTutorial.tscn    # the 5 tutorial levels + trail slots, 160 checks
 godot --headless res://tests/VerifyGridOpacity.tscn # Options > hex grid opacity slider, 28 checks
 godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per ten levels, 119 checks
+godot --headless res://tests/VerifyAmbience.tscn    # the moving backdrop: clouds, shadows, birds, stars, readable on every band, stops with the board and the Options toggle, 134 checks
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
 godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the 45 pose files, the generator, the import scale, the poses, every lake on every level, 337 checks
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
-  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 44 checks
+  godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 45 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyMapScroll.tscn # map opens on your level, 14 checks
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
@@ -195,6 +196,15 @@ any viewport-dependent measurement, and sanity-check by printing
   (`LevelMap.bands`), `LevelMap._draw_bands()` paints the ground under the
   trail with a fade between decades, and the header bar shows the sky of
   the band at the middle of the screen (`_update_header_sky()`).
+- **`scripts/gameplay/AmbientBackdrop.gd`** — what moves over that sky and
+  ground: drifting clouds, their shadows on the ground, a passing flock,
+  stars. Per band from the `cloud`/`clouds`/`shadow`/`birds`/`stars` keys
+  on each `PALETTES` row. The last child of `Level.tscn`'s Background
+  layer and of `MainMenu.tscn`; **`mouse_filter` must stay IGNORE** or it
+  eats every board tap. Nodes are drawn once and moved by position; only
+  wingbeats and twinkle redraw, at 12 Hz. Stops with the board
+  (`Level._update_board_animation()` sets `running`) and with Options >
+  Moving background (`Settings.background_motion`). `VerifyAmbience`.
 
 **Beat cycle.** One measure = 4 beats = 1.2 s (`SUBTICK_INTERVAL` 0.15 ×
 `ticks_per_beat` 2 × 4). Beats are PLACEMENT → WATER → TERRAIN → STATUS. The
@@ -220,7 +230,8 @@ frame from that counter; let slower tiles repeat frames. It runs only while
 the board is actually visible — `Level._update_board_animation()` calls
 `board.set_process()` from `Level._process()` every frame, so a new popup is
 covered automatically. Add a full-screen panel? Add it to that check, or it
-will repaint a board nobody can see and hold the screen awake.
+will repaint a board nobody can see and hold the screen awake. The same
+check stops the moving backdrop (`ambient.running`).
 
 **`_draw()` culls to the screen.** `_visible_draw_rect()` gives the visible
 band in board coordinates and the cell and water loops skip anything outside

@@ -2,15 +2,16 @@ extends Control
 class_name OptionsMenu
 
 ## The Options popup: a mute and a volume each for the music and the sound
-## effects, and the hex grid's opacity. One scene, instanced on the main
-## menu, on Level Select and inside a level's pause menu, so the three
-## never drift apart. It is a modal like
-## the level's popups: the root and the Dim rect both STOP mouse input, so
+## effects, the hex grid's opacity, and whether the backdrop moves. One
+## scene, instanced on the main menu, on Level Select and inside a level's
+## pause menu, so the three never drift apart. It is a modal like the
+## level's popups: the root and the Dim rect both STOP mouse input, so
 ## a tap beside the panel cannot reach whatever is underneath -- on Level
 ## Select that would be a level node, in a level the board.
 ##
-## The toggles read "Music" / "Sound effects" and are ON when audible, so a
-## player scanning the panel sees what is on rather than what is muted.
+## The toggles read "Music" / "Sound effects" / "Moving background" and are
+## ON when audible or moving, so a player scanning the panel sees what is
+## on rather than what is muted.
 ## They write straight to Settings, which persists them and mutes the bus;
 ## nothing here is applied on Close, so there is no Cancel to get wrong.
 ##
@@ -34,6 +35,7 @@ const SLIDER_MAX := 100.0
 @onready var sfx_volume_value: Label = $Center/Panel/VBox/SfxVolumeRow/SfxVolumeValue
 @onready var grid_opacity_slider: HSlider = $Center/Panel/VBox/GridOpacitySlider
 @onready var grid_opacity_value: Label = $Center/Panel/VBox/GridOpacityRow/GridOpacityValue
+@onready var motion_toggle: CheckButton = $Center/Panel/VBox/MotionToggle
 @onready var close_button: Button = $Center/Panel/VBox/CloseButton
 
 ## [slider, percentage label, Settings property] per dial, filled in _ready().
@@ -43,6 +45,7 @@ var _sliders: Array = []
 func _ready() -> void:
 	music_toggle.toggled.connect(func(on: bool): Settings.music_muted = not on)
 	sfx_toggle.toggled.connect(func(on: bool): Settings.sfx_muted = not on)
+	motion_toggle.toggled.connect(func(on: bool): Settings.background_motion = on)
 	_sliders = [
 		[music_volume_slider, music_volume_value, &"music_volume"],
 		[sfx_volume_slider, sfx_volume_value, &"sfx_volume"],
@@ -75,6 +78,7 @@ func open() -> void:
 	# re-save the value that was just read.
 	music_toggle.set_pressed_no_signal(not Settings.music_muted)
 	sfx_toggle.set_pressed_no_signal(not Settings.sfx_muted)
+	motion_toggle.set_pressed_no_signal(Settings.background_motion)
 	# set_value_no_signal for the same reason; the labels are refreshed by
 	# hand since nothing fires.
 	for entry in _sliders:
