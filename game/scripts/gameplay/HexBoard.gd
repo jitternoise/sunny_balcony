@@ -18,9 +18,10 @@ signal level_lost
 ## tools/verify_solutions.gd under --script where no autoload exists, so it
 ## must not name Sfx (see CLAUDE.md); Level.gd listens and does.
 ##
-## Terrain events (fire out, pool fill/full, geyser) are held back to the
-## STATUS beat, when the change is also first drawn (see
-## resolve_status_phase()), so what is heard lands with what is seen.
+## Terrain events (fire out, pool fill/full, geyser, a tunnel's first
+## water) are held back to the STATUS beat, when the change is also first
+## drawn (see resolve_status_phase()), so what is heard lands with what is
+## seen.
 ## Water and mudslides draw on the WATER beat and emit there.
 signal board_event(kind: StringName, coord: Vector2i)
 
@@ -30,6 +31,7 @@ const EVENT_FIRE_OUT := &"fire_out"
 const EVENT_POOL_FILL := &"pool_fill"           # a beat of connection credited to a lake
 const EVENT_POOL_FULL := &"pool_full"           # the beat that filled it
 const EVENT_GEYSER := &"geyser"                 # a geyser waking into a source
+const EVENT_TUNNEL := &"tunnel"                 # water surfacing at a tunnel exit, once per exit per run
 
 ## Terrain events waiting for the STATUS beat -- [kind, coord] pairs.
 var _events_to_reveal: Array = []
@@ -42,15 +44,17 @@ const CellState := {
 	GEYSER = "geyser",
 	DIRT = "dirt",
 	HYDRO = "hydro", # one of a Hydro Electric Power Plant's 3 cells -- see hydro_plants
+	TUNNEL_IN = "tunnel_in",   # swallows every drop that reaches it -- see tunnel_transit
+	TUNNEL_OUT = "tunnel_out", # where they surface: ordinary ground to surface water
 }
 
 ## Terrain icon textures. Placeable-block icons come from each BlockData
 ## resource's own `icon` field (data-driven, see BlockData.gd) since new
 ## block types get their icon by just filling in that field on their
 ## .tres -- no code change needed. Terrain isn't a Resource per-type, so
-## its icons are preloaded here instead. Geyser has no dedicated glyph yet
-## (see claude/icon-system.md's open follow-ups) -- it keeps its existing
-## procedural _draw_geyser_icon() droplet shape. Dirt deliberately has no
+## its icons are preloaded here instead. A dormant geyser is the cracked
+## stone vent (ICON_GEYSER); once it activates it is drawn as a source with
+## the waterfall glyph (see _draw_source_marker()). Dirt deliberately has no
 ## glyph at all: per the "color stages only" design decision for the dig
 ## mechanic, an undug/partially-dug hex communicates its state purely
 ## through its fill color (see _draw_cell()'s DIRT branch).
@@ -58,6 +62,9 @@ const ICON_FIRE := preload("res://assets/icons/icon_fire.svg")
 const ICON_TOWN := preload("res://assets/icons/icon_town.svg")
 const ICON_SOURCE := preload("res://assets/icons/icon_source.svg")
 const ICON_HYDRO := preload("res://assets/icons/icon_hydro.svg")
+const ICON_GEYSER := preload("res://assets/icons/icon_geyser.svg")
+const ICON_TUNNEL_IN := preload("res://assets/icons/icon_tunnel_in.svg")
+const ICON_TUNNEL_OUT := preload("res://assets/icons/icon_tunnel_out.svg")
 
 ## Animated water tiles. Each sheet is WATER_FRAMES frames of
 ## WATER_FRAME_PX laid out in a row, and every frame fills a whole hex --
@@ -128,6 +135,8 @@ const TILE_DIRT_2 := &"dirt_2"
 const TILE_MUDSLIDE := &"mudslide"
 const TILE_BLAST := &"blast"
 const TILE_TRENCH := &"trench"
+const TILE_TUNNEL_IN := &"tunnel_in"
+const TILE_TUNNEL_OUT := &"tunnel_out"
 
 ## What each state looks like. Keys per entry:
 ##   fill   -- Color of the hex underneath (always drawn, even under FILL
@@ -152,6 +161,36 @@ const BASIN_SURFACE_COLOR := Color(0.75, 0.9, 1.0, 0.95)
 const BASIN_SHORE_COLOR := Color(0.92, 0.86, 0.64, 0.95)
 const BASIN_SHORE_WIDTH := 3.0
 
+## Underground tunnel palette (LevelData.tunnel_pairs). Both ends sit on
+## the same mossy cave stone -- a cool green-grey, clear of every terrain
+## fill here, every block colour and every backdrop ground (the nearest,
+## "Badger dusk", is bluer) -- under a limestone arch glyph. The route
+## between them is a row of earthy stepping stones, one per underground
+## beat of travel, rimmed in the arch's limestone so they read as the same
+## structure on a dark empty cell, each with a small chevron pointing the
+## way the water runs underground (entrance to exit). A stone lights up
+## water-blue while a drop is at that step, rimmed in the water glyphs'
+## navy so it still stands out over a frothy surface stream -- see
+## _draw_tunnel_routes().
+const TUNNEL_FILL_COLOR := Color(0.33, 0.40, 0.36)
+const TUNNEL_STONE_COLOR := Color(0.46, 0.34, 0.22)
+const TUNNEL_STONE_OUTLINE := Color(0.79, 0.73, 0.62, 0.95)
+const TUNNEL_STONE_LIT_COLOR := Color(0.18, 0.56, 0.95)
+const TUNNEL_STONE_LIT_OUTLINE := Color(0.04, 0.24, 0.39)
+const TUNNEL_STONE_LIT_CHEVRON := Color(0.95, 0.98, 1.0)
+const TUNNEL_ROUTE_COLOR := Color(0.79, 0.73, 0.62, 0.35)
+const TUNNEL_STONE_RADIUS := 0.22 # of Hex.SIZE
+## The exit's pre-Start first-move arrow (_draw_tunnel_exit_arrows()): a
+## bold pale arrow in a dark casing that starts past the foot of the arch
+## glyph and reaches into the cell the spring falls to, so it never sits on
+## the glyph's own water. Drawn after the cells and the pool animals, so a
+## neighbouring cell cannot paint over its tip. In Hex.SIZEs from the
+## exit's centre.
+const TUNNEL_ARROW_COLOR := Color(0.93, 0.97, 1.0)
+const TUNNEL_ARROW_CASING := Color(0.04, 0.12, 0.2, 0.95)
+const TUNNEL_ARROW_FROM := 0.68
+const TUNNEL_ARROW_TO := 1.2
+
 const TILE_VISUALS := {
 	TILE_EMPTY: {"fill": Color(0.15, 0.15, 0.18), "icon": null},
 	# The first terrain type converted to animation: the flame sways, and an
@@ -171,10 +210,9 @@ const TILE_VISUALS := {
 	# the board visibly marks exactly which cell the flood hit.
 	TILE_TOWN: {"fill": Color(0.55, 0.45, 0.35), "icon": ICON_TOWN},
 	TILE_TOWN_FLOODED: {"fill": Color(0.65, 0.85, 0.95), "icon": ICON_TOWN},
-	# Dormant purple -- distinct from every other terrain colour. Geyser is
-	# the one state with no icon texture: it still draws its own procedural
-	# droplet, since no SVG has been made for it yet.
-	TILE_GEYSER: {"fill": Color(0.5, 0.3, 0.6), "icon": null},
+	# Dormant purple -- distinct from every other terrain colour. The vent
+	# glyph is centred, so one orientation serves both grids.
+	TILE_GEYSER: {"fill": Color(0.5, 0.3, 0.6), "icon": ICON_GEYSER},
 	# Steel-blue "structure" colour -- distinct from Pool's water-blue and
 	# from every block colour.
 	TILE_HYDRO: {"fill": Color(0.25, 0.55, 0.75), "icon": ICON_HYDRO},
@@ -195,6 +233,10 @@ const TILE_VISUALS := {
 	# entry stays at the cap -- see dig_progress) keeps a distinct trench
 	# colour so the carved channel stays readable as riverbed.
 	TILE_TRENCH: {"fill": DUG_TRENCH_COLOR, "icon": null},
+	# Underground tunnel ends -- one cave-stone fill, two glyphs: the arch
+	# with chevrons going in, and the arch with water spilling out.
+	TILE_TUNNEL_IN: {"fill": TUNNEL_FILL_COLOR, "icon": ICON_TUNNEL_IN},
+	TILE_TUNNEL_OUT: {"fill": TUNNEL_FILL_COLOR, "icon": ICON_TUNNEL_OUT},
 }
 
 ## The board's single animation heartbeat. Every animated tile derives its
@@ -298,10 +340,12 @@ const PENDING_REMOVAL_COLOR := Color(0.15, 0.15, 0.18, 0.55)
 ## tile (see _trigger_mudslide()), opening a path the PLAYER didn't choose.
 ## Collapsed tiles are fully open (water flows through immediately) and
 ## drawn in MUDSLIDE_COLOR, distinct from the player-dug trench color, so
-## the board tells the story of where the river forced its own way. At the
-## current tempo (0.3s/beat) 10 beats is ~3 seconds of standing water --
-## enough time to finish a tile you're already digging, but a real threat
-## if you fall behind.
+## the board tells the story of where the river forced its own way. These
+## are WATER beats, and there is one per measure (see _note_dirt_stall()),
+## so 10 of them is ten measures = 12 s of standing water at the current
+## tempo -- not the "~3 s" an earlier comment claimed (handheld-audit.md
+## finding 32). Enough time to finish a tile you're already digging, a
+## real threat if you fall behind.
 const MUDSLIDE_BEATS_REQUIRED := 10
 const MUDSLIDE_COLLAPSE_TILES := 3
 const MUDSLIDE_COLOR := Color(0.22, 0.15, 0.10) # wet mud -- darker than the dug trench
@@ -611,6 +655,51 @@ var _spent_preset_cells: Dictionary = {}
 ## whatever tick() computes as its first move.
 var water_cells: Array[Dictionary] = []
 
+## How many WATER beats this run has resolved -- incremented at the start
+## of every resolve_water_phase() that runs, reset to 0 by setup(). The
+## clock the underground tunnels keep time by (see tunnel_transit).
+var water_beat: int = 0
+
+## Drops travelling underground right now, one entry per (entrance, due)
+## pair: {"entrance": Vector2i, "exit": Vector2i, "entered": int (the
+## water_beat it went in on), "due": int (the water_beat it surfaces on)}.
+##
+## THE TIMING RULE (LevelData.tunnel_pairs). "The standard flow rate" is
+## one cell per WATER beat, and the underground route is the straight
+## line, so with d = the hex distance between entrance E and exit X:
+##
+##   - a drop that would enter E on WATER beat t -- by natural fall, by a
+##     Diverter/Splitter redirect, on a pointy or a flat grid -- leaves the
+##     surface on beat t. Every one of those paths ends in _try_enter(),
+##     which records the transit here and refuses the drop, so it is not
+##     in water_cells afterwards;
+##   - at the end of WATER beat t + d it is placed ON X, merging with
+##     anything already there -- exactly where a surface drop moving one
+##     cell per beat would be after d moves;
+##   - from beat t + d + 1 it falls from X by the spring rule, exactly a
+##     water source's: DOWN_LEFT first then the zigzag on a pointy grid,
+##     "straight" (Hex.FLAT_DOWN) on a flat one, like an active geyser.
+##
+## Deduped on (entrance, due): two drops into one mouth on one beat are one
+## drop underground, the same way two streams into one cell merge on the
+## surface (_add_water()). Throughput is otherwise unlimited -- a mouth
+## fed every beat keeps d drops in flight -- and nothing on the surface,
+## a Wall included, touches the route. Cleared by setup().
+##
+## The EXIT is ordinary ground to surface water, enterable the way a
+## source's own cell is: a stream that happens to cross it passes through
+## (merging with whatever surfaces there), and it is neither solid nor a
+## second mouth. Solid, it would be a wall the player never placed and
+## cannot move; swallowing, it would be an entrance leading nowhere. Only
+## the block ban (_footprint_placeable()) sets it apart -- a Wall parked
+## on a spring would bury the tunnel for good.
+var tunnel_transit: Array[Dictionary] = []
+
+## Tunnel exits water has already surfaced at this run -- each one sounds
+## EVENT_TUNNEL once, the first time, like a geyser waking. Cleared by
+## setup().
+var _tunnel_exits_opened: Dictionary = {}
+
 var inventory: Dictionary = {} # block id -> remaining count
 
 ## True for a "jamboree" level (level_data.total_block_budget > 0): the
@@ -769,6 +858,9 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 	_preview_arrows.clear()
 	_preview_from_cells.clear()
 	water_cells.clear()
+	water_beat = 0
+	tunnel_transit.clear()
+	_tunnel_exits_opened.clear()
 	flooded_towns.clear()
 	game_over = false
 	lose_reason = ""
@@ -812,6 +904,13 @@ func setup(data: LevelData, blocks: Dictionary) -> void:
 			cell_terrain[cell] = CellState.HYDRO
 			hydro_cell_to_anchor[cell] = anchor
 		hydro_plants[anchor] = {"cells": cells, "touched": false, "active": false}
+
+	# Underground tunnels: both ends are terrain, neither takes a block
+	# (_footprint_placeable()). The entrance swallows water (_try_enter());
+	# the exit is ordinary ground that water also surfaces on.
+	for entrance in data.tunnel_pairs.keys():
+		cell_terrain[entrance] = CellState.TUNNEL_IN
+		cell_terrain[data.tunnel_pairs[entrance]] = CellState.TUNNEL_OUT
 
 	# Preset blocks (LevelData.preset_blocks): committed straight into
 	# placed_blocks at setup, so they're live from the very first beat --
@@ -1257,6 +1356,8 @@ func _footprint_placeable(cells: Array[Vector2i]) -> bool:
 		var terrain: String = cell_terrain.get(cell, CellState.EMPTY)
 		if terrain == CellState.FIRE or terrain == CellState.POOL or terrain == CellState.TOWN or terrain == CellState.GEYSER or terrain == CellState.DIRT or terrain == CellState.HYDRO:
 			return false
+		if terrain == CellState.TUNNEL_IN or terrain == CellState.TUNNEL_OUT:
+			return false
 	return true
 
 
@@ -1415,6 +1516,7 @@ func resolve_placement_phase() -> void:
 func resolve_water_phase() -> void:
 	if game_over:
 		return
+	water_beat += 1
 
 	var is_flat := level_data.grid_style == "flat"
 	for source in level_data.water_sources:
@@ -1460,6 +1562,12 @@ func resolve_water_phase() -> void:
 			if next_water[i]["coord"] != entry["coord"]:
 				moved = true
 
+	# Underground arrivals, after every surface drop has moved: a drop
+	# that went into a tunnel d beats ago surfaces ON its exit now, and
+	# falls from there next beat -- see tunnel_transit for the rule.
+	if _surface_tunnel_arrivals(next_water):
+		moved = true
+
 	water_cells = next_water
 	# Mudslides resolve after every drop has moved for this beat, so a
 	# slide's terrain changes can't affect drops mid-loop -- see
@@ -1468,6 +1576,52 @@ func resolve_water_phase() -> void:
 	queue_redraw()
 	if moved:
 		board_event.emit(EVENT_WATER_ADVANCED, Vector2i.ZERO)
+
+
+## Puts every tunnel_transit entry due on this WATER beat onto its exit,
+## as a fresh stream with the spring's first move -- DOWN_LEFT on a pointy
+## grid, "straight" on a flat one, exactly what an active geyser spawns
+## (see resolve_water_phase()'s source loops) -- and drops it from the
+## list. _add_water() merges it with a surface drop already on the exit,
+## so the exit is enterable ground like a source's own cell rather than a
+## second source stacking two drops in one hex. Returns true if anything
+## surfaced, which counts as the flood moving (EVENT_WATER_ADVANCED).
+func _surface_tunnel_arrivals(next_water: Array[Dictionary]) -> bool:
+	if tunnel_transit.is_empty():
+		return false
+	var is_flat := level_data.grid_style == "flat"
+	var surfaced := false
+	var still_underground: Array[Dictionary] = []
+	for transit in tunnel_transit:
+		if transit["due"] != water_beat:
+			still_underground.append(transit)
+			continue
+		var exit_cell: Vector2i = transit["exit"]
+		if is_flat:
+			_add_water(next_water, exit_cell, Hex.FLAT_DOWN, "straight")
+		else:
+			_add_water(next_water, exit_cell, Hex.DOWN_LEFT)
+		surfaced = true
+		if not _tunnel_exits_opened.has(exit_cell):
+			_tunnel_exits_opened[exit_cell] = true
+			_events_to_reveal.append([EVENT_TUNNEL, exit_cell])
+	tunnel_transit = still_underground
+	return surfaced
+
+
+## A drop reaching tunnel entrance `entrance` on this WATER beat goes
+## underground: it is due at the exit hex-distance beats from now, one
+## cell per beat along the straight line (see tunnel_transit). Deduped on
+## (entrance, due), so two streams into one mouth on one beat surface as
+## one drop, as they would have merged on the surface.
+func _enter_tunnel(entrance: Vector2i) -> void:
+	var exit_cell: Vector2i = level_data.tunnel_pairs[entrance]
+	var due: int = water_beat + _cube_distance(exit_cell - entrance)
+	for transit in tunnel_transit:
+		if transit["entrance"] == entrance and transit["due"] == due:
+			return
+	tunnel_transit.append({"entrance": entrance, "exit": exit_cell,
+		"entered": water_beat, "due": due})
 
 
 ## Beat 3 -- TERRAIN. Applies the fire/pool/geyser contact effects flagged
@@ -2102,6 +2256,17 @@ func _try_enter(coord: Vector2i) -> bool:
 		_lose(LoseReason.TOWN)
 		return false
 
+	if terrain == CellState.TUNNEL_IN:
+		# The mouth swallows the drop: it leaves the surface this beat and
+		# travels underground to the exit (see tunnel_transit). Every path
+		# into a cell -- natural fall and both block-redirect loops, on
+		# both grids -- ends here, and none of them treats the entrance as
+		# solid (it is not in _is_wall()/_is_solid_block()), so a Diverter
+		# pointed at a mouth feeds it rather than backing up. Nothing to
+		# resolve on the TERRAIN beat: the tunnel keeps its own clock.
+		_enter_tunnel(coord)
+		return false
+
 	if terrain == CellState.DIRT:
 		# Defensive only -- see the doc comment above. Packed dirt simply
 		# can't be entered; no terrain effect, no loss.
@@ -2212,7 +2377,10 @@ func screen_to_hex(local_pos: Vector2) -> Vector2i:
 ## into it, but does NOT end the branch -- a fire only consumes the first
 ## water that ever reaches it and is transparent to every beat after that,
 ## so the preview continues straight through, tracing the path all the way
-## to wherever it actually ends up (e.g. a pool further down).
+## to wherever it actually ends up (e.g. a pool further down). A tunnel
+## entrance gets an arrow INTO it and the branch then carries on from the
+## tunnel's exit, the whole underground run costing one step -- see
+## _predict_from_tunnel_exit().
 func _predict_flow_arrows() -> Array:
 	var arrows: Array = []
 	if level_data == null:
@@ -2258,6 +2426,9 @@ func _predict_branch(coord: Vector2i, next_dir: Vector2i, mode: String, is_flat:
 			arrows.append({"from": coord, "to": target})
 			if _predict_would_consume(target):
 				continue # town/pool/dormant geyser -- this branch ends right here
+			if _is_tunnel_entrance(target):
+				_predict_from_tunnel_exit(target, is_flat, steps_remaining - 1, arrows)
+				continue
 			_predict_branch(target, opposite_dir, mode, is_flat, steps_remaining - 1, arrows)
 		return
 
@@ -2289,11 +2460,33 @@ func _predict_branch(coord: Vector2i, next_dir: Vector2i, mode: String, is_flat:
 		arrows.append({"from": coord, "to": target})
 		if _predict_would_consume(target):
 			return # town/pool/dormant geyser -- this branch ends right here
+		if _is_tunnel_entrance(target):
+			_predict_from_tunnel_exit(target, is_flat, steps_remaining - 1, arrows)
+			return
 		var spawn_dir := (opposite_dir if mode == "zigzag" else Hex.FLAT_DOWN) if is_flat else opposite_dir
 		_predict_branch(target, spawn_dir, mode, is_flat, steps_remaining - 1, arrows)
 		return
 	# No candidate succeeded -- boxed in by walls/edges on every side, or a
 	# pure edge exit either way. Nothing further to draw for this branch.
+
+
+## True if `coord` is an underground tunnel's entrance (LevelData.tunnel_pairs).
+func _is_tunnel_entrance(coord: Vector2i) -> bool:
+	return cell_terrain.get(coord, CellState.EMPTY) == CellState.TUNNEL_IN
+
+
+## The flow preview's jump through a tunnel: the arrow INTO the entrance
+## has already been drawn, and the branch carries on from the exit with
+## the spring's first move -- the whole underground run counts as the one
+## step that arrow spent, so a tunnel never eats the preview's budget.
+## Nothing is drawn between the two ends here; the route's stepping stones
+## (_draw_tunnel_routes()) already show that part, and how long it takes.
+func _predict_from_tunnel_exit(entrance: Vector2i, is_flat: bool, steps_remaining: int, arrows: Array) -> void:
+	var exit_cell: Vector2i = level_data.tunnel_pairs[entrance]
+	if is_flat:
+		_predict_branch(exit_cell, Hex.FLAT_DOWN, "straight", true, steps_remaining, arrows)
+	else:
+		_predict_branch(exit_cell, Hex.DOWN_LEFT, "", false, steps_remaining, arrows)
 
 
 ## Read-only stand-in for the terminal-vs-continues distinction in
@@ -2390,6 +2583,10 @@ func _resolve_tile_state(coord: Vector2i) -> StringName:
 		return TILE_GEYSER
 	if terrain == CellState.HYDRO:
 		return TILE_HYDRO
+	if terrain == CellState.TUNNEL_IN:
+		return TILE_TUNNEL_IN
+	if terrain == CellState.TUNNEL_OUT:
+		return TILE_TUNNEL_OUT
 	if terrain == CellState.DIRT:
 		var taps: int = mini(dig_progress.get(coord, 0) as int, DIRT_COLORS.size() - 1)
 		return [TILE_DIRT_0, TILE_DIRT_1, TILE_DIRT_2][taps]
@@ -2438,6 +2635,10 @@ func _draw() -> void:
 			continue
 		_draw_cell(coord)
 
+	# Underground tunnels: the stepping-stone route between each pair's two
+	# ends, over the cells and under the water -- see _draw_tunnel_routes().
+	_draw_tunnel_routes(visible)
+
 	# Source markers: every original water_sources cell, plus any geyser
 	# that has activated into a new source (see active_geysers). Drawn
 	# after the base cells but before the falling water circles, so the
@@ -2461,10 +2662,33 @@ func _draw() -> void:
 	var wet := {}
 	for entry in water_cells:
 		wet[entry["coord"]] = true
+	# A tunnel mouth drinking this beat counts as wet: the drop is not in
+	# water_cells any more (it left the surface as it went in), so it is
+	# found in tunnel_transit instead. It goes into `wet` BEFORE the
+	# stream is drawn, or _is_lead_water() takes the cell above the mouth
+	# for the head of the stream and foams it, and the river looks as if
+	# it stopped one cell short of the hole it is running into.
+	var drinking: Array[Vector2i] = []
+	for transit in tunnel_transit:
+		if transit["entered"] != water_beat:
+			continue
+		var mouth: Vector2i = transit["entrance"]
+		if not wet.has(mouth):
+			wet[mouth] = true
+			drinking.append(mouth)
 	for entry in water_cells:
 		if not visible.has_point(Hex.axial_to_pixel(entry["coord"])):
 			continue
 		_draw_water(entry["coord"], _is_lead_water(entry["coord"], wet))
+	# The mouth itself is body water, never a head; _draw_water() puts the
+	# arch back on top.
+	for mouth in drinking:
+		if visible.has_point(Hex.axial_to_pixel(mouth)):
+			_draw_water(mouth, false)
+	# Stepping stones a surface stream is running over go back on top of
+	# it, the way a block's glyph does, or the player loses count of the
+	# delay (and the lit stones) mid-run -- see _draw_tunnel_stones_over_water().
+	_draw_tunnel_stones_over_water(visible, wet)
 
 	# The pool animals: after the water, so a stream arriving through the
 	# cells above a lake never paints over one, and before the flow preview
@@ -2475,7 +2699,10 @@ func _draw() -> void:
 	# source markers so its amber arrows sit on top of them, and before the
 	# water circles below (there's never any real water yet while this is
 	# showing, since it's only true before Start is pressed).
+	# A tunnel exit's pre-Start first-move arrow: after the cells and the
+	# animals, so nothing drawn later covers its tip in the next cell.
 	if show_flow_preview:
+		_draw_tunnel_exit_arrows(visible)
 		_draw_flow_preview()
 
 	# Live Bomb Catapult aim preview (see active_catapult_aim/
@@ -2588,8 +2815,7 @@ func _draw_cell(coord: Vector2i) -> void:
 
 	# 5. glyph. A state with a sheet animates; one with only an icon draws
 	#    it statically, which is how a tile type gets converted to animation
-	#    without touching anything here. Geyser is the lone special case: it
-	#    has no SVG yet and still draws its own procedural droplet.
+	#    without touching anything here.
 	if visual.get("mode", TileMode.GLYPH) == TileMode.GLYPH:
 		var glyph_sheet: Texture2D = _tile_sheet(visual)
 		if glyph_sheet != null:
@@ -2598,8 +2824,6 @@ func _draw_cell(coord: Vector2i) -> void:
 				_anim_frame(visual.get("fps", ANIM_TICK_FPS), frames, _cell_stagger(coord, frames)))
 		elif visual["icon"] != null:
 			_draw_icon(center, visual["icon"])
-		elif state == TILE_GEYSER:
-			_draw_geyser_icon(center)
 
 	# 6. per-state overlays. (A pool's animal is not one of them: it is
 	#    one scene per LAKE, drawn by _draw_pool_characters() after the
@@ -2776,6 +3000,38 @@ func _draw_geyser_direction_arrow(coord: Vector2i) -> void:
 	var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.10)
 	draw_line(arrow_end, arrow_end + back + perp, color, 2.0, true)
 	draw_line(arrow_end, arrow_end + back - perp, color, 2.0, true)
+
+
+## Where the first drop to surface at tunnel exit `coord` will actually go,
+## given the blocks on the board right now -- the direction the exit's
+## pre-Start arrow points. Unlike a dormant geyser's arrow, which always
+## shows the spring's first try, this resolves that try the way the sim
+## will (_try_natural_step() / _advance_water_flat()): on a pointy grid
+## DOWN_LEFT, or DOWN_RIGHT when DOWN_LEFT is a Wall, a carved-out cell or
+## anything else _is_wall() calls solid; on a flat grid only FLAT_DOWN
+## ("straight"). A drop that falls straight off the bottom still shows its
+## way off. Vector2i.ZERO when the spring is boxed in and will not move,
+## which draws no arrow. The tunnel_3 lesson is exactly "set the Wall so
+## the spring turns away" -- an arrow that kept pointing into the Wall
+## would teach the opposite.
+func _tunnel_exit_first_move(coord: Vector2i) -> Vector2i:
+	# Built with append(), not a ternary of literals -- see the NOTE in
+	# _advance_water_flat() on why that comes back untyped.
+	var candidates: Array[Vector2i] = []
+	if _is_flat_grid():
+		candidates.append(Hex.FLAT_DOWN)
+	else:
+		candidates.append(Hex.DOWN_LEFT)
+		candidates.append(Hex.DOWN_RIGHT)
+	for dir in candidates:
+		var target := coord + dir
+		if not _is_flat_grid() and target.y > bottom_row:
+			return dir # off the bottom edge: a loss, either diagonal alike
+		if _is_flat_grid() and not level_data.blocked_cells.has(target) and _cube_distance(target) > level_data.grid_radius:
+			return dir # off the flat grid's true boundary: a loss that way
+		if in_playable_area(target) and not _is_wall(target):
+			return dir
+	return Vector2i.ZERO
 
 
 ## Draws `texture` centered on `center`, scaled to comfortably fit inside a
@@ -2997,27 +3253,6 @@ func _draw_status_bar_at(center: Vector2, filled: int, required: int, lit_color:
 		draw_rect(rect, Color(0, 0, 0, 0.5), false, 1.0)
 
 
-## Draws a simple upward-spraying droplet shape (a triangular "spout" plus
-## small droplets above it) centered on a dormant geyser cell, so it reads
-## as "something will erupt here" distinct from every other terrain icon.
-## Kept procedural (no SVG asset exists for Geyser yet -- see the ICON_*
-## constants' doc comment above).
-func _draw_geyser_icon(center: Vector2) -> void:
-	var half := Hex.SIZE * 0.22
-	var spout_height := Hex.SIZE * 0.35
-
-	var spout := PackedVector2Array([
-		Vector2(center.x - half, center.y + half),
-		Vector2(center.x + half, center.y + half),
-		Vector2(center.x, center.y + half - spout_height),
-	])
-	draw_colored_polygon(spout, Color(0.85, 0.7, 0.9))
-
-	draw_circle(Vector2(center.x, center.y - spout_height * 0.9), Hex.SIZE * 0.08, Color(0.85, 0.7, 0.9))
-	draw_circle(Vector2(center.x - Hex.SIZE * 0.18, center.y - spout_height * 0.5), Hex.SIZE * 0.06, Color(0.85, 0.7, 0.9))
-	draw_circle(Vector2(center.x + Hex.SIZE * 0.18, center.y - spout_height * 0.5), Hex.SIZE * 0.06, Color(0.85, 0.7, 0.9))
-
-
 ## Marks a water source cell (an original level_data.water_sources entry, or
 ## a geyser that's activated into one) with the river glyph (ICON_SOURCE)
 ## underneath a bright ring plus a small arrow pointing toward its first
@@ -3173,6 +3408,169 @@ func _draw_water(coord: Vector2i, is_lead: bool) -> void:
 	if placed_blocks.has(coord):
 		var block: BlockData = block_catalog[placed_blocks[coord]]
 		_draw_icon(center, block.glyph(_is_flat_grid()))
+	# Same for a tunnel end: the mouth is wet whenever it is drinking and
+	# the exit whenever it is flowing, which is most of a run, and the arch
+	# is what says there is a tunnel here at all.
+	var terrain: String = cell_terrain.get(coord, CellState.EMPTY)
+	if terrain == CellState.TUNNEL_IN or terrain == CellState.TUNNEL_OUT:
+		_draw_icon(center, _tile_visual(coord, _resolve_tile_state(coord))["icon"])
+
+
+## Underground routes (LevelData.tunnel_pairs): for each pair, a faint
+## dashed line between the two ends' centres with d - 1 stepping stones
+## evenly spaced along it, d being the hex distance -- one stone per
+## underground cell of travel, so the player can count the delay before
+## the exit flows. A stone lights up water-blue while a drop is at that
+## step (step = water_beat - entered, 1 .. d - 1; step 0 is the drop going
+## in, drawn as a wet mouth, and step d is the drop on the exit).
+##
+## Culled per pair on the segment's bounding box, grown by a stone's
+## radius; the cell loop's margin (_visible_draw_rect()) already covers
+## the rest.
+func _draw_tunnel_routes(visible: Rect2) -> void:
+	if level_data.tunnel_pairs.is_empty():
+		return
+	for entrance in level_data.tunnel_pairs.keys():
+		var exit_cell: Vector2i = level_data.tunnel_pairs[entrance]
+		if not _tunnel_route_visible(entrance, exit_cell, visible):
+			continue
+		var from := Hex.axial_to_pixel(entrance)
+		var to := Hex.axial_to_pixel(exit_cell)
+		# The dashed line runs between the arch glyphs, not through them --
+		# and stops short of the exit's first-move arrow when that arrow
+		# points back along the route, so the one arrow on the line never
+		# reads as the underground water running exit-to-entrance.
+		var dir_vec := (to - from).normalized()
+		var inset := Hex.SIZE * 0.55
+		var exit_inset := inset
+		var arrow_dir := _tunnel_exit_arrow_vector(exit_cell)
+		if arrow_dir != Vector2.ZERO and arrow_dir.dot(-dir_vec) > 0.8:
+			exit_inset = Hex.SIZE * (TUNNEL_ARROW_TO + 0.15)
+		if from.distance_to(to) > inset + exit_inset:
+			draw_dashed_line(from + dir_vec * inset, to - dir_vec * exit_inset,
+				TUNNEL_ROUTE_COLOR, 3.0, 8.0, true, true)
+		for stone in _tunnel_stones(entrance, exit_cell):
+			_draw_tunnel_stone(stone["at"], stone["lit"], stone["dir"])
+
+
+## The stepping stones that surface water would otherwise hide, drawn again
+## on top of it once the water is down (_draw()). The route is drawn under
+## the water so the dashed line never crosses a stream, but a stone is the
+## thing the player counts -- and the one that lights up -- so a stone
+## that overlaps a wet cell comes back over it, the same way _draw_water()
+## puts a block's glyph back on top. `wet` is _draw()'s set of wet cells.
+func _draw_tunnel_stones_over_water(visible: Rect2, wet: Dictionary) -> void:
+	if level_data.tunnel_pairs.is_empty() or wet.is_empty():
+		return
+	# A stone overlaps a hex's water sprite when it is closer to the centre
+	# than the hex's corner radius plus its own.
+	var reach := Hex.SIZE + Hex.SIZE * TUNNEL_STONE_RADIUS
+	for entrance in level_data.tunnel_pairs.keys():
+		var exit_cell: Vector2i = level_data.tunnel_pairs[entrance]
+		if not _tunnel_route_visible(entrance, exit_cell, visible):
+			continue
+		for stone in _tunnel_stones(entrance, exit_cell):
+			var at: Vector2 = stone["at"]
+			var near := Hex.pixel_to_axial(at)
+			for offset in [Vector2i.ZERO] + Hex.NEIGHBOR_OFFSETS:
+				var cell: Vector2i = near + offset
+				if wet.has(cell) and Hex.axial_to_pixel(cell).distance_to(at) < reach:
+					_draw_tunnel_stone(at, stone["lit"], stone["dir"])
+					break
+
+
+## True if the route between `entrance` and `exit_cell` can put a pixel
+## inside `visible` -- its segment's bounding box, grown by a stone.
+func _tunnel_route_visible(entrance: Vector2i, exit_cell: Vector2i, visible: Rect2) -> bool:
+	var from := Hex.axial_to_pixel(entrance)
+	var bounds := Rect2(from, Vector2.ZERO).expand(Hex.axial_to_pixel(exit_cell))
+	return visible.intersects(bounds.grow(Hex.SIZE * TUNNEL_STONE_RADIUS * 2.0))
+
+
+## One pair's stepping stones, entrance end first: d - 1 of them evenly
+## spaced between the two centres, each {"at": Vector2, "lit": bool,
+## "dir": Vector2}; lit while an in-flight drop is at that step (see
+## _draw_tunnel_routes()), and "dir" the unit vector toward the exit that
+## its chevron points along.
+func _tunnel_stones(entrance: Vector2i, exit_cell: Vector2i) -> Array[Dictionary]:
+	var from := Hex.axial_to_pixel(entrance)
+	var to := Hex.axial_to_pixel(exit_cell)
+	var toward_exit := (to - from).normalized()
+	var d: int = _cube_distance(exit_cell - entrance)
+	var lit := {}
+	for transit in tunnel_transit:
+		if transit["entrance"] == entrance:
+			lit[water_beat - (transit["entered"] as int)] = true
+	var stones: Array[Dictionary] = []
+	for step in range(1, d):
+		stones.append({"at": from.lerp(to, float(step) / float(d)), "lit": lit.has(step),
+			"dir": toward_exit})
+	return stones
+
+
+## One stepping stone: an earthy disc rimmed in limestone with a chevron
+## pointing `toward_exit`, or, lit, a water-blue disc rimmed in navy with a
+## white chevron -- dark rim on pale froth, so a lit stone over a surface
+## stream still reads.
+func _draw_tunnel_stone(at: Vector2, lit: bool, toward_exit: Vector2) -> void:
+	var radius := Hex.SIZE * TUNNEL_STONE_RADIUS
+	if lit:
+		draw_circle(at, radius, TUNNEL_STONE_LIT_COLOR, true, -1.0, true)
+		draw_arc(at, radius, 0.0, TAU, 20, TUNNEL_STONE_LIT_OUTLINE, 3.0, true)
+	else:
+		draw_circle(at, radius, TUNNEL_STONE_COLOR, true, -1.0, true)
+		draw_arc(at, radius, 0.0, TAU, 20, TUNNEL_STONE_OUTLINE, 2.0, true)
+	if toward_exit == Vector2.ZERO:
+		return
+	var perp := Vector2(-toward_exit.y, toward_exit.x)
+	var tip := at + toward_exit * (radius * 0.45)
+	var tail := at - toward_exit * (radius * 0.25)
+	var chevron := PackedVector2Array([tail + perp * (radius * 0.5), tip, tail - perp * (radius * 0.5)])
+	draw_polyline(chevron, TUNNEL_STONE_LIT_CHEVRON if lit else TUNNEL_STONE_OUTLINE, 2.5, true)
+
+
+## The unit vector of tunnel exit `exit_cell`'s pre-Start first-move arrow,
+## or Vector2.ZERO when no arrow is drawn there: after Start, when the
+## flow preview already reaches the exit (it draws that segment in amber),
+## or when the spring is boxed in (_tunnel_exit_first_move()).
+func _tunnel_exit_arrow_vector(exit_cell: Vector2i) -> Vector2:
+	if not show_flow_preview or _preview_from_cells.has(exit_cell):
+		return Vector2.ZERO
+	var first_move := _tunnel_exit_first_move(exit_cell)
+	if first_move == Vector2i.ZERO:
+		return Vector2.ZERO
+	return (Hex.axial_to_pixel(exit_cell + first_move) - Hex.axial_to_pixel(exit_cell)).normalized()
+
+
+## Every tunnel exit's pre-Start first-move arrow -- the exit is a spring,
+## so before Start it shows which way its water will fall, the way a
+## dormant geyser does, resolved against the blocks on the board
+## (_tunnel_exit_first_move()). Bolder than the geyser's and cased, and
+## clear of the exit's glyph: TUNNEL_ARROW_FROM .. TUNNEL_ARROW_TO.
+func _draw_tunnel_exit_arrows(visible: Rect2) -> void:
+	if level_data.tunnel_pairs.is_empty():
+		return
+	var drawn := {}
+	for exit_cell in level_data.tunnel_pairs.values():
+		if drawn.has(exit_cell):
+			continue # two entrances can share one exit
+		drawn[exit_cell] = true
+		var center := Hex.axial_to_pixel(exit_cell)
+		if not visible.has_point(center):
+			continue
+		var dir_vec := _tunnel_exit_arrow_vector(exit_cell)
+		if dir_vec == Vector2.ZERO:
+			continue
+		var arrow_start := center + dir_vec * (Hex.SIZE * TUNNEL_ARROW_FROM)
+		var arrow_end := center + dir_vec * (Hex.SIZE * TUNNEL_ARROW_TO)
+		var back := -dir_vec * (Hex.SIZE * 0.24)
+		var perp := Vector2(-dir_vec.y, dir_vec.x) * (Hex.SIZE * 0.17)
+		var shape := PackedVector2Array([arrow_end + back + perp, arrow_end, arrow_end + back - perp])
+		draw_line(arrow_start, arrow_end, TUNNEL_ARROW_CASING, 8.0, true)
+		draw_polyline(shape, TUNNEL_ARROW_CASING, 8.0, true)
+		draw_circle(arrow_end, 4.0, TUNNEL_ARROW_CASING, true, -1.0, true)
+		draw_line(arrow_start, arrow_end, TUNNEL_ARROW_COLOR, 4.0, true)
+		draw_polyline(shape, TUNNEL_ARROW_COLOR, 4.0, true)
 
 
 ## True if this water cell is the front of its stream -- nothing wet in any

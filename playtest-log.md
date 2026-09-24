@@ -1498,7 +1498,14 @@ one try, without you already knowing the game?**
 Things that are not about one level — a mechanic that never lands, a group
 that drags, art that reads wrong everywhere. Add as you go.
 
--
+- 2026-09-21, owner, after the 6-wide narrowing: "the grid of the levels can
+  taper and be asymmetrical. too many levels have similar grids." Done the
+  same day: 42 levels in 1-50 each got their own outline (table in
+  `dev-progress.md`). Water hitting a side wall bounces one step inward and
+  then runs straight down beside it -- confirmed as engine behaviour, not a
+  bug (the same bounce the old sloped hexagon edges gave).
+- Level 33 won without any placement (pre-existing, since before the
+  narrowing). Fixed with a boulder on the bare stream; see `dev-progress.md`.
 
 ## Levels to revisit
 

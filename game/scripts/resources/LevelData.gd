@@ -203,3 +203,25 @@ class_name LevelData
 ## far right (tutorial 5's instructive failure). Purely visual: the engine
 ## never reads it for placement or win logic.
 @export var hint_cells: Array[Vector2i] = []
+
+## Underground tunnels: entrance axial coordinate -> exit axial coordinate.
+## Level terrain, like a geyser or a pool -- the player never places, moves
+## or removes one, and neither end can take a block.
+##
+## The ENTRANCE swallows every drop that reaches it, by natural fall or by
+## a Diverter/Splitter, on either grid. The drop then travels the straight
+## underground line to the EXIT at the standard flow rate -- one cell per
+## WATER beat -- so a drop entering on beat t surfaces ON the exit at the
+## end of beat t + d, where d is the hex distance between the two ends,
+## and falls from there exactly as a water source's stream does. The exit
+## is ordinary ground to surface water; nothing on the surface affects the
+## route. See HexBoard.resolve_water_phase() / tunnel_transit for the rule
+## in full.
+##
+## Several pairs per level are allowed, and two entrances may share one
+## exit; but no cell may be both an entrance and an exit, the two ends of
+## a pair must differ, and neither may sit on a source, fire, lake, town,
+## geyser, dirt, hydro plant, preset block or blocked cell --
+## tools/smoke_test.gd enforces it. Written in a .tres like pool_targets,
+## and omitted when empty, which it is on every level without a tunnel.
+@export var tunnel_pairs: Dictionary = {}

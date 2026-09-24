@@ -1,5 +1,67 @@
 # Flash Flood — Dev Progress
 
+## Status: the underground tunnel (2026-09-23)
+
+**The owner: "lets add a new tile. an underground route. so the water
+stream hits the enterence tile, and then takes time at the standard flow
+rate to directly travel to the output tile."** Built on `underground-tunnel`
+(from `varied-grids`) by a workflow: engine and art, then tests, sandbox
+levels and a launcher, with the level editor in parallel; two independent
+verifiers per round (spec, regressions + visuals), two repair rounds, the
+editor verified separately; then a last pass here.
+
+**The rule.** `LevelData.tunnel_pairs` (entrance -> exit) is terrain placed
+by the level, like a geyser. A drop that would enter the entrance on WATER
+beat t -- natural fall, a Diverter or Splitter redirect, either grid --
+leaves the surface; at the end of beat t + d (d = hex distance, one cell
+per measure along the straight line) it is put ON the exit, and from t+d+1
+it falls by a source's rule. Timing checked for d = 1, 2, 3, 5, pointy and
+flat, redirects in, an exit above its entrance, two entrances sharing an
+exit, a parked exit, Retry mid-transit and game over mid-transit. Neither
+end takes a block or is solid; the exit is ordinary ground to surface
+water. `water_beat` and `tunnel_transit` are public and reset in setup().
+`EVENT_TUNNEL` fires once per exit and plays the geyser sound (no new
+sound: gen_sfx.py needs numpy, which this Mac lacks).
+
+**How it reads.** Both ends are a limestone arch on a mossy cave-stone fill
+(`icon_tunnel_in.svg`, `icon_tunnel_out.svg`): the entrance's mouth is a
+dark hole with blue chevrons pointing in; the exit's is full of water with
+white chevrons pointing out -- dark in, bright out, told apart at a glance
+(first drawn with the same dark mouth; a verifier and this pass found the
+two too alike). Between them, d-1 stepping stones on a faint dashed line
+count the delay; each carries a chevron pointing entrance-to-exit and
+lights blue while a drop is under it, and stones under surface water are
+redrawn on top. The entrance looks wet while drinking, and counts as wet
+for the stream-head foam, so the river no longer looks as if it stopped
+one cell short of the hole. The exit's pre-Start arrow is computed from
+where the spring will really fall (a Wall can turn it), drawn after the
+cells in a navy casing; the flow preview jumps the tunnel as one step.
+
+**Sandbox, not campaign.** No existing level changed: 100/0/0, 0 changed
+BoardSnapshots against a baseline taken before the first edit. Three
+6-wide levels in `game/data/sandbox/` (ids 951-953), each winnable only
+through the tunnel, two winning placements each, solutions in
+`sandbox-solutions.md`: tunnel_1 "Under the Town" (a Diverter into the
+mouth, d = 2), tunnel_2 "Buying Time" (a 6-beat tunnel back up the board
+keeps the second stream off until the lake fills), tunnel_3 "Spring in
+the Cellar" (the exit comes up where its first fall hits a town; a Wall
+turns it into the lake). `tests/PlayLevel.tscn` opens any level on save
+slot 99 (`LEVEL=tunnel_1`); a non-campaign level's HUD shows "Tunnel 1".
+
+**Editor.** `level-editor.html` has a Tunnel tool (entrance, then exit),
+the route and stones, a Tunnels list with d, validation, and the timing
+rule in its playtest; all 105 level and tutorial files still round-trip
+byte for byte, and files with tunnels do too.
+
+**Verified:** VerifyTunnels (156 checks) and every other suite, headless
+and windowed; smoke_test (108 levels incl. the sandbox); verify_solutions
+100/0/0; BoardSnapshots 0 changed; renders of all three sandbox levels
+pre-Start and mid-run looked at.
+
+**Open:** where tunnels debut in the campaign (owner). `EVENTS_HEARD_ON_
+THE_WINNING_BEAT` leaves the tunnel out, so a first gush on the winning
+beat is silent like other per-beat sounds.
+
 ## Status: moving backdrops -- clouds, shadows, birds, stars (2026-09-22)
 
 **Every level and the main menu now have a moving backdrop** over the flat
@@ -52,6 +114,208 @@ checks now (the new toggle).
 
 **Not done:** the Level Select map is still static. Nothing has been seen
 moving on a device -- as ever, llvmpipe only.
+
+## Status: every level wins, every open item that needed no owner input (2026-09-21, later)
+
+**The owner: "of these items fix what you can without my additional
+input."** Eight work items ran as parallel agents, each followed by an
+independent verifier told to refute it; all eight verdicts came back clean.
+Then the whole suite. The book is **100 exact / 0 broken / 0 prose** for
+the first time since the 2-wide Wall.
+
+**The seven Wall-broken levels, each a data fix.** `solve_broken.gd` had
+already shown no solution exists with their shipped data (every wall
+position, every 1- and 2-placement combination of the inventory), so each
+got the smallest change that restores a win, searched programmatically
+(every free cell as a rock x every wall anchor, then one extra tile, then
+one-hex terrain moves), keeping the wall load-bearing where the geometry
+allows and the win near the documented measure:
+
+| Level | Change | Solution | Win |
+|---|---|---|---|
+| 64 | two rocks, (-1, -3) and (-1, -1) | wall (0, 0) | 14 (was 15) |
+| 66 | rock (-2, -1); fire (-2, 2) -> (-1, 1); pool (-4, 4)'s lake relaid to (-4, 1..3) | wall (-3, 1) | 15 |
+| 67 | second lake shifted one hex right, anchor (-2, 6) -> (-1, 6) | wall (-3, 5) | 18 |
+| 68 | + one Splitter in the inventory | splitter (0, -2) + wall (-2, 1) | 18 (par 24) |
+| 69 | rock (-1, 6) | wall (-2, 3) | 19 |
+| 92 | + one Diverter-Right | divert-right (1, -1) + the same 4 digs | 37 |
+| 96 | + one Diverter-Left | divert-left (-6, 12) + divert-right (-9, 17) + the same 8 digs | 41 (was 42) |
+
+Why not always a rock: on 64 the source's two fall cells are horizontally
+adjacent, so any 2-wide wall touching one covers the other (dams the
+source) or mirrors off-grid; the first rock does the old 1-wide wall's job
+and the second gives the player's wall a job. On 66 the level was broken
+twice -- the 2026-09-15 lakes had also put pool (-4, 4)'s cells across the
+only route to pool (-3, 4) -- and no two changes fix it, hence three. On
+67 the fire sat on the geyser stream with a lake cell one step before it,
+so the old 1-wide wall never won either. On 92 and 96 the second
+splitter's two streams run in adjacent columns the whole way down, so a
+2-wide wall that blocks one always covers the other: a diverter one cell
+above does exactly what the 1-wide wall did, and the Wall stays in the
+tray unused (a red herring; placing it at the old cell times out). On 68
+every rock either fails or makes the bare run win; the Splitter makes the
+intro's "TWO streams" literal. Every geyser level still wakes its geyser
+in the winning run. Health per `solution_space.gd`: 64/66/67/69 TIGHT
+(two wall answers each), 68/92/96 OK.
+
+**Level 22 was unwinnable, and had been since 6312206.** Splitters S7
+(-5, 9) and S9 (-14, 27) sit on odd rows, so their down-right child lands
+on an even row and prefers DOWN_LEFT -- straight into a lake cell of the
+splitter's own pool, while the down-left output was a lake cell too. Both
+branches drained into one lake and nothing reached S8-S10 or the last
+four pools; the best channel timed out at 7/11 pools. The prose solution
+hid it because the verifier skips prose. Both lakes are relaid to the
+compact rhombus the five upper lakes use (anchor (a, b) -> (a-2, b+1),
+(a-1, b), (a-1, b+1)), the six freed cells are dirt again, and the book
+carries a 100-cell dig list that wins at 101 (was "108 cells, 103" --
+the bottom lake's cell (-24, 48) is two rows above its anchor). A router
+that models the engine's parity rule (next_dir flips every measure, moved
+or not; a splitter's children inherit the opposite of the arriving
+direction) found it; the real HexBoard confirmed it, no stall, no
+mudslide, no edge loss.
+
+**Level 18's hydro bonus is earnable.** The plant sat at (-2, 0), off both
+streams, so nothing ever touched it. It is now at (1, 0) -- on the cell
+the winning stream used to fall into after the fire, so natural fall TRIES
+it (touched) and takes the other diagonal -- with an interior hole at
+(-2, 1) that bounces the stream back onto its old path, so the wall
+(2, -2) still wins at 18. A brute force over every plant anchor, then
+every anchor + one hole, found this the only combination that keeps the
+measure-18 win. Activating as soon as the ring appears loses at the edge;
+waiting 2+ measures earns it, the same timing shape as level 33.
+`PLANT_LEVELS[18]` in `VerifyHydroBonus.gd` updated; 8/8 PASS. The bare
+run now stalls against the plant instead of losing at the edge, which is
+what 25's plant already does.
+
+**Art.** `assets/icons/icon_geyser.svg`: a dormant vent -- cracked stone
+cap, wisps -- in the geyser's purple, wired through `TILE_VISUALS` like
+every other terrain glyph; `_draw_geyser_icon()` is gone. The three flat-
+orientation glyphs now import at 3x (they were the last 100 px textures).
+`game/icon.svg` + `icon.png` (`config/icon`) and `assets/splash.png`
+(`boot_splash/image`): one placeholder mark, the waterfall falling onto a
+flame over a dark hex on the sky blue, rasterised from the SVG headlessly.
+Snapshot net: only the geyser levels and the two flat levels changed.
+
+**Also.** Book lines 45 and 62 no longer list a placement the engine
+rejects (the remaining block wins alone). Level 19's and 90's intros
+teach the Bomb Catapult (19: it is only a solid block there; 90: press,
+hold, drag, release, 7-hex blast, one shot). `MUDSLIDE_BEATS_REQUIRED`'s
+comment said ~3 s; it is ten measures, 12 s, and now says so. `level-
+editor.html` rewritten to the full LevelData format (every field, lakes,
+2-wide Wall, flat grids, corridor band, byte-identical round trips on
+four files). `open-items.md` has a dated reconcile section at the top;
+`handheld-audit.md` #4, #32, #33 annotated. `level-min-times.md` rows
+22, 64, 68, 96 and the totals updated.
+
+**Not done, on purpose** -- each needs the owner or a device: the 16
+single-answer levels, the six flat-grid off-board sources, tutorial
+gating, a campaign-complete screen, the par clock, dig-progress colour,
+resetting a healthy save slot, the story staging, the backlog features,
+and everything export/device-side.
+
+**Verified:** smoke_test; verify_solutions 100/0/0; solution_space 0
+BROKEN; every headless suite (SmokeLevel, VerifyHydroBonus, VerifyLevelMap,
+VerifySafeArea, VerifySaveIntegrity, VerifyMultiTouch, VerifyBoardHeartbeat,
+VerifyWaterBlocking, VerifyTutorial, VerifyGridOpacity, VerifyBackdrops,
+VerifySfx, VerifyMusic, VerifyCharacters) and the four windowed ones
+(VerifyBoardCentring, VerifyTouchTargets, VerifyMapScroll,
+VerifyUndoAndHeader) at the real 720x1280 on the Mac -- all PASS.
+
+## Status: every level in 1-50 has its own silhouette (2026-09-21)
+
+**The owner, playing the 6-wide build: "the grid of the levels can taper
+and be asymmetrical. too many levels have similar grids."** The 2026-09-16
+narrowing had turned 42 of the first fifty into the same 6x9 rectangle.
+Each of those 42 now has a distinct outline, carved with `blocked_cells`
+inside the same radius-5 grid; the corridors (13-17, 19, 22) and the flat
+level 20 were already their own shapes and are untouched, as are the
+tutorials.
+
+| Level | Shape | Row widths, top to bottom |
+|---|---|---|
+| 1 | funnel | 6 6 6 5 5 5 4 4 3 |
+| 2 | V (opens downward) | 3 4 4 5 6 6 6 6 6 |
+| 3 | lean, top-left to bottom-right | 5 5 5 5 6 6 5 5 5 |
+| 4 | chamfered NE and SW corners | 4 5 6 6 6 6 6 5 4 |
+| 5 | lean, top-right to bottom-left | 5 x 9 |
+| 6 | right bite (rows -1..2) plus its hole | 6 6 5 4 4 4 4 6 6 |
+| 7 | teardrop | 3 3 5 5 6 6 6 6 4 |
+| 8 | wedge (right edge steps in) | 6 6 5 5 4 4 3 3 3 |
+| 9 | left stairs | 6 6 6 5 5 5 4 4 4 |
+| 10 | hourglass | 6 6 5 4 4 4 5 6 6 |
+| 11 | boot (narrow channel, right flare under it) | 4 5 4 5 4 6 5 6 6 |
+| 12 | stub, six rows tall (rows 2-4 never saw water) | 6 6 6 5 5 4 |
+| 18 | lens, 13 rows | 3 4 4 5 6 6 6 6 5 5 4 4 3 |
+| 21 | gorge (left-aligned neck over the dirt plain) | 3 3 4 6 6 6 6 6 5 |
+| 23 | chamfered NW and SE corners | 4 5 6 6 6 6 6 5 5 |
+| 24 | pinch | 6 6 6 4 4 4 6 6 6 |
+| 25 | flare (4-wide left-aligned top, 6-wide base) | 4 4 4 4 5 6 6 6 6 |
+| 26 | left-aligned V | 3 4 4 5 5 6 6 6 6 |
+| 27 | hexagon | 4 5 6 6 6 6 5 5 4 |
+| 28 | right stairs | 6 6 6 5 5 5 4 4 4 |
+| 29 | Z (left-aligned top block, centred bottom block) | 4 4 4 6 6 6 4 4 4 |
+| 30 | D, rounded on the right | 4 5 6 6 6 6 6 5 5 |
+| 31 | left wedge | 6 6 5 5 5 5 4 4 3 |
+| 32 | L (3-wide neck on the left, wide base) | 4 3 3 3 3 6 6 6 6 |
+| 33 | V with a boulder at (0, 2) | 3 4 4 5 6 6 5 6 6 |
+| 34 | SE corner cut | 6 6 6 6 6 6 5 4 4 |
+| 35 | NE corner cut | 3 4 5 6 6 6 6 6 6 |
+| 36 | ramp (right edge slopes to 3, with a foot) | 6 6 5 5 4 4 3 3 4 |
+| 37 | diamond | 3 4 5 6 6 6 5 4 3 |
+| 38 | lean, top-left to bottom-right | 5 5 5 5 6 6 5 5 5 |
+| 39 | D, rounded on the left | 4 5 6 6 6 6 6 5 4 |
+| 40 | flask (3-wide centred neck) | 3 3 3 4 4 6 6 6 6 |
+| 41 | left stairs | 6 6 6 5 5 5 4 4 4 |
+| 42 | chamfered NE and SW corners | 4 5 6 6 6 6 5 5 4 |
+| 43 | cross | 4 4 4 6 6 6 4 4 4 |
+| 44 | triangle top (the source alone on the peak) | 1 2 3 4 5 6 6 6 6 |
+| 45 | right bite | 6 6 6 4 4 4 5 6 6 |
+| 46 | NW corner cut | 4 5 5 6 6 6 6 6 6 |
+| 47 | T | 6 6 6 4 4 4 4 4 4 |
+| 48 | spout | 6 6 5 5 4 3 3 3 3 |
+| 49 | D, rounded on the right | 4 5 6 6 6 6 6 5 5 |
+| 50 | bell | 4 4 5 5 6 6 6 6 6 |
+
+**How a shape was chosen so nothing plays differently.** Natural fall only
+ever tries a cell it would then enter, so a cell the water never visits can
+be blocked without touching a single replay. `tools/footprint.gd` (new,
+kept) replays each level three ways -- bare, the documented solution, and
+the solution with the hydro plant switched on at every delay that earns the
+bonus -- and prints the union of visited cells, the real block footprints
+(a Wall's mirrored half included: level 38's wall at (-1,-1) covers (-2,-1),
+not (0,-1), because the fire is there) and the terrain. Every outline was
+checked to contain that set, then every bare run and solution was replayed
+and compared line for line with the pre-reshape result: identical on 41
+levels. `solution_space.gd` before and after: no level changed health band;
+a few OK levels lost some winning placements that sat on carved cells (27:
+46 -> 39, 29: 45 -> 33, 43: 46 -> 34) and stay OK.
+
+**Every outline keeps the 6.5-hex bounding box of a 6-wide column**, so
+tile size is unchanged on all 42 and none of them scrolls: a 5.5-hex box
+would grow the tile to 68 px and put a 9-row board 14 px past the band. A
+6.0 box (odd rows to column 2, even rows to 1) is the other fit that works.
+`VerifyBoardCentring` ran at the real 720x1280 on the Mac (51 checks, pass)
+-- the desktop app can open a real window, so this suite is not Linux-only
+after all.
+
+**Level 33 won by itself.** Its bare stream ran through the fire and into
+the pool; the documented wall (-3, 3) changed nothing, and this predates
+the narrowing (the pre-2026-09-16 hexagon wins bare too). A boulder at
+(0, 2) -- a blocked cell on the stream -- bounces it one column left and
+off the bottom edge at measure 10; the same documented wall now catches
+it and wins at 12, the hydro bonus is still earnable (delay 3), and the
+solution book did not change. It is the only rock in 1-50 that is on a
+stream on purpose, and the search over every other cell of that stream
+found no other rock with any winning wall. 33 is KNIFE now (one winning
+wall), which is honest: it was "OK, 35 placements" only because doing
+nothing won.
+
+**Verified:** `smoke_test.gd` pass; `verify_solutions.gd` 92 exact / 7
+broken / 1 prose, the same seven; the 6-wide audit; SmokeLevel,
+VerifyHydroBonus (the known level-18 failure only), VerifyLevelMap,
+VerifyTutorial, VerifyCharacters, VerifyBackdrops, VerifyWaterBlocking,
+VerifyBoardHeartbeat, VerifyBoardCentring; and a contact sheet of all 42
+boards from `AllLevelShots`.
 
 ## Status: the pool animal -- one character per ten levels (2026-09-20)
 

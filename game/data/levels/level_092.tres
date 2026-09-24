@@ -24,7 +24,8 @@ Vector2i(6, -12): "splitter",
 Vector2i(2, -4): "splitter"
 }
 starting_inventory = {
-"wall": 1
+"wall": 1,
+"divert_right": 1
 }
 blocked_cells = Array[Vector2i]([])
 town_cells = Array[Vector2i]([Vector2i(-7, 14), Vector2i(-6, 13), Vector2i(-7, 15), Vector2i(-6, 12)])

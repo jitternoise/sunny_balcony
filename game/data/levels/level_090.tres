@@ -6,7 +6,7 @@
 script = ExtResource("1")
 level_id = 90
 display_name = "90. The Gauntlet IV"
-intro_text = "Everything at once: fixed splitters, dirt to dig, hazards to dodge. The river won't wait."
+intro_text = "Everything at once: fixed splitters, dirt to dig, hazards to dodge. The river won't wait. The Bomb Catapult earns its keep here: place it, press and hold it, drag to aim, keep holding for more range, and release -- the blast digs out a 7-hex patch of dirt at once. One shot, then it is spent."
 grid_radius = 13
 corridor_half_width = 2
 water_sources = Array[Vector2i]([Vector2i(7, -13)])

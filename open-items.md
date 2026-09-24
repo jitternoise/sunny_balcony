@@ -14,6 +14,84 @@ anything *looks or feels* is verified — see "Needs a live playtest" at the end
 
 ---
 
+## 🔄 Reconciled 2026-09-21 — read this before anything below
+
+The sections below this one are kept as history; several of their claims
+have since been overtaken. The state of the tree on 2026-09-21 (branch
+`varied-grids`), each item checked by running it, not by reading:
+
+**Closed since the last reconcile**
+
+- **The solution book is 100 exact / 0 broken / 0 prose.** The "11 still
+  broken" (and "27") figures below are history. Levels 1, 6, 10, 11 came
+  back with the 6-wide narrowing (2026-09-16); 64, 66, 67, 68, 69, 92 and
+  96 got data fixes on 2026-09-21 (the re-solver had proven no solution
+  existed with their data -- see `dev-progress.md` for each change and
+  the alternatives searched); 45 and 62's lines dropped a placement the
+  engine rejects; 33 got a boulder because it won untouched. `verify_
+  solutions.gd` below 100 exact is now a regression.
+- **Level 22 was unwinnable too, since 6312206 (the four-hex lakes,
+  2026-09-15)** -- two of its lower lakes sat on the channel below odd-row
+  splitters and swallowed both branches. Nobody noticed because its
+  solution was prose and the verifier skips prose. Both lakes are relaid
+  and the book now carries a verified 100-cell dig list (win 101).
+- **Level 68 is winnable** (handheld-audit #33): one Splitter added to its
+  inventory; splitter (0, -2) + wall (-2, 1) wins at 18, under its par of
+  24, so its map spur can open.
+- **Level 18's hydro bonus is earnable** -- the plant moved to (1, 0) with
+  an interior hole at (-2, 1); `VerifyHydroBonus` is 8/8 again.
+- **The geyser has art** (`icon_geyser.svg`, table-driven like every other
+  glyph; the procedural droplet is gone). The three flat-orientation glyphs
+  now import at 3x like the rest.
+- **App icon and boot splash exist** (audit #4): placeholders, one mark
+  for all three files, see the standing caveats in `CLAUDE.md`.
+- **The audit's whole fix-first list (1-10) is done**, most of it on
+  2026-09-08..11: block-catalog `.remap`, RTL pin, Unlock All behind
+  `OS.is_debug_build()`, atomic saves, pointer latch, drag threshold,
+  `_draw()` culling and `max_fps`, heartbeat gating, HUD outline, touch
+  targets. Findings 18 and 25 are fixed too.
+- **Placement failure is no longer silent**: a refused tap buzzes `invalid`
+  (the SFX work, 2026-09-20). Fitting the Wall still has no visual hint.
+- **`delete_slot()` has a caller** -- `discard_damaged_slot()`, a two-tap
+  reset on the slot screen, but only for a slot that failed to load. A
+  healthy slot still cannot be reset from the UI (audit #8 stands).
+- **The level editor knows every LevelData field** and draws the Wall 2
+  wide; it round-trips level_003/021/068 and tutorial_5 byte for byte.
+- **The Bomb Catapult is taught** in the intros of level 19 (where it is
+  only a solid block) and level 90 (the first level it can blast dirt on).
+  Discoverability of the press-and-hold itself is still nil (audit #38).
+- **The mudslide's "~3 s" was a comment error**; it is ten measures, 12 s,
+  by design (audit #32). The comment says so now.
+- **Levels 1-50 are all at most 6 wide and no two neighbours share a
+  silhouette** (owner's rules, 2026-09-16 and -21).
+
+**Genuinely still open, and why nothing was done**
+
+- **Where the underground tunnel debuts** (built 2026-09-23, owner's
+  request): it works, is tested and has three sandbox levels
+  (`game/data/sandbox/`, open one with `tests/PlayLevel.tscn`), but no
+  campaign level uses it. Which band, and whether as new levels or by
+  reworking existing ones, is the owner's call.
+- Needs the owner's call: the 16 single-answer (KNIFE) levels 1, 3, 6, 7,
+  8, 10, 24, 25, 32, 33, 34, 47, 48, 49, 50, 65 versus the "several
+  placements win" intent; the six flat-grid off-board sources (55, 56, 59,
+  60, 61, 62 -- both fixes change play); gating the tutorial; a
+  campaign-complete screen (the story bible wants it wordless); a par
+  clock; dig progress by colour only and the deuteranopia fills;
+  resetting a healthy save slot; the story-bible staging (vignettes, the
+  Pan, ghost hands, `intro_text` prose); the three backlog features
+  (almost-lost warning, accelerate-once-won, tempo work).
+- Needs a device: everything in the pre-export checklist (renderer on iOS,
+  texture compression, safe-area on a real cutout, redraw cost, sheet
+  bleed), the export presets and Android toolchain, and hearing any of
+  the audio.
+- Needs art review: the pool animals (first pass), the geyser glyph, the
+  app icon and splash, the tile art at device sizes (audit #26).
+- Never built: scoring, an accessibility pass, level-complete polish, a
+  curriculum beyond the linear gate, localisation (audit #44).
+
+---
+
 ## ✅ Blockers cleared 2026-09-04
 
 Both missing icon assets have been supplied and installed, and every `res://`

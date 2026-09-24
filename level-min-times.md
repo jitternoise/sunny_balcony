@@ -40,12 +40,12 @@ Placement/dig time before Start is excluded (it's untimed).
 | 19 | 25 | 30.0 s |
 | 20 | 13 | 15.6 s |
 
-## Dig the River (levels 21-22) — 14.4 s to 123.6 s
+## Dig the River (levels 21-22) — 14.4 s to 121.2 s
 
 | Level | Measures | Min time |
 |---|---|---|
 | 21 | 12 | 14.4 s |
-| 22 | 103 | 123.6 s |
+| 22 | 101 | 121.2 s |
 
 ## Diverter Drills (levels 23-30) — 14.4 s to 15.6 s
 
@@ -117,11 +117,11 @@ Placement/dig time before Start is excluded (it's untimed).
 | Level | Measures | Min time |
 |---|---|---|
 | 63 | 14 | 16.8 s |
-| 64 | 15 | 18.0 s |
+| 64 | 14 | 16.8 s |
 | 65 | 14 | 16.8 s |
 | 66 | 15 | 18.0 s |
 | 67 | 18 | 21.6 s |
-| 68 | 19 | 22.8 s |
+| 68 | 18 | 21.6 s |
 | 69 | 19 | 22.8 s |
 | 70 | 19 | 22.8 s |
 
@@ -164,7 +164,7 @@ Placement/dig time before Start is excluded (it's untimed).
 | 93 | 35 | 42.0 s |
 | 94 | 38 | 45.6 s |
 | 95 | 41 | 49.2 s |
-| 96 | 42 | 50.4 s |
+| 96 | 41 | 49.2 s |
 | 97 | 44 | 52.8 s |
 | 98 | 46 | 55.2 s |
 | 99 | 44 | 52.8 s |
@@ -172,5 +172,5 @@ Placement/dig time before Start is excluded (it's untimed).
 
 ## Campaign totals
 
-- Fastest level: 1 (9.6 s). Slowest: 22 (123.6 s, The Great Cascade).
-- Median level: 15.6 s. Sum of all 100 minimums: 38.9 minutes of pure water-flow time.
+- Fastest level: 1 (9.6 s). Slowest: 22 (121.2 s, The Great Cascade).
+- Median level: 15.6 s. Sum of all 100 minimums: 38.5 minutes of pure water-flow time.

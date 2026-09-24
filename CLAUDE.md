@@ -15,7 +15,7 @@ The Godot project is `game/`. Design docs live at the repo root.
 | `dev-progress.md` | Session log, **newest first**. Prepend a `## Status: … (date)` entry when you finish work. |
 | `open-items.md` | What is genuinely outstanding, plus the **pre-export checklist**. |
 | `release-checklist.md` | Step-by-step path to both stores, code and non-code, with dated store requirements (2026-09-10). |
-| `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. Findings 33-44 were settled 2026-09-10 -- **33, level 68 being unwinnable, is the most serious thing still open.** |
+| `handheld-audit.md` | Android/iOS platform audit (2026-09-08). 47 verified findings, ranked, with a fix-first list. Findings 33-44 were settled 2026-09-10; the whole fix-first list and 33 (level 68 unwinnable) are done as of 2026-09-21. What is left needs a device. |
 | `story-bible.md` | The wordless story design. Only its first slice, the pool animal, is in the engine (2026-09-20). |
 | `level-solutions.md` | One verified solution per level. |
 | `level-min-times.md` | Verified minimum measures per level — the source of `par_measures`. |
@@ -42,6 +42,9 @@ godot --headless res://tests/VerifyAmbience.tscn    # the moving backdrop: cloud
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
 godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the 45 pose files, the generator, the import scale, the poses, every lake on every level, 337 checks
+godot --headless res://tests/VerifyTunnels.tscn     # underground tunnel: exact timing, redirects in, parking, both grids, preview, events, smoke rules, the 3 sandbox levels, 156 checks
+# open any one level directly, on save slot 99 (bare name: data/sandbox/ then data/levels/):
+LEVEL=tunnel_1 godot --path . --resolution 720x1280 res://tests/PlayLevel.tscn
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 45 checks
@@ -71,17 +74,32 @@ godot --headless --path game --script res://tools/verify_solutions.gd -- ../leve
 `game/tools/verify_solutions.gd`. A previous session missed it, built a
 duplicate whose parser silently skipped the 24 dig-bearing entries, and
 reported 9 broken solutions when the real figure was 11. Current expected
-result: **92 exact / 7 broken / 1 prose (level 22)**. The 7 (64, 66, 67,
-68, 69, 92, 96) are all wall placements broken by the 2026-08-31 change
-making the Wall 2 tiles wide. Every level in 1-50 has a verified solution.
+result: **100 exact / 0 broken / 0 prose** (since 2026-09-21: the seven
+Wall-broken levels 64, 66, 67, 68, 69, 92, 96 got data fixes, level 33 got
+its boulder, and level 22's prose became a 100-cell dig list after its two
+blocking lakes were relaid). Anything below 100 exact is a regression.
+`tools/solution_space.gd` reports 0 BROKEN too; 16 levels are single-answer
+(KNIFE), which is a design question, not a bug.
 
-**Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16). A
-former radius-4 hexagon is now a radius-5 grid with rows +-5 and every
-offset column outside -3..2 in `blocked_cells`, its terrain slid sideways
-to fit. `HexBoard.bottom_row` (the lowest playable row) is what the edge
-loss tests against, NOT `grid_radius`, so blocking the bottom row is safe.
-Level 20 (flat grid) keeps its radius-4 hexagon and blocks columns q = -4,
--3 and 4 instead, because the flat grid's loss test is `_cube_distance()`.
+**Levels 1-50 are at most 6 hexes wide** (owner's rule, 2026-09-16) **and
+no two neighbours share a silhouette** (owner's rule, 2026-09-21: "the grid
+can taper and be asymmetrical"). A former radius-4 hexagon is a radius-5
+grid whose outline -- funnel, V, lean, wedge, stairs, hourglass, bite, T,
+cross, diamond, a 6-row stub on 12, a 13-row lens on 18 -- is carved with
+`blocked_cells`; the table of shapes is in `dev-progress.md` (2026-09-21).
+Every outline keeps the same 6.5-hex bounding box as a plain 6-wide column,
+so the tile size and the no-scroll fit at 720x1280 are identical on all of
+them: a narrower box grows the tiles and a 9-row board then scrolls 14 px.
+An outline only ever removes cells that neither the bare run, the documented
+solution, nor the hydro bonus route ever visits, so every replay is
+bit-identical -- `tools/footprint.gd` prints those cells; run it before
+carving. The one exception is level 33's boulder at (0, 2), placed ON the
+bare stream on purpose: the level won untouched before it. `HexBoard.
+bottom_row` (the lowest playable row) is what the edge loss tests against,
+NOT `grid_radius`, so blocking the bottom row is safe. Level 20 (flat grid)
+keeps its radius-4 hexagon and blocks columns q = -4, -3 and 4 instead,
+because the flat grid's loss test is `_cube_distance()`. Levels 13-17, 19
+and 22 are corridors and were left alone.
 
 ### Safe-area insets are simulated here, never real
 
@@ -214,11 +232,30 @@ level's outcome. Keep it that way.
 **Tile drawing is table-driven.** `_resolve_tile_state()` is the single place
 terrain precedence lives; `TILE_VISUALS` is the single place each state's
 appearance lives. To animate a tile type, add a sheet to its table entry — do
-not add a branch. A state with no sheet falls back to its static icon. Two
-states draw themselves instead: a geyser (no art yet) and a **pool**, whose
-look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
+not add a branch. A state with no sheet falls back to its static icon (the
+dormant geyser's is `icon_geyser.svg`; an activated one draws as a source).
+One state draws itself instead: a **pool**, whose look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
 stream's water sheet clipped at a waterline set by `pool_fill`, and rims only
 the lake's outer edges. A lake cell also skips the per-cell border.
+
+**Underground tunnels** (`LevelData.tunnel_pairs`, entrance -> exit, added
+2026-09-23) are terrain, placed by the level, never by the player. The
+entrance swallows a drop in `_try_enter()` and records it in
+`HexBoard.tunnel_transit`; the drop is put ON the exit at the end of WATER
+beat t + d, where d is the hex distance and `HexBoard.water_beat` counts the
+beats -- the standard one-cell-per-measure rate along the straight line --
+and falls from there by the spring rule (a source's: DOWN_LEFT first;
+"straight" on a flat grid). The exit is ordinary ground to surface water;
+neither end takes a block; neither is solid. d-1 stepping stones between
+the ends count the delay and light up blue under an in-flight drop. The
+exit's pre-Start arrow is computed (`_tunnel_exit_first_move()`), not a
+copy of the geyser's, because a Wall can turn a spring's first fall.
+`EVENT_TUNNEL` plays the geyser sound; `smoke_test.gd` validates the pairs.
+**No campaign level uses a tunnel yet** -- the three levels that do live
+in `game/data/sandbox/` (ids 951-953, outside `LevelSelect.LEVEL_PATHS`,
+solutions in `sandbox-solutions.md`, which `verify_solutions.gd` does not
+read; `VerifyTunnels` replays them). A sandbox level's HUD label shows its
+display_name up to the colon instead of "Level 951".
 
 **Tutorial hints.** `LevelData.hint_cells` draws a dashed amber outline on a
 cell until a block sits there. Only the tutorials set it; list the Wall's
@@ -254,9 +291,13 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
   spacers (`_make_bar_spacer()`), so the bar's children alternate
   spacer/button: **`get_child(0)` is not the first button.**
 - **The Wall is 2 tiles wide.** Placing one covers the tapped cell *and* a
-  neighbour. This invalidated 11 documented solutions and is the single most
-  common source of "why doesn't this level win any more". Tutorial 5 exists
-  to teach exactly this.
+  neighbour. This invalidated 11 documented solutions -- the last seven were
+  re-solved with data fixes on 2026-09-21 (rocks, a relaid lake, one extra
+  tile; see `dev-progress.md`) -- and it is still the single most common
+  source of "why doesn't this level win any more". Tutorial 5 exists to
+  teach exactly this. Its second cell mirrors leftward when the right one
+  cannot take a block, and a wall whose BOTH orientations fail is refused
+  with the `invalid` buzz.
 - **A trail slot is not a level number.** The five tutorial levels sit below
   level 1 on the map, so slot 5 is level 1 and slot 104 is level 100. Use
   `LevelSelect.slot_of_level()` / `level_of_slot()`; indexing `points[]` by a
@@ -330,6 +371,12 @@ pre-Start boards. Check a scrolled, mid-simulation board by hand.
 - **Nothing has ever run on a GPU or a device.** Every render so far is Linux
   / Xvfb / llvmpipe software rendering. That verifies drawing logic and
   nothing about how it behaves on a phone.
+- **The app icon and boot splash are placeholders** drawn 2026-09-21:
+  `game/icon.svg` (`config/icon`), `game/icon.png` (512 px, for the export
+  presets) and `game/assets/splash.png` (`boot_splash/image`, centred on the
+  sky colour) are all the same waterfall-on-a-hex mark, rasterised from the
+  SVG by a headless `Image.load_svg_from_string()`; redraw the SVG and
+  re-rasterise, do not edit the PNGs by hand.
 - **No export presets are committed** (`export_presets.cfg` is gitignored) and
   neither export has been configured. See the pre-export checklist in
   `open-items.md` — the iOS Compatibility renderer reaching Metal through
