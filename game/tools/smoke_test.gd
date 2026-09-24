@@ -28,6 +28,11 @@ const KNOWN_ISSUES := {
 }
 
 
+## Every folder of LevelData to check. data/sandbox/ holds levels that
+## exist to try a mechanic before the owner places it in the campaign.
+const LEVEL_DIRS: Array[String] = ["res://data/levels/", "res://data/sandbox/"]
+
+
 func _init() -> void:
 	var errors: Array[String] = []
 	var known: Array[String] = []
@@ -42,16 +47,22 @@ func _init() -> void:
 		if b == null:
 			errors.append("block %s failed to load" % f)
 		else:
-			block_ids[b.id] = true
+			block_ids[b.id] = b
 
-	# Levels
-	var files := DirAccess.get_files_at("res://data/levels/")
-	files.sort()
+	# Levels: the campaign and tutorials, then the sandbox levels that are
+	# not on the map yet (res://data/sandbox/, opened by tests/PlayLevel).
+	# A sandbox file is named "sandbox/<file>" in every message.
+	var files: Array[String] = []
+	for dir in LEVEL_DIRS:
+		var names := DirAccess.get_files_at(dir)
+		names.sort()
+		for n in names:
+			files.append(n if dir == "res://data/levels/" else dir.trim_prefix("res://data/") + n)
 	var seen_ids := {}
 	for f in files:
 		if not f.ends_with(".tres"):
 			continue
-		var lv = load("res://data/levels/" + f)
+		var lv = load("res://data/" + (f if f.contains("/") else "levels/" + f))
 		if lv == null:
 			errors.append("%s failed to load" % f)
 			continue
@@ -126,6 +137,8 @@ func _init() -> void:
 			if _hex_distance(c) > radius:
 				errors.append("%s pool_targets %s is outside grid_radius %d" % [f, c, radius])
 
+		_check_tunnels(f, lv, block_ids, errors)
+
 	print("\n=== smoke test: %d levels, %d block types ===" % [checked, block_ids.size()])
 	if not known.is_empty():
 		print("KNOWN - %d deferred issue(s), not counted as failures:" % known.size())
@@ -141,6 +154,63 @@ func _init() -> void:
 		quit(1)
 
 
+## Underground tunnels (LevelData.tunnel_pairs): both ends playable, on
+## plain ground -- not a source, fire, lake, town, geyser, dirt, hydro
+## plant cell or preset block (any cell of its footprint) -- the two ends
+## of a pair different, and no cell both an entrance and an exit. Two
+## entrances sharing one exit is allowed. Static so tests/VerifyTunnels
+## can hand it a bad LevelData in memory without running the whole scan.
+static func _check_tunnels(f: String, lv, block_ids: Dictionary, errors: Array[String]) -> void:
+	if lv.tunnel_pairs.is_empty():
+		return
+	var taken := {}
+	for c in lv.water_sources: taken[c] = "a water source"
+	for c in lv.fire_cells: taken[c] = "a fire"
+	for c in lv.town_cells: taken[c] = "a town"
+	for c in lv.geyser_cells: taken[c] = "a geyser"
+	for c in lv.dirt_cells: taken[c] = "dirt"
+	for anchor in lv.pool_targets:
+		taken[anchor] = "a lake"
+		for c in lv.lake_cells.get(anchor, []): taken[c] = "a lake"
+	for center in lv.hydro_plant_cells:
+		for dq in [-1, 0, 1]: taken[center + Vector2i(dq, 0)] = "a hydro plant"
+	for anchor in lv.preset_blocks:
+		taken[anchor] = "a preset block"
+		var block = block_ids.get(lv.preset_blocks[anchor], null)
+		if block != null:
+			for offset in block.footprint_offsets: taken[anchor + offset] = "a preset block"
+	var exits := {}
+	for entrance in lv.tunnel_pairs:
+		exits[lv.tunnel_pairs[entrance]] = true
+	for entrance in lv.tunnel_pairs:
+		var exit_cell = lv.tunnel_pairs[entrance]
+		if typeof(entrance) != TYPE_VECTOR2I or typeof(exit_cell) != TYPE_VECTOR2I:
+			errors.append("%s tunnel_pairs entry %s -> %s is not Vector2i -> Vector2i" % [f, entrance, exit_cell])
+			continue
+		if entrance == exit_cell:
+			errors.append("%s tunnel at %s enters and exits on the same cell" % [f, entrance])
+		if exits.has(entrance):
+			errors.append("%s tunnel cell %s is both an entrance and an exit" % [f, entrance])
+		for end in [["entrance", entrance], ["exit", exit_cell]]:
+			var c: Vector2i = end[1]
+			if not _in_playable_area(lv, c):
+				errors.append("%s tunnel %s %s is outside the playable area" % [f, end[0], c])
+			if taken.has(c):
+				errors.append("%s tunnel %s %s is on %s" % [f, end[0], c, taken[c]])
+
+
+## HexBoard.in_playable_area() without a board: radius, blocked_cells and
+## the corridor band.
+static func _in_playable_area(lv, c: Vector2i) -> bool:
+	if lv.blocked_cells.has(c) or _hex_distance(c) > lv.grid_radius:
+		return false
+	if lv.corridor_half_width > 0:
+		var band_center := int(roundf(-c.y / 2.0))
+		if absi(c.x - band_center) > lv.corridor_half_width:
+			return false
+	return true
+
+
 ## Axial distance from the origin (0,0) on a hex grid.
-func _hex_distance(c: Vector2i) -> int:
+static func _hex_distance(c: Vector2i) -> int:
 	return int((abs(c.x) + abs(c.y) + abs(c.x + c.y)) / 2.0)

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Tunnel exit: the entrance's stone arch (icon_tunnel_in.svg), but
+       the mouth is FULL of water where the entrance's is a dark hole --
+       dark hole in, bright water out, told apart at a glance before the
+       chevrons are even read. White chevrons point UP, out of it (the
+       entrance's are pale blue, pointing in), over a foam lip at the
+       threshold. The water stays inside the arch: no ledge and no falls,
+       so it never reads as a second water source (icon_source.svg). Same
+       limestone on the same mossy cave-stone fill; the first-move arrow is
+       drawn by HexBoard below the arch, not baked in here. -->
+  <!-- the arch: stone ring over the mouth -->
+  <path d="M10 88 L10 50 A40 40 0 0 1 90 50 L90 88 Z"
+        fill="#c9bb9f" stroke="#2a241c" stroke-width="5" stroke-linejoin="round"/>
+  <!-- the mouth -->
+  <path d="M28 88 L28 52 A22 22 0 0 1 72 52 L72 88 Z"
+        fill="#2f8fdc" stroke="#2a241c" stroke-width="4" stroke-linejoin="round"/>
+  <!-- deeper water at the back of the mouth, so it reads as coming from inside -->
+  <path d="M33 60 A17 17 0 0 1 67 60 L67 64 Q50 58 33 64 Z" fill="#1f6fb8"/>
+  <!-- joints between the arch stones, keystone at the crown -->
+  <g stroke="#2a241c" stroke-width="3.5" stroke-linecap="round">
+    <path d="M44 31 L42 11"/>
+    <path d="M56 31 L58 11"/>
+    <path d="M33 38 L19 24"/>
+    <path d="M67 38 L81 24"/>
+    <path d="M28 55 L10 55"/>
+    <path d="M72 55 L90 55"/>
+    <path d="M28 72 L10 72"/>
+    <path d="M72 72 L90 72"/>
+  </g>
+  <!-- the foam lip where the stream spills over the threshold -->
+  <path d="M30 88 L30 78 Q40 72 50 77 Q60 82 70 76 L70 88 Z"
+        fill="#dff3ff" stroke="#0b3d63" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M36 84 Q43 80 50 84 Q57 88 64 83" fill="none"
+        stroke="#7cc4f5" stroke-width="3" stroke-linecap="round"/>
+  <!-- chevrons out of the mouth: dark outline under, pale water over -->
+  <g fill="none" stroke="#0b3d63" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 55 L50 43 L62 55"/>
+    <path d="M38 69 L50 57 L62 69"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 55 L50 43 L62 55"/>
+    <path d="M38 69 L50 57 L62 69"/>
+  </g>
+</svg>

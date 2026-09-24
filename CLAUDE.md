@@ -41,6 +41,9 @@ godot --headless res://tests/VerifyBackdrops.tscn   # one sky/ground pair per te
 godot --headless res://tests/VerifySfx.tscn         # the sound catalogue, its files and recipes, every play(), the wiring, the volume dial, 154 checks
 godot --headless res://tests/VerifyMusic.tscn       # one loop per ten levels, crossfade, no restart on the same band, the volume dial, 114 checks
 godot --headless res://tests/VerifyCharacters.tscn  # one pool animal per ten levels: the cast, the 45 pose files, the generator, the import scale, the poses, every lake on every level, 337 checks
+godot --headless res://tests/VerifyTunnels.tscn     # underground tunnel: exact timing, redirects in, parking, both grids, preview, events, smoke rules, the 3 sandbox levels, 156 checks
+# open any one level directly, on save slot 99 (bare name: data/sandbox/ then data/levels/):
+LEVEL=tunnel_1 godot --path . --resolution 720x1280 res://tests/PlayLevel.tscn
 # needs a display (measures laid-out control sizes):
 xvfb-run -a --server-args="-screen 0 720x1280x24" \
   godot --resolution 720x1280 res://tests/VerifyTouchTargets.tscn # 48dp targets, 44 checks
@@ -224,6 +227,25 @@ dormant geyser's is `icon_geyser.svg`; an activated one draws as a source).
 One state draws itself instead: a **pool**, whose look is per-lake state — `_draw_basin()` fills the cracked lakebed with the
 stream's water sheet clipped at a waterline set by `pool_fill`, and rims only
 the lake's outer edges. A lake cell also skips the per-cell border.
+
+**Underground tunnels** (`LevelData.tunnel_pairs`, entrance -> exit, added
+2026-09-23) are terrain, placed by the level, never by the player. The
+entrance swallows a drop in `_try_enter()` and records it in
+`HexBoard.tunnel_transit`; the drop is put ON the exit at the end of WATER
+beat t + d, where d is the hex distance and `HexBoard.water_beat` counts the
+beats -- the standard one-cell-per-measure rate along the straight line --
+and falls from there by the spring rule (a source's: DOWN_LEFT first;
+"straight" on a flat grid). The exit is ordinary ground to surface water;
+neither end takes a block; neither is solid. d-1 stepping stones between
+the ends count the delay and light up blue under an in-flight drop. The
+exit's pre-Start arrow is computed (`_tunnel_exit_first_move()`), not a
+copy of the geyser's, because a Wall can turn a spring's first fall.
+`EVENT_TUNNEL` plays the geyser sound; `smoke_test.gd` validates the pairs.
+**No campaign level uses a tunnel yet** -- the three levels that do live
+in `game/data/sandbox/` (ids 951-953, outside `LevelSelect.LEVEL_PATHS`,
+solutions in `sandbox-solutions.md`, which `verify_solutions.gd` does not
+read; `VerifyTunnels` replays them). A sandbox level's HUD label shows its
+display_name up to the colon instead of "Level 951".
 
 **Tutorial hints.** `LevelData.hint_cells` draws a dashed amber outline on a
 cell until a block sits there. Only the tutorials set it; list the Wall's

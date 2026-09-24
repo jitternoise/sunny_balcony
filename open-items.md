@@ -67,6 +67,11 @@ have since been overtaken. The state of the tree on 2026-09-21 (branch
 
 **Genuinely still open, and why nothing was done**
 
+- **Where the underground tunnel debuts** (built 2026-09-23, owner's
+  request): it works, is tested and has three sandbox levels
+  (`game/data/sandbox/`, open one with `tests/PlayLevel.tscn`), but no
+  campaign level uses it. Which band, and whether as new levels or by
+  reworking existing ones, is the owner's call.
 - Needs the owner's call: the 16 single-answer (KNIFE) levels 1, 3, 6, 7,
   8, 10, 24, 25, 32, 33, 34, 47, 48, 49, 50, 65 versus the "several
   placements win" intent; the six flat-grid off-board sources (55, 56, 59,

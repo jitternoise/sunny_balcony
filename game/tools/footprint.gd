@@ -4,7 +4,8 @@ extends SceneTree
 ## water visits on the bare run (b), under the documented solution (w, B for
 ## both), on the hydro-bonus route (h, the union over every activation delay
 ## that earns it), every cell a documented block really covers (x -- the
-## Wall's second half after any mirroring), and the terrain.
+## Wall's second half after any mirroring), and the terrain -- a tunnel's
+## entrance is I and its exit O (LevelData.tunnel_pairs).
 ##
 ##   godot --headless --path game --script res://tools/footprint.gd
 ##
@@ -128,6 +129,9 @@ func _print_map(data: LevelData, keep: Dictionary, place: Dictionary, digs: Dict
 	for c in data.pool_targets: marks[c] = "P"
 	for a in data.lake_cells: for c in data.lake_cells[a]: if not marks.has(c): marks[c] = "L"
 	for c in data.preset_blocks: if not marks.has(c): marks[c] = "X"
+	for e in data.tunnel_pairs:
+		marks[e] = "I"
+		marks[data.tunnel_pairs[e]] = "O"
 	for r in range(-R, R + 1):
 		var cells := {}
 		for q in range(-R, R + 1):

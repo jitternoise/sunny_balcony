@@ -124,7 +124,12 @@
           <b>Pool</b> creates a whole 4-hex lake (anchor + 3 cells, rhombus where it fits); click the
           anchor to remove the lake, <b>Lake cell</b> adds/removes a single cell of an adjacent lake.
           <b>Hydro</b> places a 3-cell plant (centre + left + right). <b>Preset</b> bakes the chosen
-          block into the level; a preset Wall covers its anchor and the cell to its right.</p>
+          block into the level; a preset Wall covers its anchor and the cell to its right.<br>
+          <b>Tunnel</b>: click the entrance, then its exit (click the entrance again to cancel). Clicking
+          an existing entrance removes its tunnel; clicking an existing exit removes every tunnel into
+          it, unless an entrance is waiting, in which case the new tunnel shares that exit. The dots
+          between the ends are the underground cells: a drop swallowed on beat t is on the exit at the
+          end of beat t + d (d = hex distance), one dot per beat in between.</p>
         </div>
         <div class="section">
           <h3>Grid</h3>
@@ -193,6 +198,12 @@
         <div class="section">
           <h3>Preset blocks</h3>
           <div id="presetList" class="list"></div>
+        </div>
+        <div class="section">
+          <h3>Tunnels</h3>
+          <p class="hint"><code>tunnel_pairs</code>: entrance → exit. d = hex distance; the drop spends
+          d − 1 beats underground and appears on the exit d beats after it was swallowed.</p>
+          <div id="tunnelList" class="list"></div>
         </div>
       </div>
 
@@ -276,7 +287,12 @@
           touches it and the player activates it; then its 3 cells become sources.<br>
           • Water pressing on dirt for 10 beats triggers a mudslide that collapses up to 3 dirt tiles.<br>
           • Town cell or past the lowest playable row = loss. Win = every fire out and every lake full.<br>
-          • A level with no fires and no pools wins on measure 1.
+          • A level with no fires and no pools wins on measure 1.<br>
+          • A tunnel entrance swallows every drop that would enter it (natural fall or a block
+          redirect) on WATER beat t; at the end of beat t + d (d = hex distance entrance → exit) the
+          drop is placed on the exit, merging with anything there, and from beat t + d + 1 it falls
+          like a spring: pointy down-left first then zigzag, flat "straight". Surface blocks never
+          affect the route. Neither end is solid; neither takes a block; the exit is ordinary ground.
           </p>
         </div>
         <div class="section">
@@ -285,8 +301,9 @@
           <code>level_id, display_name, intro_text, grid_radius, corridor_half_width, grid_style,
           source_flow_style, water_sources, fire_cells, pool_targets, lake_cells, preset_blocks,
           starting_inventory, blocked_cells, hint_cells, town_cells, geyser_cells, dirt_cells,
-          total_block_budget, hydro_plant_cells, par_measures</code>. Optional fields are omitted
-          when empty/zero unless the imported file already had them. Array fields go on one line;
+          total_block_budget, hydro_plant_cells, par_measures, tunnel_pairs</code>. Optional fields are omitted
+          when empty/zero. An imported file's own text is kept for any field you leave unchanged, even an
+          empty one; an optional field you empty (the last tunnel removed, say) is dropped. Array fields go on one line;
           dictionaries one entry per line, as Godot writes them.</p>
         </div>
       </div>
@@ -382,7 +399,7 @@ function blockFootprint(anchor, id, mirrored){
 const FIELD_ORDER = ["level_id","display_name","intro_text","grid_radius","corridor_half_width",
   "grid_style","source_flow_style","water_sources","fire_cells","pool_targets","lake_cells",
   "preset_blocks","starting_inventory","blocked_cells","hint_cells","town_cells","geyser_cells",
-  "dirt_cells","total_block_budget","hydro_plant_cells","par_measures"];
+  "dirt_cells","total_block_budget","hydro_plant_cells","par_measures","tunnel_pairs"];
 // Written even when at their default, matching the repo's usual template.
 const ALWAYS_FIELDS = new Set(["level_id","display_name","intro_text","grid_radius","water_sources",
   "fire_cells","pool_targets","lake_cells","starting_inventory","blocked_cells","town_cells",
@@ -505,6 +522,7 @@ function newLevel(){
     geyser_cells:new Set(),
     dirt_cells:new Set(),
     hydro_plant_cells:new Set(),      // plant centres
+    tunnel_pairs:new Map(),           // entrance "q,r" -> exit "q,r"
     total_block_budget:0, par_measures:0,
     _src:null,                        // {header, order, raw{}, canon{}} of the imported file
   };
@@ -536,6 +554,7 @@ function levelFromFields(fields){
   for(const [k,v] of dict(F.lake_cells)) if(isVec(k)) L.lake_cells.set(key(k), [...coordSetFrom(v)]);
   for(const [k,v] of dict(F.preset_blocks)) if(isVec(k)) L.preset_blocks.set(key(k), String(v));
   for(const [k,v] of dict(F.starting_inventory)) if(typeof k==="string") L.starting_inventory.set(k, int(v,0));
+  for(const [k,v] of dict(F.tunnel_pairs)) if(isVec(k) && isVec(v)) L.tunnel_pairs.set(key(k), key(v));
   return L;
 }
 function levelFromTres(text){
@@ -570,6 +589,7 @@ function canonicalValue(L, name){
     case "lake_cells": return dictText([...L.lake_cells].map(([k,v])=>`${vecText(k)}: ${coordsArrayText(v)}`));
     case "preset_blocks": return dictText([...L.preset_blocks].map(([k,v])=>`${vecText(k)}: ${gdString(v)}`));
     case "starting_inventory": return dictText([...L.starting_inventory].map(([k,v])=>`${gdString(k)}: ${v}`));
+    case "tunnel_pairs": return dictText([...L.tunnel_pairs].map(([k,v])=>`${vecText(k)}: ${vecText(v)}`));
     case "water_sources": case "fire_cells": case "blocked_cells": case "hint_cells":
     case "town_cells": case "geyser_cells": case "dirt_cells": case "hydro_plant_cells":
       return coordsArrayText(L[name]);
@@ -589,6 +609,7 @@ function isDefault(L, name){
     case "par_measures": return L.par_measures===0;
     case "level_id": case "display_name": case "grid_radius": return false;
     case "source_flow_style": case "pool_targets": case "lake_cells": case "preset_blocks": case "starting_inventory":
+    case "tunnel_pairs":
       return L[name].size===0;
     default: return L[name] && L[name].size===0;
   }
@@ -615,7 +636,12 @@ function serializeLevel(L){
     if(name==="script"){ lines.push(src && src.raw.script ? src.raw.script : 'script = ExtResource("1")'); continue; }
     const canon = canonicalField(L, name);
     if(src && name in src.raw){
-      lines.push((canon===null || src.canon[name]===canon) ? src.raw[name] : canon);
+      const unchanged = canon===null || src.canon[name]===canon;
+      // An edit that empties an optional field (the last tunnel pair
+      // removed, say) leaves it out, as a new level would -- the repo's
+      // template fields in ALWAYS_FIELDS are still written empty.
+      if(!unchanged && !ALWAYS_FIELDS.has(name) && isDefault(L,name)) continue;
+      lines.push(unchanged ? src.raw[name] : canon);
     } else if(canon!==null){
       lines.push(canon);
     }
@@ -633,6 +659,12 @@ function roundTrip(text){
   return {ok: out===text, out, firstDiff};
 }
 window.FF = { parseTres, parseValue, levelFromTres, serializeLevel, roundTrip, newLevel, canonicalField };
+// Test hooks for the playtest sim (reads the editor's current level `L`).
+window.FF.sim = {
+  load: level => loadLevel(level), level: () => L,
+  make: () => makeSim(), measure: S => simMeasure(S), place: (S,c,id) => simPlaceBlock(S,c,id),
+  validate: () => { runValidation(); return [...document.querySelectorAll("#validation .valitem")].map(e=>e.className.split(" ")[1]+": "+e.textContent); },
+};
 
 /* =========================================================================
    STATE
@@ -641,6 +673,7 @@ let L = newLevel();
 let sim = null;
 let currentTool = "source";
 let presetToolBlock = "wall";
+let tunnelPending = null;   // entrance "q,r" waiting for its exit click (Tunnel tool)
 const TOOLS = [
   {id:"source", label:"Source", color:"#4d99ff"},
   {id:"fire", label:"Fire", color:"#e64d1a"},
@@ -650,6 +683,7 @@ const TOOLS = [
   {id:"geyser", label:"Geyser", color:"#6fd6d6"},
   {id:"dirt", label:"Dirt", color:"#6b4f2e"},
   {id:"hydro", label:"Hydro", color:"#cfd8dc"},
+  {id:"tunnel", label:"Tunnel", color:"#4e4a5c"},
   {id:"preset", label:"Preset", color:"#fff3cc"},
   {id:"hint", label:"Hint", color:"#ffd133"},
   {id:"blocked", label:"Blocked", color:"#333"},
@@ -714,8 +748,14 @@ function terrainAt(k){
   if(L.geyser_cells.has(k)) return "geyser";
   if(L.dirt_cells.has(k)) return "dirt";
   if(hydroCenterOf(k)) return "hydro";
+  if(L.tunnel_pairs.has(k)) return "tunnel_in";
+  if(tunnelEntrancesOf(k).length) return "tunnel_out";
   return "empty";
 }
+// Tunnels: an entrance is a key of tunnel_pairs, an exit a value; two
+// entrances may share one exit.
+function tunnelEntrancesOf(x){ const out=[]; for(const [e,t] of L.tunnel_pairs) if(t===x) out.push(e); return out; }
+function tunnelDistance(e,x){ const a=parseKey(e), b=parseKey(x); return cubeDist({q:b.q-a.q, r:b.r-a.r}); }
 function cellIsFree(k){
   return terrainAt(k)==="empty" && !L.water_sources.has(k) && !presetAnchorOf(k);
 }
@@ -728,6 +768,7 @@ function clearCell(k, opts){
          else L.lake_cells.set(a, L.lake_cells.get(a).filter(x=>x!==k)); }
   const h=hydroCenterOf(k); if(h) L.hydro_plant_cells.delete(h);
   const p=presetAnchorOf(k); if(p) L.preset_blocks.delete(p);
+  if(!opts.keepTunnel){ L.tunnel_pairs.delete(k); for(const e of tunnelEntrancesOf(k)) L.tunnel_pairs.delete(e); }
   if(!opts.keepHint) L.hint_cells.delete(k);
 }
 
@@ -805,6 +846,25 @@ function applyTool(c, tool){
       if(bad.length){ setStatus(`Cannot preset ${presetToolBlock} at (${k}): cell (${bad[0]}) is not free playable ground.`); return; }
       L.preset_blocks.set(k, presetToolBlock); return;
     }
+    case "tunnel": {
+      if(tunnelPending===null){
+        if(L.tunnel_pairs.has(k)){ setStatus(`Removed tunnel (${k}) → (${L.tunnel_pairs.get(k)}).`); L.tunnel_pairs.delete(k); return; }
+        const ins=tunnelEntrancesOf(k);
+        if(ins.length){ for(const e of ins) L.tunnel_pairs.delete(e); setStatus(`Removed ${ins.length} tunnel(s) into (${k}).`); return; }
+        if(!inPlayable(c) && !L.blocked_cells.has(k)){ setStatus("A tunnel entrance must be on the playable board."); return; }
+        tunnelPending=k; setStatus(`Entrance (${k}) chosen — now click its exit (click the entrance again to cancel).`); return;
+      }
+      const e=tunnelPending;
+      if(k===e){ tunnelPending=null; setStatus("Tunnel cancelled."); return; }
+      if(L.tunnel_pairs.has(k)){ setStatus(`(${k}) is already a tunnel entrance — a cell cannot be both an entrance and an exit.`); return; }
+      if(!inPlayable(c) && !L.blocked_cells.has(k)){ setStatus("A tunnel exit must be on the playable board."); return; }
+      if(tunnelEntrancesOf(e).length){ tunnelPending=null; setStatus(`(${e}) became an exit meanwhile — start again.`); return; }
+      for(const x of [e,k]){ clearCell(x,{keepHint:true, keepTunnel:true}); L.blocked_cells.delete(x); }
+      L.tunnel_pairs.set(e,k); tunnelPending=null;
+      const d=tunnelDistance(e,k);
+      setStatus(`Tunnel (${e}) → (${k}): d = ${d}, a drop swallowed on beat t is on the exit at the end of beat t+${d}.`);
+      return;
+    }
   }
 }
 
@@ -850,6 +910,8 @@ const COL = {
   lakeRim:"#e0d29f", town:"#8c7359", townFlooded:"#7fb3ff", geyser:"#4fb8b8", geyserActive:"#a8f0f0",
   dirt:"#6b4f2e", trench:"#4d3d2e", mudslide:"#382619", hydro:"#c5ced4", hydroRim:"#37474f", hydroActive:"#e0f7fa",
   water:"#4d99ff", outline:"rgba(0,0,0,.55)", source:"#8fd0ff", preset:"rgba(255,243,204,.9)", hint:"#ffd133",
+  tunnel:"#4e4a5c", tunnelArch:"#b3a893", tunnelMouth:"#141018", tunnelStone:"#4a3826", tunnelStoneRim:"#1c140c",
+  tunnelRoute:"rgba(214,200,170,.35)",
 };
 function hexPath(center){
   const flat=isFlat();
@@ -882,13 +944,20 @@ function draw(){
     drawBodyRim(b.cells, b.preset ? COL.preset : "rgba(255,255,255,.7)", Math.max(1.5,view.size*(b.preset?0.1:0.07)), b.preset ? [view.size*0.3, view.size*0.15] : null);
     drawBlockGlyph(b.cells, blockDef(b.id));
   }
+  for(const [e,x] of L.tunnel_pairs) drawTunnelRoute(e, x, rect);
   for(const k of L.hint_cells) drawHint(parseKey(k));
   for(const k of L.water_sources) drawSourceMarker(parseKey(k), L.source_flow_style.get(k)||"straight", false);
+  if(!sim || !sim.started) for(const x of new Set(L.tunnel_pairs.values())) drawTunnelExitArrow(parseKey(x));
   if(sim){
     for(const g of sim.activeGeysers) drawSourceMarker(parseKey(g), "straight", true);
     for(const g of sim.hydroSources) drawSourceMarker(parseKey(g), "straight", true);
     for(const w of sim.water) drawWater(w.coord);
+    // an entrance swallowing water this beat looks wet, glyph kept on top
+    for(const e of new Set(sim.tunnelTransit.filter(t=>t.entered===sim.waterBeat).map(t=>t.entrance))){
+      const c=parseKey(e); drawWetMouth(c); drawTunnelGlyph(toScreen(c), true);
+    }
   }
+  if(tunnelPending!==null && currentTool==="tunnel" && activeTab()!=="playtest") drawTunnelPending(parseKey(tunnelPending));
   drawFooter(flat);
 }
 function drawCell(c){
@@ -908,6 +977,7 @@ function drawCell(c){
     case "geyser": fill=COL.geyser; break;
     case "dirt": fill=COL.dirt; if(sim && sim.digProgress.get(k)) label=String(sim.digProgress.get(k)); break;
     case "hydro": fill=COL.hydro; break;
+    case "tunnel_in": case "tunnel_out": fill=COL.tunnel; break;
     case "empty":
       if(sim){ if(sim.mudslide.has(k)) fill=COL.mudslide; else if(sim.digProgress.get(k)>=3) fill=COL.trench; else if(sim.activeGeysers.includes(k)) fill=COL.geyserActive; else if(sim.hydroSources.includes(k)) fill=COL.hydroActive; }
       break;
@@ -925,6 +995,7 @@ function drawCell(c){
   }
   if(t==="town" && !blocked) drawTownIcon(center);
   if(t==="geyser") drawGeyserIcon(center, sim ? (sim.geyserFill.get(k)||0) : 0);
+  if((t==="tunnel_in" || t==="tunnel_out") && !blocked) drawTunnelGlyph(center, t==="tunnel_in");
   if(t==="hydro" && sim){ const a=sim.hydroCellToAnchor.get(k); const p=sim.hydroPlants.get(a); if(p && p.touched && !p.active){ ctx.beginPath(); ctx.arc(center.x,center.y,view.size*0.45,0,Math.PI*2); ctx.strokeStyle="#ffd133"; ctx.lineWidth=2; ctx.stroke(); } }
   if(label){ ctx.fillStyle="#fff"; ctx.font=`bold ${Math.max(9,view.size*0.5)}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(label, center.x, center.y); }
   if(view.size>16 && !outside && !label){
@@ -994,10 +1065,94 @@ function drawGeyserIcon(center, fill){
   if(fill>0){ ctx.fillStyle="#fff"; ctx.font=`bold ${Math.max(8,s*0.35)}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(`${fill}/3`, center.x, center.y+s*0.35); }
   ctx.restore();
 }
+// Tunnel glyphs: a stone arch with a dark mouth. Entrance: a chevron pointing
+// down into the mouth. Exit: the same arch with water welling up in it and
+// the chevron turned round, pointing out.
+function drawTunnelGlyph(center, entrance){
+  const s=view.size, cx=center.x, w=s*0.42, spring=center.y-s*0.04, base=center.y+s*0.32, iw=s*0.23;
+  ctx.save();
+  ctx.lineJoin="round"; ctx.lineWidth=Math.max(1,s*0.06); ctx.strokeStyle="#1a1620";
+  ctx.beginPath(); ctx.moveTo(cx-w,base); ctx.lineTo(cx-w,spring); ctx.arc(cx,spring,w,Math.PI,0); ctx.lineTo(cx+w,base); ctx.closePath();
+  ctx.fillStyle=COL.tunnelArch; ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx-iw,base); ctx.lineTo(cx-iw,spring+s*0.04); ctx.arc(cx,spring+s*0.04,iw,Math.PI,0); ctx.lineTo(cx+iw,base); ctx.closePath();
+  ctx.fillStyle=COL.tunnelMouth; ctx.fill();
+  if(entrance){
+    ctx.strokeStyle="#8fd0ff"; ctx.lineWidth=Math.max(1.2,s*0.08); ctx.lineCap="round";
+    const y0=spring-s*0.07, y1=spring+s*0.12;
+    ctx.beginPath(); ctx.moveTo(cx-s*0.13,y0); ctx.lineTo(cx,y1); ctx.lineTo(cx+s*0.13,y0); ctx.stroke();
+  } else {
+    // Exit: the stream welling up inside the mouth and a chevron pointing
+    // UP out of it -- the entrance's turned round, no falls, so it never
+    // reads as a second water source.
+    ctx.fillStyle=COL.water;
+    ctx.beginPath(); ctx.moveTo(cx-iw*0.85,base); ctx.lineTo(cx-iw*0.85,base-s*0.1);
+    ctx.quadraticCurveTo(cx,base-s*0.16,cx+iw*0.85,base-s*0.1); ctx.lineTo(cx+iw*0.85,base); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#8fd0ff"; ctx.lineWidth=Math.max(1.2,s*0.08); ctx.lineCap="round";
+    const y0=spring+s*0.12, y1=spring-s*0.07;
+    ctx.beginPath(); ctx.moveTo(cx-s*0.13,y0); ctx.lineTo(cx,y1); ctx.lineTo(cx+s*0.13,y0); ctx.stroke();
+  }
+  ctx.restore();
+}
+// The underground route: d-1 stepping stones evenly spaced on the straight
+// line entrance -> exit over a faint dashed line; a stone lights up while an
+// in-flight drop is at that step (step = waterBeat - entered, 1..d-1).
+function drawTunnelRoute(e, x, rect){
+  const a=toScreen(parseKey(e)), b=toScreen(parseKey(x)), s=view.size, m=s*2;
+  if(Math.max(a.x,b.x)<-m || Math.min(a.x,b.x)>rect.width+m || Math.max(a.y,b.y)<-m || Math.min(a.y,b.y)>rect.height+m) return;
+  const d=tunnelDistance(e,x);
+  const lit=new Set();
+  if(sim) for(const t of sim.tunnelTransit) if(t.entrance===e){ const step=sim.waterBeat-t.entered; if(step>=1 && step<=d-1) lit.add(step); }
+  ctx.save();
+  ctx.strokeStyle=COL.tunnelRoute; ctx.lineWidth=Math.max(1,s*0.05); ctx.setLineDash([s*0.15,s*0.15]);
+  ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  ctx.setLineDash([]);
+  for(let i=1;i<d;i++){
+    const px=a.x+(b.x-a.x)*i/d, py=a.y+(b.y-a.y)*i/d;
+    ctx.beginPath(); ctx.arc(px,py,Math.max(2,s*0.13),0,Math.PI*2);
+    ctx.fillStyle=lit.has(i)?COL.water:COL.tunnelStone; ctx.fill();
+    ctx.strokeStyle=COL.tunnelStoneRim; ctx.lineWidth=Math.max(1,s*0.035); ctx.stroke();
+    // a chevron pointing the way the water runs underground, toward the exit
+    const r=Math.max(2,s*0.13), len=Math.hypot(b.x-a.x,b.y-a.y)||1, ux=(b.x-a.x)/len, uy=(b.y-a.y)/len;
+    ctx.strokeStyle=lit.has(i)?"#ffffff":COL.tunnelArch; ctx.lineWidth=Math.max(1,s*0.035);
+    ctx.beginPath(); ctx.moveTo(px-ux*r*0.25-uy*r*0.5,py-uy*r*0.25+ux*r*0.5); ctx.lineTo(px+ux*r*0.45,py+uy*r*0.45);
+    ctx.lineTo(px-ux*r*0.25+uy*r*0.5,py-uy*r*0.25-ux*r*0.5); ctx.stroke();
+  }
+  ctx.restore();
+}
+// Pre-Start, an exit shows its first move -- it behaves like a spring.
+function drawTunnelExitArrow(c){
+  const center=toScreen(c), s=view.size, flat=isFlat();
+  const d = flat ? FLAT_DOWN : DOWN_LEFT;
+  const u=axialToPixel(d,1,flat), len=Math.hypot(u.x,u.y), ux=u.x/len, uy=u.y/len;
+  const p0={x:center.x+ux*s*0.62, y:center.y+uy*s*0.62}, p1={x:center.x+ux*s*1.05, y:center.y+uy*s*1.05};
+  ctx.save(); ctx.strokeStyle=COL.source; ctx.fillStyle=COL.source; ctx.lineWidth=Math.max(1.2,s*0.07); ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+  const h=s*0.14, nx=-uy, ny=ux;
+  ctx.beginPath(); ctx.moveTo(p1.x+ux*h*0.6,p1.y+uy*h*0.6); ctx.lineTo(p1.x-ux*h*0.5+nx*h*0.6,p1.y-uy*h*0.5+ny*h*0.6); ctx.lineTo(p1.x-ux*h*0.5-nx*h*0.6,p1.y-uy*h*0.5-ny*h*0.6); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawTunnelPending(c){
+  const center=toScreen(c), flat=isFlat();
+  ctx.save(); ctx.strokeStyle="#ffffff"; ctx.lineWidth=Math.max(1.5,view.size*0.1); ctx.setLineDash([view.size*0.2, view.size*0.14]);
+  ctx.beginPath(); for(let i=0;i<6;i++){ const p=hexCorner(center,i,view.size*0.9,flat); if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); } ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
 function drawWater(c){
   const center=toScreen(c);
   ctx.beginPath(); ctx.arc(center.x, center.y, view.size*0.38, 0, Math.PI*2);
   ctx.fillStyle=COL.water; ctx.fill();
+}
+// A tunnel entrance drinking this beat: water over the whole cell, not a
+// drop-sized circle -- the arch drawn on top covers the middle of the cell,
+// so only water reaching out to the hex edge still reads as "wet".
+function drawWetMouth(c){
+  const center=toScreen(c), flat=isFlat();
+  ctx.save();
+  ctx.beginPath();
+  for(let i=0;i<6;i++){ const p=hexCorner(center,i,view.size*0.94,flat); if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); }
+  ctx.closePath();
+  ctx.fillStyle=COL.water; ctx.fill();
+  ctx.restore();
 }
 function drawFooter(flat){
   const rect=wrap.getBoundingClientRect();
@@ -1035,7 +1190,9 @@ function updateHoverReadout(sx,sy){
   if(cubeDist(c)>L.grid_radius){ el.textContent=`(${c.q}, ${c.r}) — outside grid`; return; }
   const bits=[`(${c.q}, ${c.r})`];
   if(L.blocked_cells.has(k)) bits.push("blocked"); else if(!inCorridorBand(c)) bits.push("outside corridor");
-  const t=terrainAt(k); if(t!=="empty") bits.push(t + (t==="pool" ? ` (lake ${lakeAnchorOf(k)})` : t==="hydro" ? ` (plant ${hydroCenterOf(k)})` : ""));
+  const t=terrainAt(k); if(t!=="empty" && t!=="tunnel_in" && t!=="tunnel_out") bits.push(t + (t==="pool" ? ` (lake ${lakeAnchorOf(k)})` : t==="hydro" ? ` (plant ${hydroCenterOf(k)})` : ""));
+  if(L.tunnel_pairs.has(k)){ const x=L.tunnel_pairs.get(k); bits.push(`tunnel entrance → (${x}), d = ${tunnelDistance(k,x)}`); }
+  for(const e of tunnelEntrancesOf(k)) bits.push(`tunnel exit ← (${e}), d = ${tunnelDistance(e,k)}`);
   if(L.water_sources.has(k)) bits.push("source" + (isFlat() ? " "+(L.source_flow_style.get(k)||"straight") : ""));
   const p=presetAnchorOf(k); if(p) bits.push(`preset ${L.preset_blocks.get(p)} @ ${p}`);
   if(L.hint_cells.has(k)) bits.push("hint");
@@ -1060,7 +1217,7 @@ function buildToolbar(){
     const btn=document.createElement("button");
     btn.className = t.id===currentTool ? "active" : "";
     btn.innerHTML=`<span class="swatch" style="background:${t.color}"></span>${t.label}`;
-    btn.onclick=()=>{ currentTool=t.id; buildToolbar(); };
+    btn.onclick=()=>{ currentTool=t.id; if(t.id!=="tunnel") tunnelPending=null; buildToolbar(); draw(); };
     bar.appendChild(btn);
     if(t.id==="preset"){
       const sel=document.createElement("select");
@@ -1121,10 +1278,10 @@ $("btnBlockedFromCorridor").onclick=()=>{
 };
 $("btnClearBlocked").onclick=()=>{ L.blocked_cells.clear(); afterEdit(); fitToView(); };
 $("btnClearAll").onclick=()=>{
-  if(!confirm("Clear all terrain, sources, lakes, presets, hints and blocked cells?")) return;
+  if(!confirm("Clear all terrain, sources, lakes, presets, tunnels, hints and blocked cells?")) return;
   for(const n of ["water_sources","fire_cells","blocked_cells","hint_cells","town_cells","geyser_cells","dirt_cells","hydro_plant_cells"]) L[n].clear();
-  for(const n of ["source_flow_style","pool_targets","lake_cells","preset_blocks"]) L[n].clear();
-  afterEdit();
+  for(const n of ["source_flow_style","pool_targets","lake_cells","preset_blocks","tunnel_pairs"]) L[n].clear();
+  tunnelPending=null; afterEdit();
 };
 $("btnNewLevel").onclick=()=>{ if(!confirm("Start a new empty level? Unsaved edits are lost.")) return; loadLevel(newLevel()); };
 $("btnApplyManual").onclick=()=>{
@@ -1182,6 +1339,14 @@ function renderLists(){
     row.querySelector("button").onclick=()=>{ L.preset_blocks.delete(a); afterEdit(); };
     pl.appendChild(row);
   }
+  const tl=$("tunnelList"); tl.innerHTML = L.tunnel_pairs.size ? "" : '<span style="color:var(--dim)">none</span>';
+  for(const [e,x] of L.tunnel_pairs){
+    const d=tunnelDistance(e,x);
+    const row=document.createElement("div"); row.className="row";
+    row.innerHTML=`<span>(${e}) → (${x}) · d = ${d} · ${Math.max(0,d-1)} underground</span><button class="mini">remove</button>`;
+    row.querySelector("button").onclick=()=>{ L.tunnel_pairs.delete(e); afterEdit(); };
+    tl.appendChild(row);
+  }
 }
 
 /* =========================================================================
@@ -1199,6 +1364,9 @@ function makeSim(){
     water:[], pendingTerrain:[], firesRemaining:L.fire_cells.size, flooded:new Set(),
     useBudget:L.total_block_budget>0, budgetRemaining:L.total_block_budget, inventory:new Map(),
     selectedBlockId:"", bottomRow:bottomRow(), flat:isFlat(),
+    waterBeat:0,                      // WATER beats run so far (HexBoard.water_beat)
+    tunnelTransit:[],                 // {entrance, exit, entered, due} (HexBoard.tunnel_transit)
+    tunnelEmerged:new Set(),          // exits water has come out of this run (EVENT_TUNNEL fires once each)
   };
   if(!S.useBudget) for(const [id,n] of L.starting_inventory) S.inventory.set(id,n);
   for(const k of L.fire_cells) S.terrain.set(k,"fire");
@@ -1210,6 +1378,7 @@ function makeSim(){
   for(const a of L.hydro_plant_cells){ const c=parseKey(a); const cells=[key(add(c,{q:-1,r:0})),a,key(add(c,{q:1,r:0}))];
     for(const x of cells){ S.terrain.set(x,"hydro"); S.hydroCellToAnchor.set(x,a); } S.hydroPlants.set(a,{cells,touched:false,active:false}); }
   for(const [a,id] of L.preset_blocks){ for(const x of blockFootprint(parseKey(a),id,false).map(key)){ S.placed.set(x,id); S.anchors.set(x,a); } S.presetCells.add(a); }
+  for(const [e,x] of L.tunnel_pairs){ if(!S.terrain.has(e)) S.terrain.set(e,"tunnel_in"); if(!S.terrain.has(x)) S.terrain.set(x,"tunnel_out"); }
   return S;
 }
 const simT=(S,k)=>S.terrain.get(k)||"empty";
@@ -1232,6 +1401,11 @@ function simTryEnter(S,c){
   if(t==="town"){ S.flooded.add(k); simLose(S,"town"); return false; }
   if(t==="dirt") return false;
   if(t==="hydro"){ simNoteHydroContact(S,c); return false; }
+  if(t==="tunnel_in"){ // swallowed: off the surface this beat, on the exit at the end of beat t+d
+    const x=L.tunnel_pairs.get(k), due=S.waterBeat+tunnelDistance(k,x);
+    if(!S.tunnelTransit.some(tr=>tr.entrance===k && tr.due===due)) S.tunnelTransit.push({entrance:k, exit:x, entered:S.waterBeat, due});
+    return false;
+  }
   if(t==="fire"||t==="pool"||t==="geyser"){ if(!S.pendingTerrain.includes(k)) S.pendingTerrain.push(k); return false; }
   return true;
 }
@@ -1303,6 +1477,7 @@ function simMeasure(S){
   if(S.gameOver) return;
   S.started=true;
   // WATER beat
+  S.waterBeat++;
   for(const k of L.water_sources){
     const c=parseKey(k);
     if(S.flat){ const mode=L.source_flow_style.get(k)||"straight"; S.water.push({coord:c,nextDir:mode==="zigzag"?FLAT_DOWN_LEFT:FLAT_DOWN,mode}); }
@@ -1315,6 +1490,14 @@ function simMeasure(S){
   S.stalledThisBeat.clear();
   const next=[];
   for(const e of S.water) simAdvance(S,e,next);
+  // tunnel arrivals: placed on the exit, falling from there next beat by the spring rule
+  const arriving=S.tunnelTransit.filter(t=>t.due===S.waterBeat);
+  S.tunnelTransit=S.tunnelTransit.filter(t=>t.due!==S.waterBeat);
+  for(const t of arriving){
+    const x=parseKey(t.exit);
+    if(S.flat) simAddWater(next,x,FLAT_DOWN,"straight"); else simAddWater(next,x,DOWN_LEFT);
+    S.tunnelEmerged.add(t.exit);
+  }
   S.water=next;
   simMudslides(S);
   // TERRAIN beat
@@ -1340,7 +1523,7 @@ function simFootprintPlaceable(S,cells){
     if(!inPlayable(c)) return false;
     if(L.water_sources.has(k)||S.activeGeysers.includes(k)||S.hydroSources.includes(k)) return false;
     if(S.placed.has(k)) return false;
-    if(["fire","pool","town","geyser","dirt","hydro"].includes(simT(S,k))) return false;
+    if(["fire","pool","town","geyser","dirt","hydro","tunnel_in","tunnel_out"].includes(simT(S,k))) return false;
   }
   return true;
 }
@@ -1423,6 +1606,7 @@ function updatePlaytestUI(){
     const bits=[];
     if(L.geyser_cells.size) bits.push(`geysers active: ${sim.activeGeysers.length}/${L.geyser_cells.size}`);
     if(L.hydro_plant_cells.size) bits.push(`hydro plants running: ${[...sim.hydroPlants.values()].filter(p=>p.active).length}/${sim.hydroPlants.size}`);
+    if(L.tunnel_pairs.size) bits.push(`underground: ${sim.tunnelTransit.length} drop(s) · exits flowed: ${sim.tunnelEmerged.size}/${new Set(L.tunnel_pairs.values()).size}`);
     if(L.par_measures) bits.push(`par: ${L.par_measures} measures`);
     xe.textContent=bits.join(" · ");
   }
@@ -1451,7 +1635,7 @@ function importText(text){
   catch(err){ alert("Couldn't parse that as a LevelData .tres: "+err.message); }
 }
 function loadLevel(level){
-  L=level; sim=null; stopAutoplay();
+  L=level; sim=null; stopAutoplay(); tunnelPending=null;
   for(const id of [...L.starting_inventory.keys(), ...L.preset_blocks.values()]) if(!blockDef(id)) catalog.push({id, display_name:id, behavior:BEHAVIOR.WALL, color:"#ffffff", footprint:[]});
   buildToolbar(); syncForm(); renderLists(); fitToView(); runValidation(); refreshExport();
 }
@@ -1521,6 +1705,20 @@ function runValidation(){
     for(const d of [{q:-1,r:0},{q:0,r:0},{q:1,r:0}]) if(!inPlayable(add(c,d))) bad(`Hydro plant (${a}) cell (${key(add(c,d))}) is not playable — it would silently not render.`);
     if(isFlat()) warn("Hydro plants are untested on a flat grid."); }
   for(const k of L.hint_cells) if(L.blocked_cells.has(k)) warn(`hint cell (${k}) is blocked.`);
+  // tunnel_pairs: the rules tools/smoke_test.gd checks
+  for(const [e,x] of L.tunnel_pairs){
+    if(e===x){ bad(`Tunnel (${e}) → (${x}): the entrance and exit are the same cell.`); continue; }
+    for(const [role,k] of [["entrance",e],["exit",x]]){
+      const c=parseKey(k), what=`Tunnel (${e}) → (${x}): the ${role} (${k})`;
+      if(L.blocked_cells.has(k)) bad(`${what} is a blocked cell.`);
+      else if(!inPlayable(c)) bad(`${what} is not in the playable area.`);
+      if(L.water_sources.has(k)) bad(`${what} is a water source.`);
+      const t=terrainAt(k);
+      if(t!=="empty" && t!=="tunnel_in" && t!=="tunnel_out") bad(`${what} is on ${t==="pool"?"a pool/lake":t} terrain.`);
+      const p=presetAnchorOf(k); if(p) bad(`${what} is under the preset ${L.preset_blocks.get(p)} at (${p}).`);
+    }
+    if(L.tunnel_pairs.has(x)) bad(`Tunnel (${e}) → (${x}): the exit (${x}) is also a tunnel entrance.`);
+  }
   if(L.town_cells.size && L.town_cells.size!==4) warn(`Town has ${L.town_cells.size} cell(s); the convention is 4 edge-connected cells.`);
   if(L.total_block_budget>0 && L.starting_inventory.size) warn("total_block_budget > 0: starting_inventory is ignored by the engine.");
   if(!items.length) items.push({level:"ok",text:`No issues. ${playableCoords().length} playable cells, ≈${width} wide, bottom row ${bottomRow()}.`});

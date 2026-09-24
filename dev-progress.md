@@ -1,5 +1,67 @@
 # Flash Flood — Dev Progress
 
+## Status: the underground tunnel (2026-09-23)
+
+**The owner: "lets add a new tile. an underground route. so the water
+stream hits the enterence tile, and then takes time at the standard flow
+rate to directly travel to the output tile."** Built on `underground-tunnel`
+(from `varied-grids`) by a workflow: engine and art, then tests, sandbox
+levels and a launcher, with the level editor in parallel; two independent
+verifiers per round (spec, regressions + visuals), two repair rounds, the
+editor verified separately; then a last pass here.
+
+**The rule.** `LevelData.tunnel_pairs` (entrance -> exit) is terrain placed
+by the level, like a geyser. A drop that would enter the entrance on WATER
+beat t -- natural fall, a Diverter or Splitter redirect, either grid --
+leaves the surface; at the end of beat t + d (d = hex distance, one cell
+per measure along the straight line) it is put ON the exit, and from t+d+1
+it falls by a source's rule. Timing checked for d = 1, 2, 3, 5, pointy and
+flat, redirects in, an exit above its entrance, two entrances sharing an
+exit, a parked exit, Retry mid-transit and game over mid-transit. Neither
+end takes a block or is solid; the exit is ordinary ground to surface
+water. `water_beat` and `tunnel_transit` are public and reset in setup().
+`EVENT_TUNNEL` fires once per exit and plays the geyser sound (no new
+sound: gen_sfx.py needs numpy, which this Mac lacks).
+
+**How it reads.** Both ends are a limestone arch on a mossy cave-stone fill
+(`icon_tunnel_in.svg`, `icon_tunnel_out.svg`): the entrance's mouth is a
+dark hole with blue chevrons pointing in; the exit's is full of water with
+white chevrons pointing out -- dark in, bright out, told apart at a glance
+(first drawn with the same dark mouth; a verifier and this pass found the
+two too alike). Between them, d-1 stepping stones on a faint dashed line
+count the delay; each carries a chevron pointing entrance-to-exit and
+lights blue while a drop is under it, and stones under surface water are
+redrawn on top. The entrance looks wet while drinking, and counts as wet
+for the stream-head foam, so the river no longer looks as if it stopped
+one cell short of the hole. The exit's pre-Start arrow is computed from
+where the spring will really fall (a Wall can turn it), drawn after the
+cells in a navy casing; the flow preview jumps the tunnel as one step.
+
+**Sandbox, not campaign.** No existing level changed: 100/0/0, 0 changed
+BoardSnapshots against a baseline taken before the first edit. Three
+6-wide levels in `game/data/sandbox/` (ids 951-953), each winnable only
+through the tunnel, two winning placements each, solutions in
+`sandbox-solutions.md`: tunnel_1 "Under the Town" (a Diverter into the
+mouth, d = 2), tunnel_2 "Buying Time" (a 6-beat tunnel back up the board
+keeps the second stream off until the lake fills), tunnel_3 "Spring in
+the Cellar" (the exit comes up where its first fall hits a town; a Wall
+turns it into the lake). `tests/PlayLevel.tscn` opens any level on save
+slot 99 (`LEVEL=tunnel_1`); a non-campaign level's HUD shows "Tunnel 1".
+
+**Editor.** `level-editor.html` has a Tunnel tool (entrance, then exit),
+the route and stones, a Tunnels list with d, validation, and the timing
+rule in its playtest; all 105 level and tutorial files still round-trip
+byte for byte, and files with tunnels do too.
+
+**Verified:** VerifyTunnels (156 checks) and every other suite, headless
+and windowed; smoke_test (108 levels incl. the sandbox); verify_solutions
+100/0/0; BoardSnapshots 0 changed; renders of all three sandbox levels
+pre-Start and mid-run looked at.
+
+**Open:** where tunnels debut in the campaign (owner). `EVENTS_HEARD_ON_
+THE_WINNING_BEAT` leaves the tunnel out, so a first gush on the winning
+beat is silent like other per-beat sounds.
+
 ## Status: every level wins, every open item that needed no owner input (2026-09-21, later)
 
 **The owner: "of these items fix what you can without my additional

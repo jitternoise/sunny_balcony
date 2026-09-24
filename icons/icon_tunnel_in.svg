@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Tunnel entrance: a round stone arch over a dark cave mouth, with two
+       pale-water chevrons pointing down INTO it -- "the stream goes in
+       here". Warm limestone blocks on the cell's mossy cave-stone fill
+       (HexBoard TILE_TUNNEL_IN); the exit (icon_tunnel_out.svg) is the
+       same arch with water spilling out of the mouth instead. A round
+       arch, not the source's flat ledge or the geyser's purple mound, so
+       the family reads apart at 58 px. -->
+  <!-- the arch: stone ring over the mouth -->
+  <path d="M10 88 L10 50 A40 40 0 0 1 90 50 L90 88 Z"
+        fill="#c9bb9f" stroke="#2a241c" stroke-width="5" stroke-linejoin="round"/>
+  <!-- the mouth -->
+  <path d="M28 88 L28 52 A22 22 0 0 1 72 52 L72 88 Z"
+        fill="#15120e" stroke="#2a241c" stroke-width="4" stroke-linejoin="round"/>
+  <!-- joints between the arch stones, keystone at the crown -->
+  <g stroke="#2a241c" stroke-width="3.5" stroke-linecap="round">
+    <path d="M44 31 L42 11"/>
+    <path d="M56 31 L58 11"/>
+    <path d="M33 38 L19 24"/>
+    <path d="M67 38 L81 24"/>
+    <path d="M28 55 L10 55"/>
+    <path d="M72 55 L90 55"/>
+    <path d="M28 72 L10 72"/>
+    <path d="M72 72 L90 72"/>
+  </g>
+  <!-- chevrons into the mouth: dark outline under, pale water over -->
+  <g fill="none" stroke="#0b3d63" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 47 L50 59 L62 47"/>
+    <path d="M38 64 L50 76 L62 64"/>
+  </g>
+  <g fill="none" stroke="#9fd8ff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 47 L50 59 L62 47"/>
+    <path d="M38 64 L50 76 L62 64"/>
+  </g>
+</svg>

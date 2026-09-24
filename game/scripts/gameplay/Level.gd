@@ -185,6 +185,7 @@ const BOARD_SOUNDS: Dictionary = {
 	HexBoard.EVENT_POOL_FILL: &"pool_fill",
 	HexBoard.EVENT_POOL_FULL: &"pool_full",
 	HexBoard.EVENT_GEYSER: &"geyser",
+	HexBoard.EVENT_TUNNEL: &"geyser", # a spring's first gush, like a geyser waking
 }
 
 ## HUD buttons with a sound of their own, left out of the generic tap.
@@ -426,7 +427,11 @@ func _set_pre_start_status() -> void:
 	var has_blocks: bool = (board.use_block_budget
 		or not level_data.starting_inventory.is_empty())
 	level_label.text = ("Tutorial %d" % (level_data.level_id - GameState.TUTORIAL_ID_FIRST + 1)
-		if GameState.is_tutorial_level(level_data.level_id) else "Level %d" % level_data.level_id)
+		if GameState.is_tutorial_level(level_data.level_id) else "Level %d" % level_data.level_id
+		if LevelSelect.LEVEL_PATHS.has(_level_path) else level_data.display_name.get_slice(":", 0).strip_edges())
+		# A sandbox level has no number: its name up to the colon ("Tunnel 1"),
+		# the same short width as "Level 47", since the whole display_name runs
+		# under the Play and Pause buttons. The full name is the intro's title.
 	status_label.text = ("Place your blocks, then press play" if has_blocks
 		else "Press play and watch")
 
